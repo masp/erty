@@ -1,0 +1,27 @@
+Module {
+    Name: test
+    FuncDecl {
+        Name: expr
+        Parameters: [
+        ]
+        Statements: [
+            ExprStatement {
+                AssignExpr {
+                    Left: {Identifier test}
+                    Right: StringLiteral { Value: hello world }
+                }
+            }
+            ExprStatement {
+                AssignExpr {
+                    Left: {Identifier a}
+                    Right: {
+                        + {
+                            Left: IntLiteral { Value: 3 }
+                            Right: IntLiteral { Value: 5 }
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}

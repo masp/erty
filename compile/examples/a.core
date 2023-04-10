@@ -1,0 +1,28 @@
+module 'a' ['a'/0,
+	    'module_info'/0,
+	    'module_info'/1]
+    attributes [%% Line 1
+		'file' =
+		    %% Line 1
+		    [{[97|[46|[101|[114|[108]]]]],1}],
+		%% Line 6
+		'file' =
+		    %% Line 6
+		    [{[115|[97|[109|[112|[108|[101|[46|[99|[111|[114|[101]]]]]]]]]]],3}]]
+'a'/0 =
+    %% Line 4
+    ( fun () ->
+	  'a'
+      -| [{'function',{'a',0}}] )
+'module_info'/0 =
+    ( fun () ->
+	  call 'erlang':'get_module_info'
+	      ('a')
+      -| [{'function',{'module_info',0}}] )
+'module_info'/1 =
+    ( fun (_0) ->
+	  call 'erlang':'get_module_info'
+	      ('a', ( _0
+		      -| [{'function',{'module_info',1}}] ))
+      -| [{'function',{'module_info',1}}] )
+end

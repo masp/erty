@@ -1,0 +1,53 @@
+module defer
+
+export type State struct {
+    Count int
+    Stage atom
+}
+
+export type Result interface {
+    'ok'
+    ('ok', state State)
+    ('ok', map[atom]any)
+    ('error', rc int)
+}
+
+export func map() {
+
+}
+
+export func add(s State) (res Result) { 
+    // equivalent to assigning a new variable
+    // S = S#{Count => S#Count+1}
+    s.Count = s.Count + 1
+
+    defer func() {
+        match err = catch() {
+            ('badmatch', cause) => 'error'
+            _ => raise(err)
+        }
+    }()
+
+    v := a()
+    if v == 'error' {
+        return 'error'
+    }
+    (ok, A) := v
+    if A < 0 {
+        raise(('error', 'belowzero'))
+    }
+
+    if v = b(); b == 'wrong' {
+        return 'error'
+    }
+    {ok, B} = v
+    return A+B
+}
+
+export func catch() {
+    defer func() {
+        err = catch()
+        if 
+    }
+    dangerous()
+}

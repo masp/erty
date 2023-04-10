@@ -1,0 +1,10 @@
+FuncDecl {
+    Name: params
+    Parameters: [
+        Identifier { Name: {Identifier a} }
+        Identifier { Name: {Identifier b} }
+        Identifier { Name: {Identifier c} }
+    ]
+    Statements: [
+    ]
+}

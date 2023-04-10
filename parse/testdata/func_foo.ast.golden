@@ -1,0 +1,7 @@
+FuncDecl {
+    Name: foo
+    Parameters: [
+    ]
+    Statements: [
+    ]
+}

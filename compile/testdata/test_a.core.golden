@@ -1,0 +1,5 @@
+module 'test_a' []
+'a'/0 =
+    (fun () ->
+    'a')
+end

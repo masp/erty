@@ -1,0 +1,14 @@
+FuncDecl {
+    Name: ret
+    Parameters: [
+    ]
+    Statements: [
+        ReturnStatement {
+            Expression: {
+                Unary (-) {
+                    Expression: Identifier { Name: {Identifier b} }
+                }
+            }
+        }
+    ]
+}
