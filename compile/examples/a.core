@@ -4,16 +4,23 @@ module 'a' ['a'/0,
     attributes [%% Line 1
 		'file' =
 		    %% Line 1
-		    [{[97|[46|[101|[114|[108]]]]],1}],
-		%% Line 6
-		'file' =
-		    %% Line 6
-		    [{[115|[97|[109|[112|[108|[101|[46|[99|[111|[114|[101]]]]]]]]]]],3}]]
+		    [{[97|[46|[101|[114|[108]]]]],1}]]
 'a'/0 =
-    %% Line 4
+    %% Line 6
     ( fun () ->
-	  'a'
+	  1
       -| [{'function',{'a',0}}] )
+'multi_call'/0 =
+    %% Line 8
+    ( fun () ->
+	  let <_0> =
+	      apply %% Line 9
+		    'a'/0
+		  ()
+	  in  %% Line 9
+	      call _0:'b'
+		  (1)
+      -| [{'function',{'multi_call',0}}] )
 'module_info'/0 =
     ( fun () ->
 	  call 'erlang':'get_module_info'

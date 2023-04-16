@@ -22,7 +22,8 @@ export func add(s State) (res Result) {
     s.Count = s.Count + 1
 
     defer func() {
-        match err = catch() {
+        match err = recover() {
+            'ok' => return
             ('badmatch', cause) => 'error'
             _ => raise(err)
         }
@@ -32,15 +33,16 @@ export func add(s State) (res Result) {
     if v == 'error' {
         return 'error'
     }
-    (ok, A) := v
+    {ok, A} := v
     if A < 0 {
-        raise(('error', 'belowzero'))
+        s.Count += 1
     }
 
-    if v = b(); b == 'wrong' {
+    v := b()
+    if b == 'wrong' {
         return 'error'
     }
-    {ok, B} = v
+    {ok, B} := v
     return A+B
 }
 

@@ -1,8 +1,6 @@
 package ast
 
 import (
-	"unicode"
-
 	"github.com/masp/garlang/lexer"
 )
 
@@ -55,10 +53,12 @@ type FuncDecl struct {
 	Name       string
 	Parameters []Identifier
 	Statements []Statement
+
+	Exported bool
 }
 
 func (f FuncDecl) IsPublic() bool {
-	return unicode.IsUpper(rune(f.Name[0]))
+	return f.Exported
 }
 
 func (f FuncDecl) isDeclaration() {}
@@ -89,7 +89,7 @@ type Expression interface {
 }
 
 type CallExpr struct {
-	Target    Expression
+	Callee    Expression
 	Arguments []Expression
 }
 
@@ -97,8 +97,8 @@ func (u CallExpr) isExpression() {}
 func (u CallExpr) isNode()       {}
 
 type DotExpr struct {
-	Module Expression
-	Name   Expression
+	Target    Expression
+	Attribute lexer.Token
 }
 
 func (u DotExpr) isExpression() {}

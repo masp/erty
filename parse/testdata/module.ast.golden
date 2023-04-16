@@ -2,18 +2,19 @@ Module {
     Name: test
     FuncDecl {
         Name: expr
+        Exported: true
         Parameters: [
         ]
         Statements: [
             ExprStatement {
                 AssignExpr {
-                    Left: {Identifier test}
+                    Left: test
                     Right: StringLiteral { Value: hello world }
                 }
             }
             ExprStatement {
                 AssignExpr {
-                    Left: {Identifier a}
+                    Left: a
                     Right: {
                         + {
                             Left: IntLiteral { Value: 3 }

@@ -1,0 +1,11 @@
+map(F, [H|T]) -> [F(H)|map(F, T)];
+map(F, [])    -> [].
+
+func map(F func(any) any, L []any) {
+    match L {
+    case [H|T]:
+        return [F(H) | map(F, T)]
+    case []:
+        return []
+    }
+}

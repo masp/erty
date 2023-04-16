@@ -2,11 +2,11 @@ package parse
 
 import (
 	"bytes"
-	"errors"
 	"testing"
 
 	"github.com/masp/garlang/lexer"
 	"github.com/sebdah/goldie/v2"
+	"github.com/stretchr/testify/assert"
 )
 
 // TestParseFunc will take an input func decl, print it to a string, and then compare that matches what's
@@ -36,8 +36,12 @@ func TestParseFunc(t *testing.T) {
 			expectedAst: "params.ast",
 		},
 		{
-			input:       "func call() { mod.func(1); local(2) }",
+			input:       "func call() { mod.fn(1); local(2) }",
 			expectedAst: "call.ast",
+		},
+		{
+			input:       "func recursive() { mod.fn(1).fn(2).fn(3) }",
+			expectedAst: "recursive.ast",
 		},
 	}
 	for _, test := range tests {
@@ -45,7 +49,7 @@ func TestParseFunc(t *testing.T) {
 			lex := lexer.NewLexer(test.input)
 			toks := lex.All()
 			if lex.HasErrors() {
-				t.Fatalf("lexer errors: %v", errors.Join(lex.Errors()...))
+				t.Fatalf("lexer errors: %v", lex.Errors())
 			}
 
 			fn, err := Function(toks)
@@ -68,8 +72,8 @@ func TestParseModule(t *testing.T) {
 		expectedAst string
 	}{
 		{
-			input: `module "test"
-				func expr() {
+			input: `module test
+				export func expr() {
 					test = "hello world"
 					a = 3 + 5
 				}`,
@@ -81,7 +85,7 @@ func TestParseModule(t *testing.T) {
 			lex := lexer.NewLexer(test.input)
 			toks := lex.All()
 			if lex.HasErrors() {
-				t.Fatalf("lexer errors: %v", errors.Join(lex.Errors()...))
+				t.Fatalf("lexer errors: %v", lex.Errors())
 			}
 
 			mod, err := Module(toks)
@@ -96,4 +100,36 @@ func TestParseModule(t *testing.T) {
 			g.Assert(t, test.expectedAst, out.Bytes())
 		})
 	}
+}
+
+func TestParseFail(t *testing.T) {
+	tests := []struct {
+		input   string
+		wantErr string
+	}{
+		{
+			input:   "module abc; func foo() {",
+			wantErr: "unexpected end of file",
+		},
+		{
+			input:   "module abc; fn foo() { return 1 }",
+			wantErr: `expected func, got "fn" (Identifier)`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			lex := lexer.NewLexer(tt.input)
+			toks := lex.All()
+			if lex.HasErrors() {
+				t.Fatalf("lexer errors: %v", lex.Errors())
+			}
+
+			_, err := Module(toks)
+			if err == nil {
+				t.Fatalf("expected error")
+			}
+			assert.ErrorContainsf(t, err, tt.wantErr, "expected error %q, got %q", tt.wantErr, err.Error())
+		})
+	}
+
 }

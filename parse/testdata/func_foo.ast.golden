@@ -1,5 +1,6 @@
 FuncDecl {
     Name: foo
+    Exported: false
     Parameters: [
     ]
     Statements: [

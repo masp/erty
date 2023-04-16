@@ -1,0 +1,5 @@
+module hello_world
+
+export func main() {
+    return "hello world!"
+}

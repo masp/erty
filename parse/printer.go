@@ -76,6 +76,7 @@ func (p *printer) printFuncDecl(node ast.FuncDecl) string {
 	p.write("FuncDecl {\n")
 	p.indent()
 	p.write("Name: %s\n", node.Name)
+	p.write("Exported: %v\n", node.Exported)
 	p.write("Parameters: [\n")
 	p.indent()
 	for _, param := range node.Parameters {
@@ -132,6 +133,10 @@ func (p *printer) printExpr(node ast.Expression) {
 		p.printAssignExpr(node)
 	case ast.MatchAssignExpr:
 		p.printColonAssignExpr(node)
+	case ast.CallExpr:
+		p.printCallExpr(node)
+	case ast.DotExpr:
+		p.printDotExpr(node)
 	default:
 		panic(fmt.Sprintf("unknown node type %T", node))
 	}
@@ -142,7 +147,7 @@ func (p *printer) printExpr(node ast.Expression) {
 func (p *printer) printAssignExpr(node ast.AssignExpr) {
 	p.write("AssignExpr {\n")
 	p.indent()
-	p.write("Left: %s\n", node.Left)
+	p.write("Left: %s\n", node.Left.Value)
 	p.write("Right: ")
 	p.Print(node.Right)
 	p.currIndent--
@@ -202,8 +207,40 @@ func (p *printer) printBinaryExpr(node ast.BinaryExpr) {
 	p.write("}\n")
 }
 
+func (p *printer) printCallExpr(node ast.CallExpr) {
+	p.write("CallExpr {\n")
+	p.indent()
+
+	p.write("Callee: ")
+	p.Print(node.Callee)
+
+	p.write("Arguments: [\n")
+	p.indent()
+	for _, arg := range node.Arguments {
+		p.printIndent()
+		p.Print(arg)
+	}
+	p.currIndent--
+	p.write("]\n")
+
+	p.currIndent--
+	p.write("}\n")
+}
+
+func (p *printer) printDotExpr(node ast.DotExpr) {
+	p.write("DotExpr {\n")
+	p.indent()
+
+	p.write("Target: ")
+	p.Print(node.Target)
+	p.write("Attribute: %s\n", node.Attribute.Value)
+
+	p.currIndent--
+	p.write("}\n")
+}
+
 func (p *printer) printIdentifier(node ast.Identifier) string {
-	return fmt.Sprintf("Identifier { Name: %s }", node.Name)
+	return fmt.Sprintf("Identifier { Name: %s }", node.Name.Value)
 }
 
 func (p *printer) printStringLiteral(node ast.StringLiteral) string {

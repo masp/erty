@@ -1,0 +1,45 @@
+FuncDecl {
+    Name: recursive
+    Exported: false
+    Parameters: [
+    ]
+    Statements: [
+        ExprStatement {
+            CallExpr {
+                Callee: {
+                    DotExpr {
+                        Target: {
+                            CallExpr {
+                                Callee: {
+                                    DotExpr {
+                                        Target: {
+                                            CallExpr {
+                                                Callee: {
+                                                    DotExpr {
+                                                        Target: Identifier { Name: mod }
+                                                        Attribute: fn
+                                                    }
+                                                }
+                                                Arguments: [
+                                                    IntLiteral { Value: 1 }
+                                                ]
+                                            }
+                                        }
+                                        Attribute: fn
+                                    }
+                                }
+                                Arguments: [
+                                    IntLiteral { Value: 2 }
+                                ]
+                            }
+                        }
+                        Attribute: fn
+                    }
+                }
+                Arguments: [
+                    IntLiteral { Value: 3 }
+                ]
+            }
+        }
+    ]
+}

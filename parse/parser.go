@@ -7,12 +7,32 @@ import (
 
 	"github.com/masp/garlang/ast"
 	"github.com/masp/garlang/lexer"
+	"github.com/masp/garlang/token"
 )
 
 const maxErrors = 10
 
 var (
 	ErrTooManyErrors = errors.New("too many errors")
+)
+
+var (
+	declStart = map[token.Type]bool{
+		token.EOF:  true,
+		token.Func: true,
+	}
+
+	exprEnd = map[token.Type]bool{
+		token.EOF:        true,
+		token.Semicolon:  true,
+		token.RightParen: true,
+		token.RightBrace: true,
+		token.Comma:      true,
+	}
+
+	stmtStart = map[token.Type]bool{
+		token.Return: true,
+	}
 )
 
 type Parser struct {
@@ -22,17 +42,23 @@ type Parser struct {
 	errors []error
 }
 
+func (p *Parser) advance(to map[token.Type]bool) {
+	for p.peek().Type != token.EOF && !to[p.peek().Type] {
+		p.eat()
+	}
+}
+
 func (p *Parser) eat() lexer.Token {
 	if p.pos >= len(p.tokens) {
 		p.error(fmt.Errorf("unexpected end of file"))
-		return lexer.Token{Type: lexer.EOF}
+		return lexer.Token{Type: token.EOF}
 	}
 	token := p.tokens[p.pos]
 	p.pos++
 	return token
 }
 
-func (p *Parser) eatAll(tokenType lexer.TokenType) {
+func (p *Parser) eatAll(tokenType token.Type) {
 	if p.pos >= len(p.tokens) {
 		return
 	}
@@ -41,25 +67,26 @@ func (p *Parser) eatAll(tokenType lexer.TokenType) {
 	}
 }
 
-func (p *Parser) eatOnly(tokenType lexer.TokenType) lexer.Token {
-	token := p.eat()
-	if token.Type == lexer.EOF {
-		return token
+func (p *Parser) eatOnly(tokenType token.Type, errfmt string, args ...any) lexer.Token {
+	tok := p.eat()
+	if tok.Type == token.EOF {
+		return tok
 	}
-	if token.Type != tokenType {
-		p.error(fmt.Errorf("expected %s, got %s", tokenType.String(), token.Type.String()))
+	if tok.Type != tokenType {
+		errmsg := fmt.Sprintf(errfmt, args...)
+		p.error(fmt.Errorf("%s, got %s", errmsg, tok.Value))
 	}
-	return token
+	return tok
 }
 
 func (p *Parser) peek() lexer.Token {
 	if p.pos >= len(p.tokens) {
-		return lexer.Token{Type: lexer.EOF}
+		return lexer.Token{Type: token.EOF}
 	}
 	return p.tokens[p.pos]
 }
 
-func (p *Parser) matches(types ...lexer.TokenType) bool {
+func (p *Parser) matches(types ...token.Type) bool {
 	for _, t := range types {
 		if p.peek().Type == t {
 			return true
@@ -85,15 +112,27 @@ func Module(tokens []lexer.Token) (mod *ast.Module, err error) {
 	defer parser.catchErrors(&err)
 
 	for {
-		token := parser.peek()
-		if token.Type == lexer.EOF {
+		tok := parser.peek()
+		if tok.Type == token.EOF {
 			break
 		}
-		token = parser.eat()
+		tok = parser.eat()
 
-		switch token.Type {
-		case lexer.Func:
+		switch tok.Type {
+		case token.Func:
 			mod.Functions = append(mod.Functions, parser.parseFunction())
+		case token.Export:
+			if tok := parser.eatOnly(token.Func, "expected 'func' after 'export' keyword"); tok.Type != token.Func {
+				parser.advance(declStart)
+				continue
+			}
+			mod.Functions = append(mod.Functions, parser.parseFunction())
+			mod.Functions[len(mod.Functions)-1].Exported = true
+		case token.Semicolon:
+			continue
+		default:
+			parser.error(fmt.Errorf("expected func, got %q (%s)", tok.Value, tok.Type.String()))
+			parser.advance(declStart)
 		}
 	}
 	return mod, errors.Join(parser.errors...)
@@ -110,8 +149,15 @@ func (p *Parser) catchErrors(out *error) {
 }
 
 func (p *Parser) parseModuleHeader() *ast.Module {
-	p.eatOnly(lexer.Module)
-	name := p.eatOnly(lexer.String)
+	if tok := p.eatOnly(token.Module, "epxected 'module' keyword at start of file"); tok.Type != token.Module {
+		p.advance(declStart)
+		return &ast.Module{}
+	}
+	name := p.eatOnly(token.Identifier, "expected module name after 'module' keyword")
+	if name.Type != token.Identifier {
+		p.advance(declStart)
+		return &ast.Module{}
+	}
 	return &ast.Module{
 		Name: name.Value,
 	}
@@ -124,16 +170,16 @@ func Function(tokens []lexer.Token) (function ast.FuncDecl, err error) {
 
 	defer parser.catchErrors(&err)
 
-	parser.eatOnly(lexer.Func)
+	parser.eatOnly(token.Func, "expected 'func' keyword at start of function")
 	return parser.parseFunction(), errors.Join(parser.errors...)
 }
 
 func (p *Parser) parseFunction() ast.FuncDecl {
-	identifier := p.eatOnly(lexer.Identifier)
-	p.eatOnly(lexer.LeftParen)
+	identifier := p.eatOnly(token.Identifier, "expected function name after 'func' keyword")
+	p.eatOnly(token.LeftParen, "expected '(' after function name")
 	params := p.parseParams()
 
-	p.eatOnly(lexer.LeftBrace)
+	p.eatOnly(token.LeftBrace, "expected '{' after function parameters")
 	body := p.parseBody()
 	return ast.FuncDecl{
 		Name:       identifier.Value,
@@ -144,16 +190,20 @@ func (p *Parser) parseFunction() ast.FuncDecl {
 
 func (p *Parser) parseParams() []ast.Identifier {
 	var params []ast.Identifier
+	i := 0
 	for {
-		token := p.eat()
-		if token.Type == lexer.RightParen {
+		if p.matches(token.RightParen) {
+			p.eat()
 			break
 		}
-		if token.Type != lexer.Identifier {
-			p.error(fmt.Errorf("expected identifier, got %s", token.Type.String()))
+		if i > 0 {
+			if tok := p.eatOnly(token.Comma, "expected ',' between parameters"); tok.Type != token.Comma {
+				p.advance(exprEnd)
+			}
 		}
-		params = append(params, ast.Identifier{Name: token})
-		p.eatAll(lexer.Comma)
+		name := p.eatOnly(token.Identifier, "expected parameter name")
+		params = append(params, ast.Identifier{Name: name})
+		i++
 	}
 	return params
 }
@@ -161,37 +211,37 @@ func (p *Parser) parseParams() []ast.Identifier {
 func (p *Parser) parseBody() []ast.Statement {
 	var body []ast.Statement
 	for {
-		token := p.peek()
-		if token.Type == lexer.RightBrace {
+		tok := p.peek()
+		if tok.Type == token.RightBrace {
 			p.eat()
 			break
 		}
-		statement := p.parseStatement(token)
+		statement := p.parseStatement(tok)
 		if statement != nil {
 			body = append(body, statement)
 		}
-		p.eatAll(lexer.Semicolon)
+		p.eatAll(token.Semicolon)
 	}
 	return body
 }
 
-func (p *Parser) parseStatement(token lexer.Token) ast.Statement {
-	switch token.Type {
-	case lexer.Return:
+func (p *Parser) parseStatement(tok lexer.Token) ast.Statement {
+	switch tok.Type {
+	case token.Return:
 		return p.parseReturnStatement()
 	default: // expression statement
-		return p.parseExpressionStatement(token)
+		return p.parseExpressionStatement(tok)
 	}
 }
 
 func (p *Parser) parseReturnStatement() ast.ReturnStatement {
-	p.eatOnly(lexer.Return)
+	p.eatOnly(token.Return, "expected 'return' keyword")
 	return ast.ReturnStatement{
 		Expression: p.parseExpression(),
 	}
 }
 
-func (p *Parser) parseExpressionStatement(token lexer.Token) ast.ExprStatement {
+func (p *Parser) parseExpressionStatement(tok lexer.Token) ast.ExprStatement {
 	return ast.ExprStatement{Expression: p.parseExpression()}
 }
 
@@ -205,6 +255,8 @@ func (p *Parser) parseExpressionStatement(token lexer.Token) ast.ExprStatement {
 // factor         → unary ( ( "/" | "*" ) unary )* ;
 // unary          → ( "!" | "-" | "+" ) unary
 //                | primary ;
+// call		      → primary ( "(" arguments? ")" | "." IDENTIFIER)* ;
+// arguments      → expression ( "," expression )* ;
 // primary        → NUMBER | STRING | ATOM | IDENTIFIER
 //                | "(" expression ")" ;
 
@@ -215,7 +267,7 @@ func (p *Parser) parseExpression() ast.Expression {
 func (p *Parser) parseMatch() ast.Expression {
 	left := p.parseEquality()
 	// just if and not while because these are right-associative
-	if p.matches(lexer.Equal) {
+	if p.matches(token.Equal) {
 		p.eat()
 		right := p.parseMatch()
 		if left, ok := left.(ast.Identifier); ok {
@@ -227,7 +279,7 @@ func (p *Parser) parseMatch() ast.Expression {
 			p.error(fmt.Errorf("left hand side of assignment must be an identifier"))
 			return nil
 		}
-	} else if p.matches(lexer.ColonEqual) {
+	} else if p.matches(token.ColonEqual) {
 		p.eat()
 		right := p.parseEquality()
 		left = ast.MatchAssignExpr{
@@ -240,7 +292,7 @@ func (p *Parser) parseMatch() ast.Expression {
 
 func (p *Parser) parseEquality() ast.Expression {
 	left := p.parseComparison()
-	for p.matches(lexer.EqualEqual, lexer.BangEqual) {
+	for p.matches(token.EqualEqual, token.BangEqual) {
 		op := p.eat()
 		right := p.parseComparison()
 		left = ast.BinaryExpr{
@@ -254,7 +306,7 @@ func (p *Parser) parseEquality() ast.Expression {
 
 func (p *Parser) parseComparison() ast.Expression {
 	left := p.parseTerm()
-	for p.matches(lexer.Greater, lexer.GreaterEqual, lexer.Less, lexer.LessEqual) {
+	for p.matches(token.Greater, token.GreaterEqual, token.Less, token.LessEqual) {
 		op := p.eat()
 		right := p.parseTerm()
 		left = ast.BinaryExpr{
@@ -268,7 +320,7 @@ func (p *Parser) parseComparison() ast.Expression {
 
 func (p *Parser) parseTerm() ast.Expression {
 	left := p.parseFactor()
-	for p.matches(lexer.Plus, lexer.Minus) {
+	for p.matches(token.Plus, token.Minus) {
 		op := p.eat()
 		right := p.parseFactor()
 		left = ast.BinaryExpr{
@@ -282,7 +334,7 @@ func (p *Parser) parseTerm() ast.Expression {
 
 func (p *Parser) parseFactor() ast.Expression {
 	left := p.parseUnary()
-	for p.matches(lexer.Slash, lexer.Star) {
+	for p.matches(token.Slash, token.Star) {
 		op := p.eat()
 		right := p.parseUnary()
 		left = ast.BinaryExpr{
@@ -295,45 +347,86 @@ func (p *Parser) parseFactor() ast.Expression {
 }
 
 func (p *Parser) parseUnary() ast.Expression {
-	if p.matches(lexer.Minus, lexer.Plus) {
+	if p.matches(token.Minus, token.Plus) {
 		op := p.eat()
 		return ast.UnaryExpr{
 			Operator: op.Value,
 			Right:    p.parseUnary(),
 		}
 	}
-	return p.parsePrimary()
+	return p.parseCall()
+}
+
+func (p *Parser) parseCall() ast.Expression {
+	callee := p.parsePrimary()
+	for {
+		if p.matches(token.LeftParen) {
+			p.eat()
+			args := p.parseArguments()
+			callee = ast.CallExpr{
+				Callee:    callee,
+				Arguments: args,
+			}
+		} else if p.matches(token.Period) {
+			p.eat()
+			name := p.eatOnly(token.Identifier, "expected identifier after '.'")
+			callee = ast.DotExpr{
+				Target:    callee,
+				Attribute: name,
+			}
+		} else {
+			break
+		}
+	}
+	return callee
+}
+
+func (p *Parser) parseArguments() []ast.Expression {
+	var args []ast.Expression
+	if !p.matches(token.RightParen) {
+		args = append(args, p.parseExpression())
+		for p.matches(token.Comma) {
+			if len(args) >= 255 {
+				p.error(fmt.Errorf("cannot have more than 255 arguments"))
+				return args
+			}
+			p.eat()
+			args = append(args, p.parseExpression())
+		}
+	}
+	p.eat()
+	return args
 }
 
 func (p *Parser) parsePrimary() ast.Expression {
-	token := p.eat()
-	switch token.Type {
-	case lexer.IntLiteral:
+	tok := p.eat()
+	switch tok.Type {
+	case token.Integer:
 		return ast.IntLiteral{
-			Value: p.parseInt(token),
+			Value: p.parseInt(tok),
 		}
-	case lexer.FloatLiteral:
+	case token.Float:
 		return ast.FloatLiteral{
-			Value: p.parseFloat(token),
+			Value: p.parseFloat(tok),
 		}
-	case lexer.Identifier:
+	case token.Identifier:
 		return ast.Identifier{
-			Name: token,
+			Name: tok,
 		}
-	case lexer.String:
+	case token.String:
 		return ast.StringLiteral{
-			Value: token.Value,
+			Value: tok.Value,
 		}
-	case lexer.Atom:
+	case token.Atom:
 		return ast.AtomLiteral{
-			Value: token.Value,
+			Value: tok.Value,
 		}
-	case lexer.LeftParen:
+	case token.LeftParen:
 		expr := p.parseExpression()
-		p.eatOnly(lexer.RightParen)
+		p.eatOnly(token.RightParen, "unclosed '(' around expression")
 		return ast.ParenExpr{Expression: expr}
 	default:
-		p.error(fmt.Errorf("expected expression, got %s", token.Type.String()))
+		p.error(fmt.Errorf("expected expression, got %s", tok.Type.String()))
 		return nil
 	}
 }

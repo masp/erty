@@ -1,0 +1,29 @@
+FuncDecl {
+    Name: call
+    Exported: false
+    Parameters: [
+    ]
+    Statements: [
+        ExprStatement {
+            CallExpr {
+                Callee: {
+                    DotExpr {
+                        Target: Identifier { Name: mod }
+                        Attribute: fn
+                    }
+                }
+                Arguments: [
+                    IntLiteral { Value: 1 }
+                ]
+            }
+        }
+        ExprStatement {
+            CallExpr {
+                Callee: Identifier { Name: local }
+                Arguments: [
+                    IntLiteral { Value: 2 }
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,10 @@
+module 'intermodule' []
+    attributes [
+        ]
+'a'/0 =
+    (fun () ->
+        call apply 'app'
+            ('c'):'c'
+            ('d')
+        -| [])
+end

@@ -3,5 +3,7 @@
 
 % compile:file("sample.core", [from_core]).
 
--file("sample.core", 3).
-a() -> a.
+a() -> 1.
+
+multi_call() ->
+    (a()):b(1).

@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/masp/garlang/token"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,75 +16,75 @@ func TestLex(t *testing.T) {
 		{
 			input: "foo",
 			expected: []Token{
-				{Type: Identifier, Value: "foo"},
-				{Type: EOF},
+				{Type: token.Identifier, Value: "foo"},
+				{Type: token.EOF},
 			},
 		},
 		{
 			input: "120004 -102.4",
 			expected: []Token{
-				{Type: IntLiteral, Value: "120004"},
-				{Type: Minus, Value: "-"},
-				{Type: FloatLiteral, Value: "102.4"},
-				{Type: EOF},
+				{Type: token.Integer, Value: "120004"},
+				{Type: token.Minus, Value: "-"},
+				{Type: token.Float, Value: "102.4"},
+				{Type: token.EOF},
 			},
 		},
 		{
 			input: "foo bar",
 			expected: []Token{
-				{Type: Identifier, Value: "foo"},
-				{Type: Identifier, Value: "bar"},
-				{Type: EOF},
+				{Type: token.Identifier, Value: "foo"},
+				{Type: token.Identifier, Value: "bar"},
+				{Type: token.EOF},
 			},
 		},
 		{
 			input: "foo.call()",
 			expected: []Token{
-				{Type: Identifier, Value: "foo"},
-				{Type: Period, Value: "."},
-				{Type: Identifier, Value: "call"},
-				{Type: LeftParen, Value: "("},
-				{Type: RightParen, Value: ")"},
-				{Type: EOF},
+				{Type: token.Identifier, Value: "foo"},
+				{Type: token.Period, Value: "."},
+				{Type: token.Identifier, Value: "call"},
+				{Type: token.LeftParen, Value: "("},
+				{Type: token.RightParen, Value: ")"},
+				{Type: token.EOF},
 			},
 		},
 		{
 			input: "module foo",
 			expected: []Token{
-				{Type: Module, Value: "module"},
-				{Type: Identifier, Value: "foo"},
-				{Type: EOF},
+				{Type: token.Module, Value: "module"},
+				{Type: token.Identifier, Value: "foo"},
+				{Type: token.EOF},
 			},
 		},
 		{
 			input: "foo = X; bar = 123.5; z = 'atom'",
 			expected: []Token{
-				{Type: Identifier, Value: "foo"},
-				{Type: Equal, Value: "="},
-				{Type: Identifier, Value: "X"},
-				{Type: Semicolon, Value: ";"},
-				{Type: Identifier, Value: "bar"},
-				{Type: Equal, Value: "="},
-				{Type: FloatLiteral, Value: "123.5"},
-				{Type: Semicolon, Value: ";"},
-				{Type: Identifier, Value: "z"},
-				{Type: Equal, Value: "="},
-				{Type: Atom, Value: "atom"},
-				{Type: EOF},
+				{Type: token.Identifier, Value: "foo"},
+				{Type: token.Equal, Value: "="},
+				{Type: token.Identifier, Value: "X"},
+				{Type: token.Semicolon, Value: ";"},
+				{Type: token.Identifier, Value: "bar"},
+				{Type: token.Equal, Value: "="},
+				{Type: token.Float, Value: "123.5"},
+				{Type: token.Semicolon, Value: ";"},
+				{Type: token.Identifier, Value: "z"},
+				{Type: token.Equal, Value: "="},
+				{Type: token.Atom, Value: "atom"},
+				{Type: token.EOF},
 			},
 		},
 		{
 			input: `func main() { return "hello world" }`,
 			expected: []Token{
-				{Type: Func, Value: "func"},
-				{Type: Identifier, Value: "main"},
-				{Type: LeftParen, Value: "("},
-				{Type: RightParen, Value: ")"},
-				{Type: LeftBrace, Value: "{"},
-				{Type: Return, Value: "return"},
-				{Type: String, Value: "hello world"},
-				{Type: RightBrace, Value: "}"},
-				{Type: EOF},
+				{Type: token.Func, Value: "func"},
+				{Type: token.Identifier, Value: "main"},
+				{Type: token.LeftParen, Value: "("},
+				{Type: token.RightParen, Value: ")"},
+				{Type: token.LeftBrace, Value: "{"},
+				{Type: token.Return, Value: "return"},
+				{Type: token.String, Value: "hello world"},
+				{Type: token.RightBrace, Value: "}"},
+				{Type: token.EOF},
 			},
 		},
 		// Test case for semicolon insertion where we two statements with newlines without explicit semicolons
@@ -93,69 +94,70 @@ func TestLex(t *testing.T) {
 				test2 = "hello world 2"
 			}`,
 			expected: []Token{
-				{Type: Func, Value: "func"},
-				{Type: Identifier, Value: "main"},
-				{Type: LeftParen, Value: "("},
-				{Type: Identifier, Value: "a"},
-				{Type: Comma, Value: ","},
-				{Type: Identifier, Value: "b"},
-				{Type: Comma, Value: ","},
-				{Type: Identifier, Value: "c"},
-				{Type: RightParen, Value: ")"},
-				{Type: LeftBrace, Value: "{"},
-				{Type: Identifier, Value: "test"},
-				{Type: Equal, Value: "="},
-				{Type: String, Value: "hello world"},
-				{Type: Semicolon, Value: ";"},
-				{Type: Identifier, Value: "test2"},
-				{Type: Equal, Value: "="},
-				{Type: String, Value: "hello world 2"},
-				{Type: Semicolon, Value: ";"},
-				{Type: RightBrace, Value: "}"},
-				{Type: EOF},
+				{Type: token.Func, Value: "func"},
+				{Type: token.Identifier, Value: "main"},
+				{Type: token.LeftParen, Value: "("},
+				{Type: token.Identifier, Value: "a"},
+				{Type: token.Comma, Value: ","},
+				{Type: token.Identifier, Value: "b"},
+				{Type: token.Comma, Value: ","},
+				{Type: token.Identifier, Value: "c"},
+				{Type: token.RightParen, Value: ")"},
+				{Type: token.LeftBrace, Value: "{"},
+				{Type: token.Identifier, Value: "test"},
+				{Type: token.Equal, Value: "="},
+				{Type: token.String, Value: "hello world"},
+				{Type: token.Semicolon, Value: "\n"},
+				{Type: token.Identifier, Value: "test2"},
+				{Type: token.Equal, Value: "="},
+				{Type: token.String, Value: "hello world 2"},
+				{Type: token.Semicolon, Value: "\n"},
+				{Type: token.RightBrace, Value: "}"},
+				{Type: token.EOF},
 			},
 		},
 		// Comparison tests
 		{
 			input: `foo == bar; foo != bar; foo < bar; foo > bar; foo <= bar; foo >= bar;`,
 			expected: []Token{
-				{Type: Identifier, Value: "foo"},
-				{Type: EqualEqual, Value: "=="},
-				{Type: Identifier, Value: "bar"},
-				{Type: Semicolon, Value: ";"},
-				{Type: Identifier, Value: "foo"},
-				{Type: BangEqual, Value: "!="},
-				{Type: Identifier, Value: "bar"},
-				{Type: Semicolon, Value: ";"},
-				{Type: Identifier, Value: "foo"},
-				{Type: Less, Value: "<"},
-				{Type: Identifier, Value: "bar"},
-				{Type: Semicolon, Value: ";"},
-				{Type: Identifier, Value: "foo"},
-				{Type: Greater, Value: ">"},
-				{Type: Identifier, Value: "bar"},
-				{Type: Semicolon, Value: ";"},
-				{Type: Identifier, Value: "foo"},
-				{Type: LessEqual, Value: "<="},
-				{Type: Identifier, Value: "bar"},
-				{Type: Semicolon, Value: ";"},
-				{Type: Identifier, Value: "foo"},
-				{Type: GreaterEqual, Value: ">="},
-				{Type: Identifier, Value: "bar"},
-				{Type: Semicolon, Value: ";"},
-				{Type: EOF},
+				{Type: token.Identifier, Value: "foo"},
+				{Type: token.EqualEqual, Value: "=="},
+				{Type: token.Identifier, Value: "bar"},
+				{Type: token.Semicolon, Value: ";"},
+				{Type: token.Identifier, Value: "foo"},
+				{Type: token.BangEqual, Value: "!="},
+				{Type: token.Identifier, Value: "bar"},
+				{Type: token.Semicolon, Value: ";"},
+				{Type: token.Identifier, Value: "foo"},
+				{Type: token.Less, Value: "<"},
+				{Type: token.Identifier, Value: "bar"},
+				{Type: token.Semicolon, Value: ";"},
+				{Type: token.Identifier, Value: "foo"},
+				{Type: token.Greater, Value: ">"},
+				{Type: token.Identifier, Value: "bar"},
+				{Type: token.Semicolon, Value: ";"},
+				{Type: token.Identifier, Value: "foo"},
+				{Type: token.LessEqual, Value: "<="},
+				{Type: token.Identifier, Value: "bar"},
+				{Type: token.Semicolon, Value: ";"},
+				{Type: token.Identifier, Value: "foo"},
+				{Type: token.GreaterEqual, Value: ">="},
+				{Type: token.Identifier, Value: "bar"},
+				{Type: token.Semicolon, Value: ";"},
+				{Type: token.EOF},
 			},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
+			var prev Token
 			lex := NewLexer(test.input)
 			for _, expected := range test.expected {
-				token := lex.NextToken()
-				if token != expected {
-					t.Errorf("Expected %s '%s', got %s '%s'", expected.Type, expected.Value, token.Type, token.Value)
-				}
+				tok := lex.NextToken()
+				require.Equal(t, expected.Type.String(), tok.Type.String(), "Expected token type to match. Prev: %s(%s)", prev.Type.String(), prev.Value)
+				require.Equal(t, expected.Value, tok.Value, "Expected token value to match")
+				prev = tok
 			}
 		})
 	}
@@ -168,7 +170,11 @@ func TestLexErrors(t *testing.T) {
 	}{
 		{
 			input:    "func main() { test = \"hello world }",
-			expected: "unterminated string",
+			expected: "<string>:1:22: unterminated string",
+		},
+		{
+			input:    "'0",
+			expected: "<string>:1:1: unterminated string",
 		},
 	}
 
@@ -176,8 +182,8 @@ func TestLexErrors(t *testing.T) {
 		t.Run(test.input, func(t *testing.T) {
 			lex := NewLexer(test.input)
 			for {
-				token := lex.NextToken()
-				if token.Type == EOF {
+				tok := lex.NextToken()
+				if tok.Type == token.EOF {
 					break
 				}
 			}
@@ -200,20 +206,16 @@ func FuzzLex(f *testing.F) {
 	f.Add([]byte("foo = X; bar = 123.5"))
 	f.Add([]byte(`func main() { test = "hello world" }`))
 	f.Add([]byte(`!!!`))
+	f.Add([]byte(`"0`))
+	f.Add([]byte(`'0`))
 
 	f.Fuzz(func(t *testing.T, input []byte) {
 		lex := NewLexer(string(input))
 		for {
-			token := lex.NextToken()
-			if token.Type == EOF {
+			tok := lex.NextToken()
+			if tok.Type == token.EOF {
 				break
 			}
 		}
 	})
-}
-
-func TestTokenTypeSTring(t *testing.T) {
-	for i := EOF; i < LastTokenType; i += 1 {
-		require.NotPanics(t, func() { _ = i.String() })
-	}
 }

@@ -1,9 +1,10 @@
 FuncDecl {
     Name: params
+    Exported: false
     Parameters: [
-        Identifier { Name: {Identifier a} }
-        Identifier { Name: {Identifier b} }
-        Identifier { Name: {Identifier c} }
+        Identifier { Name: a }
+        Identifier { Name: b }
+        Identifier { Name: c }
     ]
     Statements: [
     ]

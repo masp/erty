@@ -1,12 +1,13 @@
 FuncDecl {
     Name: ret
+    Exported: false
     Parameters: [
     ]
     Statements: [
         ReturnStatement {
             Expression: {
                 Unary (-) {
-                    Expression: Identifier { Name: {Identifier b} }
+                    Expression: Identifier { Name: b }
                 }
             }
         }

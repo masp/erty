@@ -1,6 +1,0 @@
-func main() {
-    x = 10
-    y = "hello"
-    z = x + 5
-    return z
-}
