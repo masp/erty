@@ -26,4 +26,9 @@ export func hello() {
 }
 ```
 
+### Usage
+```
+gar build -o examples/ examples/hello_world.gar
+```
+
 

@@ -61,10 +61,7 @@ func (p *printer) printModule(node *ast.Module) string {
 	p.write("Module {\n")
 	p.indent()
 	p.write("Name: %s\n", node.Name)
-	for _, decl := range node.Constants {
-		p.Print(decl)
-	}
-	for _, decl := range node.Functions {
+	for _, decl := range node.Decls {
 		p.Print(decl)
 	}
 	p.currIndent--

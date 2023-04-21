@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/masp/garlang/lexer"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 )
@@ -46,13 +45,7 @@ func TestParseFunc(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			lex := lexer.NewLexer(test.input)
-			toks := lex.All()
-			if lex.HasErrors() {
-				t.Fatalf("lexer errors: %v", lex.Errors())
-			}
-
-			fn, err := Function(toks)
+			fn, err := Function(test.input)
 			if err != nil {
 				t.Fatalf("parse program: %v", err)
 			}
@@ -82,13 +75,7 @@ func TestParseModule(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			lex := lexer.NewLexer(test.input)
-			toks := lex.All()
-			if lex.HasErrors() {
-				t.Fatalf("lexer errors: %v", lex.Errors())
-			}
-
-			mod, err := Module(toks)
+			mod, err := Module("<test>", test.input)
 			if err != nil {
 				t.Fatalf("parse program: %v", err)
 			}
@@ -118,13 +105,7 @@ func TestParseFail(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			lex := lexer.NewLexer(tt.input)
-			toks := lex.All()
-			if lex.HasErrors() {
-				t.Fatalf("lexer errors: %v", lex.Errors())
-			}
-
-			_, err := Module(toks)
+			_, err := Module("<test>", tt.input)
 			if err == nil {
 				t.Fatalf("expected error")
 			}

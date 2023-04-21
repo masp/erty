@@ -85,8 +85,8 @@ type File struct {
 	lines   []int       // lines contains the offset of the first character for each line (the first entry is always 0)
 }
 
-func NewFile(name string, size int) File {
-	f := File{
+func NewFile(name string, size int) *File {
+	f := &File{
 		Name:    name,
 		Size:    size,
 		lineMut: &sync.Mutex{},

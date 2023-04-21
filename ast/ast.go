@@ -30,14 +30,14 @@ type Node interface {
 }
 
 type Module struct {
-	Name      string
-	Functions []*FuncDecl
-	Constants []*ConstDecl
+	Name  string
+	Decls []Decl
 }
 
 func (p *Module) isNode() {}
 
 type Decl interface {
+	Node
 	isDeclaration()
 }
 

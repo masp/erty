@@ -102,7 +102,13 @@ func (p *Parser) error(err error) {
 	p.errors = append(p.errors, err)
 }
 
-func Module(tokens []lexer.Token) (mod *ast.Module, err error) {
+func Module(filename string, src string) (mod *ast.Module, err error) {
+	lex := lexer.NewLexer(filename, src)
+	tokens := lex.All()
+	if lex.HasErrors() {
+		return nil, lex.Errors()
+	}
+
 	parser := &Parser{
 		tokens: tokens,
 	}
@@ -120,14 +126,15 @@ func Module(tokens []lexer.Token) (mod *ast.Module, err error) {
 
 		switch tok.Type {
 		case token.Func:
-			mod.Functions = append(mod.Functions, parser.parseFunction())
+			mod.Decls = append(mod.Decls, parser.parseFunction())
 		case token.Export:
 			if tok := parser.eatOnly(token.Func, "expected 'func' after 'export' keyword"); tok.Type != token.Func {
 				parser.advance(declStart)
 				continue
 			}
-			mod.Functions = append(mod.Functions, parser.parseFunction())
-			mod.Functions[len(mod.Functions)-1].Exported = true
+			fn := parser.parseFunction()
+			fn.Exported = true
+			mod.Decls = append(mod.Decls, fn)
 		case token.Semicolon:
 			continue
 		default:
@@ -163,11 +170,15 @@ func (p *Parser) parseModuleHeader() *ast.Module {
 	}
 }
 
-func Function(tokens []lexer.Token) (function *ast.FuncDecl, err error) {
+func Function(src string) (function *ast.FuncDecl, err error) {
+	tokens, err := lexer.Lex(src)
+	if err != nil {
+		return nil, fmt.Errorf("lex: %w", err)
+	}
+
 	parser := &Parser{
 		tokens: tokens,
 	}
-
 	defer parser.catchErrors(&err)
 
 	parser.eatOnly(token.Func, "expected 'func' keyword at start of function")

@@ -10,7 +10,6 @@ import (
 
 	"github.com/masp/garlang/compile"
 	"github.com/masp/garlang/core"
-	"github.com/masp/garlang/lexer"
 	"github.com/masp/garlang/parse"
 	"github.com/masp/garlang/token"
 )
@@ -51,28 +50,18 @@ func Main(args []string) error {
 	}
 
 	input := flags.Arg(0)
+	inputName := filepath.Base(input)
 	inputSrc, err := os.ReadFile(input)
 	if err != nil {
 		return fmt.Errorf("reading input '%s': %w", input, err)
 	}
 
-	lex := lexer.NewLexer(string(inputSrc))
-	var tokens []lexer.Token
-	for {
-		tok := lex.NextToken()
-		if tok.Type == token.EOF {
-			if lex.HasErrors() {
-				for _, err := range lex.Errors() {
-					fmt.Println(err)
-				}
-			}
-			break
+	garMod, err := parse.Module(inputName, string(inputSrc))
+	if lexErrs, ok := err.(token.ErrorList); ok {
+		for _, err := range lexErrs {
+			fmt.Fprintf(os.Stderr, "%s:%d:%d: %v", inputName, err.Pos.Line, err.Pos.Column, err.Msg)
 		}
-		tokens = append(tokens, tok)
-	}
-
-	garMod, err := parse.Module(tokens)
-	if err != nil {
+	} else if err != nil {
 		return fmt.Errorf("parse: %w", err)
 	}
 

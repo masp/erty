@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/masp/garlang/core"
-	"github.com/masp/garlang/lexer"
 	"github.com/masp/garlang/parse"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/require"
@@ -24,13 +23,7 @@ func TestCompileModule(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			lex := lexer.NewLexer(tt.input)
-			toks := lex.All()
-			if lex.HasErrors() {
-				t.Fatalf("lexer errors: %v", lex.Errors())
-			}
-
-			mod, err := parse.Module(toks)
+			mod, err := parse.Module("<test>", tt.input)
 			if err != nil {
 				t.Fatalf("parse program: %v", err)
 			}
@@ -64,13 +57,7 @@ func TestCompileFunc(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			lex := lexer.NewLexer(test.input)
-			toks := lex.All()
-			if lex.HasErrors() {
-				t.Fatalf("lexer errors: %v", lex.Errors())
-			}
-
-			fn, err := parse.Function(toks)
+			fn, err := parse.Function(test.input)
 			if err != nil {
 				t.Fatalf("parse program: %v", err)
 			}

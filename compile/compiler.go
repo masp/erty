@@ -7,7 +7,6 @@ import (
 
 	"github.com/masp/garlang/ast"
 	"github.com/masp/garlang/core"
-	"github.com/masp/garlang/lexer"
 	"github.com/masp/garlang/parse"
 )
 
@@ -34,15 +33,20 @@ func (c *Compiler) compileModule(mod *ast.Module) (core.Module, error) {
 		Name: mod.Name,
 	}
 
-	for _, fn := range mod.Functions {
-		coreFn, err := c.compileFunction(fn)
-		if err != nil {
-			return coreMod, err
+	for _, decl := range mod.Decls {
+		switch d := decl.(type) {
+		case *ast.FuncDecl:
+			coreFn, err := c.compileFunction(d)
+			if err != nil {
+				return coreMod, err
+			}
+			if d.IsPublic() {
+				coreMod.Exports = append(coreMod.Exports, coreFn.Name)
+			}
+			coreMod.Functions = append(coreMod.Functions, coreFn)
+		default:
+			panic(fmt.Errorf("unrecognized decl: %T", decl))
 		}
-		if fn.IsPublic() {
-			coreMod.Exports = append(coreMod.Exports, coreFn.Name)
-		}
-		coreMod.Functions = append(coreMod.Functions, coreFn)
 	}
 	return coreMod, nil
 }
@@ -165,10 +169,10 @@ export func module_info(Value) {
 //
 // The functions are very simple: just call 'erlang':module_info/1 with the appropriate atom.
 func addBaseFuncs(mod *ast.Module) *ast.Module {
-	commonMod, err := parse.Module(lexer.Lex(commonModFuncs(mod)))
+	commonMod, err := parse.Module("<builtin>", commonModFuncs(mod))
 	if err != nil {
 		panic(err)
 	}
-	mod.Functions = append(commonMod.Functions, mod.Functions...)
+	mod.Decls = append(commonMod.Decls, mod.Decls...)
 	return mod
 }
