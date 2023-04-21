@@ -163,7 +163,7 @@ func (p *Parser) parseModuleHeader() *ast.Module {
 	}
 }
 
-func Function(tokens []lexer.Token) (function ast.FuncDecl, err error) {
+func Function(tokens []lexer.Token) (function *ast.FuncDecl, err error) {
 	parser := &Parser{
 		tokens: tokens,
 	}
@@ -174,22 +174,22 @@ func Function(tokens []lexer.Token) (function ast.FuncDecl, err error) {
 	return parser.parseFunction(), errors.Join(parser.errors...)
 }
 
-func (p *Parser) parseFunction() ast.FuncDecl {
+func (p *Parser) parseFunction() *ast.FuncDecl {
 	identifier := p.eatOnly(token.Identifier, "expected function name after 'func' keyword")
 	p.eatOnly(token.LeftParen, "expected '(' after function name")
 	params := p.parseParams()
 
 	p.eatOnly(token.LeftBrace, "expected '{' after function parameters")
 	body := p.parseBody()
-	return ast.FuncDecl{
+	return &ast.FuncDecl{
 		Name:       identifier.Value,
 		Statements: body,
 		Parameters: params,
 	}
 }
 
-func (p *Parser) parseParams() []ast.Identifier {
-	var params []ast.Identifier
+func (p *Parser) parseParams() []*ast.Identifier {
+	var params []*ast.Identifier
 	i := 0
 	for {
 		if p.matches(token.RightParen) {
@@ -202,7 +202,7 @@ func (p *Parser) parseParams() []ast.Identifier {
 			}
 		}
 		name := p.eatOnly(token.Identifier, "expected parameter name")
-		params = append(params, ast.Identifier{Name: name})
+		params = append(params, &ast.Identifier{Name: name})
 		i++
 	}
 	return params
@@ -234,15 +234,15 @@ func (p *Parser) parseStatement(tok lexer.Token) ast.Statement {
 	}
 }
 
-func (p *Parser) parseReturnStatement() ast.ReturnStatement {
+func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	p.eatOnly(token.Return, "expected 'return' keyword")
-	return ast.ReturnStatement{
+	return &ast.ReturnStatement{
 		Expression: p.parseExpression(),
 	}
 }
 
-func (p *Parser) parseExpressionStatement(tok lexer.Token) ast.ExprStatement {
-	return ast.ExprStatement{Expression: p.parseExpression()}
+func (p *Parser) parseExpressionStatement(tok lexer.Token) *ast.ExprStatement {
+	return &ast.ExprStatement{Expression: p.parseExpression()}
 }
 
 // The order of precedence is defined by which parse* function is called first.
@@ -270,8 +270,8 @@ func (p *Parser) parseMatch() ast.Expression {
 	if p.matches(token.Equal) {
 		p.eat()
 		right := p.parseMatch()
-		if left, ok := left.(ast.Identifier); ok {
-			return ast.AssignExpr{
+		if left, ok := left.(*ast.Identifier); ok {
+			return &ast.AssignExpr{
 				Left:  left.Name,
 				Right: right,
 			}
@@ -282,7 +282,7 @@ func (p *Parser) parseMatch() ast.Expression {
 	} else if p.matches(token.ColonEqual) {
 		p.eat()
 		right := p.parseEquality()
-		left = ast.MatchAssignExpr{
+		left = &ast.MatchAssignExpr{
 			Left:  left,
 			Right: right,
 		}
@@ -295,7 +295,7 @@ func (p *Parser) parseEquality() ast.Expression {
 	for p.matches(token.EqualEqual, token.BangEqual) {
 		op := p.eat()
 		right := p.parseComparison()
-		left = ast.BinaryExpr{
+		left = &ast.BinaryExpr{
 			Left:     left,
 			Operator: op.Value,
 			Right:    right,
@@ -309,7 +309,7 @@ func (p *Parser) parseComparison() ast.Expression {
 	for p.matches(token.Greater, token.GreaterEqual, token.Less, token.LessEqual) {
 		op := p.eat()
 		right := p.parseTerm()
-		left = ast.BinaryExpr{
+		left = &ast.BinaryExpr{
 			Left:     left,
 			Operator: op.Value,
 			Right:    right,
@@ -323,7 +323,7 @@ func (p *Parser) parseTerm() ast.Expression {
 	for p.matches(token.Plus, token.Minus) {
 		op := p.eat()
 		right := p.parseFactor()
-		left = ast.BinaryExpr{
+		left = &ast.BinaryExpr{
 			Left:     left,
 			Operator: op.Value,
 			Right:    right,
@@ -337,7 +337,7 @@ func (p *Parser) parseFactor() ast.Expression {
 	for p.matches(token.Slash, token.Star) {
 		op := p.eat()
 		right := p.parseUnary()
-		left = ast.BinaryExpr{
+		left = &ast.BinaryExpr{
 			Left:     left,
 			Operator: op.Value,
 			Right:    right,
@@ -349,7 +349,7 @@ func (p *Parser) parseFactor() ast.Expression {
 func (p *Parser) parseUnary() ast.Expression {
 	if p.matches(token.Minus, token.Plus) {
 		op := p.eat()
-		return ast.UnaryExpr{
+		return &ast.UnaryExpr{
 			Operator: op.Value,
 			Right:    p.parseUnary(),
 		}
@@ -363,14 +363,14 @@ func (p *Parser) parseCall() ast.Expression {
 		if p.matches(token.LeftParen) {
 			p.eat()
 			args := p.parseArguments()
-			callee = ast.CallExpr{
+			callee = &ast.CallExpr{
 				Callee:    callee,
 				Arguments: args,
 			}
 		} else if p.matches(token.Period) {
 			p.eat()
 			name := p.eatOnly(token.Identifier, "expected identifier after '.'")
-			callee = ast.DotExpr{
+			callee = &ast.DotExpr{
 				Target:    callee,
 				Attribute: name,
 			}
@@ -402,29 +402,29 @@ func (p *Parser) parsePrimary() ast.Expression {
 	tok := p.eat()
 	switch tok.Type {
 	case token.Integer:
-		return ast.IntLiteral{
+		return &ast.IntLiteral{
 			Value: p.parseInt(tok),
 		}
 	case token.Float:
-		return ast.FloatLiteral{
+		return &ast.FloatLiteral{
 			Value: p.parseFloat(tok),
 		}
 	case token.Identifier:
-		return ast.Identifier{
+		return &ast.Identifier{
 			Name: tok,
 		}
 	case token.String:
-		return ast.StringLiteral{
+		return &ast.StringLiteral{
 			Value: tok.Value,
 		}
 	case token.Atom:
-		return ast.AtomLiteral{
+		return &ast.AtomLiteral{
 			Value: tok.Value,
 		}
 	case token.LeftParen:
 		expr := p.parseExpression()
 		p.eatOnly(token.RightParen, "unclosed '(' around expression")
-		return ast.ParenExpr{Expression: expr}
+		return &ast.ParenExpr{Expression: expr}
 	default:
 		p.error(fmt.Errorf("expected expression, got %s", tok.Type.String()))
 		return nil

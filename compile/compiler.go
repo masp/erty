@@ -47,11 +47,11 @@ func (c *Compiler) compileModule(mod *ast.Module) (core.Module, error) {
 	return coreMod, nil
 }
 
-func (c *Compiler) CompileFunction(fn ast.FuncDecl) (core.Func, error) {
+func (c *Compiler) CompileFunction(fn *ast.FuncDecl) (core.Func, error) {
 	return c.compileFunction(fn)
 }
 
-func (c *Compiler) compileFunction(fn ast.FuncDecl) (core.Func, error) {
+func (c *Compiler) compileFunction(fn *ast.FuncDecl) (core.Func, error) {
 	coreFn := core.Func{
 		Name: core.FuncName{Name: fn.Name, Arity: len(fn.Parameters)},
 		Annotation: core.Annotation{Attrs: []core.Const{
@@ -77,7 +77,7 @@ func (c *Compiler) compileStatements(stmts []ast.Statement) (core.Expr, error) {
 	var expr core.Expr
 	for _, stmt := range stmts {
 		switch stmt := stmt.(type) {
-		case ast.ReturnStatement:
+		case *ast.ReturnStatement:
 			expr = c.compileExpr(stmt.Expression)
 		}
 	}
@@ -94,35 +94,35 @@ func (c *Compiler) compileExprs(exprs []ast.Expression) []core.Expr {
 
 func (c *Compiler) compileExpr(expr ast.Expression) core.Expr {
 	switch expr := expr.(type) {
-	case ast.IntLiteral:
+	case *ast.IntLiteral:
 		return core.Integer{Value: expr.Value}
-	case ast.StringLiteral:
+	case *ast.StringLiteral:
 		return core.String{Value: expr.Value}
-	case ast.Identifier:
+	case *ast.Identifier:
 		return core.Var{Name: expr.Name.Value}
-	case ast.AtomLiteral:
+	case *ast.AtomLiteral:
 		return core.Atom{Value: expr.Value}
-	case ast.CallExpr:
+	case *ast.CallExpr:
 		return c.compileCallExpr(expr)
 	default:
 		panic(fmt.Errorf("unrecognized expression type: %T", expr))
 	}
 }
 
-func (c *Compiler) compileCallExpr(call ast.CallExpr) core.Expr {
+func (c *Compiler) compileCallExpr(call *ast.CallExpr) core.Expr {
 	switch expr := call.Callee.(type) {
-	case ast.DotExpr:
+	case *ast.DotExpr:
 		return c.compileDotCallExpr(call, expr)
 	default: // local function, we can validate that the function exists
 		return c.compileLocalCallExpr(call)
 	}
 }
 
-func (c *Compiler) compileLocalCallExpr(expr ast.CallExpr) core.Expr {
+func (c *Compiler) compileLocalCallExpr(expr *ast.CallExpr) core.Expr {
 	// If an identifier and identifier is not defined in function as variable,
 	// treat as an atom
-	if ident, ok := expr.Callee.(ast.Identifier); ok {
-		expr.Callee = ast.AtomLiteral{Value: ident.Name.Value}
+	if ident, ok := expr.Callee.(*ast.Identifier); ok {
+		expr.Callee = &ast.AtomLiteral{Value: ident.Name.Value}
 	}
 
 	return core.Application{
@@ -131,11 +131,11 @@ func (c *Compiler) compileLocalCallExpr(expr ast.CallExpr) core.Expr {
 	}
 }
 
-func (c *Compiler) compileDotCallExpr(call ast.CallExpr, dot ast.DotExpr) core.Expr {
+func (c *Compiler) compileDotCallExpr(call *ast.CallExpr, dot *ast.DotExpr) core.Expr {
 	// If an identifier and identifier is not defined in function as variable,
 	// treat as an atom
-	if ident, ok := dot.Target.(ast.Identifier); ok {
-		dot.Target = ast.AtomLiteral{Value: ident.Name.Value}
+	if ident, ok := dot.Target.(*ast.Identifier); ok {
+		dot.Target = &ast.AtomLiteral{Value: ident.Name.Value}
 	}
 	return core.InterModuleCall{
 		Module: c.compileExpr(dot.Target),

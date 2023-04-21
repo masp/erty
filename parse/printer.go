@@ -40,15 +40,15 @@ func (p *printer) Print(node ast.Node) {
 	switch node := node.(type) {
 	case *ast.Module:
 		p.printModule(node)
-	case ast.FuncDecl:
+	case *ast.FuncDecl:
 		p.printFuncDecl(node)
-	case ast.ConstDecl:
+	case *ast.ConstDecl:
 		p.printConstDecl(node)
-	case ast.ReturnStatement:
+	case *ast.ReturnStatement:
 		p.printReturnStatement(node)
-	case ast.ExprStatement:
+	case *ast.ExprStatement:
 		p.printExprStatement(node)
-	case ast.Literal, ast.Identifier:
+	case ast.Literal, *ast.Identifier:
 		p.printTerminal(node)
 	case ast.Expression:
 		p.printExpr(node)
@@ -72,7 +72,7 @@ func (p *printer) printModule(node *ast.Module) string {
 	return ""
 }
 
-func (p *printer) printFuncDecl(node ast.FuncDecl) string {
+func (p *printer) printFuncDecl(node *ast.FuncDecl) string {
 	p.write("FuncDecl {\n")
 	p.indent()
 	p.write("Name: %s\n", node.Name)
@@ -97,7 +97,7 @@ func (p *printer) printFuncDecl(node ast.FuncDecl) string {
 	return ""
 }
 
-func (p *printer) printConstDecl(node ast.ConstDecl) {
+func (p *printer) printConstDecl(node *ast.ConstDecl) {
 	p.write("ConstDecl {\n")
 	p.indent()
 	p.write("Identifier: %s\n", node.Identifier)
@@ -107,7 +107,7 @@ func (p *printer) printConstDecl(node ast.ConstDecl) {
 	p.write("}\n")
 }
 
-func (p *printer) printReturnStatement(node ast.ReturnStatement) {
+func (p *printer) printReturnStatement(node *ast.ReturnStatement) {
 	p.write("ReturnStatement {\n")
 	p.indent()
 	p.write("Expression: ")
@@ -116,7 +116,7 @@ func (p *printer) printReturnStatement(node ast.ReturnStatement) {
 	p.write("}\n")
 }
 
-func (p *printer) printExprStatement(node ast.ExprStatement) {
+func (p *printer) printExprStatement(node *ast.ExprStatement) {
 	p.write("ExprStatement ")
 	p.Print(node.Expression)
 }
@@ -125,17 +125,17 @@ func (p *printer) printExpr(node ast.Expression) {
 	fmt.Fprint(p.out, "{\n")
 	p.indent()
 	switch node := node.(type) {
-	case ast.BinaryExpr:
+	case *ast.BinaryExpr:
 		p.printBinaryExpr(node)
-	case ast.UnaryExpr:
+	case *ast.UnaryExpr:
 		p.printUnaryExpr(node)
-	case ast.AssignExpr:
+	case *ast.AssignExpr:
 		p.printAssignExpr(node)
-	case ast.MatchAssignExpr:
+	case *ast.MatchAssignExpr:
 		p.printColonAssignExpr(node)
-	case ast.CallExpr:
+	case *ast.CallExpr:
 		p.printCallExpr(node)
-	case ast.DotExpr:
+	case *ast.DotExpr:
 		p.printDotExpr(node)
 	default:
 		panic(fmt.Sprintf("unknown node type %T", node))
@@ -144,7 +144,7 @@ func (p *printer) printExpr(node ast.Expression) {
 	p.write("}\n")
 }
 
-func (p *printer) printAssignExpr(node ast.AssignExpr) {
+func (p *printer) printAssignExpr(node *ast.AssignExpr) {
 	p.write("AssignExpr {\n")
 	p.indent()
 	p.write("Left: %s\n", node.Left.Value)
@@ -154,7 +154,7 @@ func (p *printer) printAssignExpr(node ast.AssignExpr) {
 	p.write("}\n")
 }
 
-func (p *printer) printColonAssignExpr(node ast.MatchAssignExpr) {
+func (p *printer) printColonAssignExpr(node *ast.MatchAssignExpr) {
 	p.write("ColonAssignExpr {\n")
 	p.indent()
 	p.write("Left: ")
@@ -168,13 +168,13 @@ func (p *printer) printColonAssignExpr(node ast.MatchAssignExpr) {
 func (p *printer) printTerminal(node ast.Node) {
 	var val string
 	switch node := node.(type) {
-	case ast.StringLiteral:
+	case *ast.StringLiteral:
 		val = p.printStringLiteral(node)
-	case ast.IntLiteral:
+	case *ast.IntLiteral:
 		val = p.printIntLiteral(node)
-	case ast.FloatLiteral:
+	case *ast.FloatLiteral:
 		val = p.printFloatLiteral(node)
-	case ast.Identifier:
+	case *ast.Identifier:
 		val = p.printIdentifier(node)
 	default:
 		panic(fmt.Sprintf("unknown node type %T", node))
@@ -182,7 +182,7 @@ func (p *printer) printTerminal(node ast.Node) {
 	fmt.Fprintf(p.out, "%s\n", val)
 }
 
-func (p *printer) printUnaryExpr(node ast.UnaryExpr) {
+func (p *printer) printUnaryExpr(node *ast.UnaryExpr) {
 	p.write("Unary (%s) {\n", node.Operator)
 	p.indent()
 
@@ -193,7 +193,7 @@ func (p *printer) printUnaryExpr(node ast.UnaryExpr) {
 	p.write("}\n")
 }
 
-func (p *printer) printBinaryExpr(node ast.BinaryExpr) {
+func (p *printer) printBinaryExpr(node *ast.BinaryExpr) {
 	p.write("%s {\n", node.Operator)
 	p.indent()
 
@@ -207,7 +207,7 @@ func (p *printer) printBinaryExpr(node ast.BinaryExpr) {
 	p.write("}\n")
 }
 
-func (p *printer) printCallExpr(node ast.CallExpr) {
+func (p *printer) printCallExpr(node *ast.CallExpr) {
 	p.write("CallExpr {\n")
 	p.indent()
 
@@ -227,7 +227,7 @@ func (p *printer) printCallExpr(node ast.CallExpr) {
 	p.write("}\n")
 }
 
-func (p *printer) printDotExpr(node ast.DotExpr) {
+func (p *printer) printDotExpr(node *ast.DotExpr) {
 	p.write("DotExpr {\n")
 	p.indent()
 
@@ -239,18 +239,18 @@ func (p *printer) printDotExpr(node ast.DotExpr) {
 	p.write("}\n")
 }
 
-func (p *printer) printIdentifier(node ast.Identifier) string {
+func (p *printer) printIdentifier(node *ast.Identifier) string {
 	return fmt.Sprintf("Identifier { Name: %s }", node.Name.Value)
 }
 
-func (p *printer) printStringLiteral(node ast.StringLiteral) string {
+func (p *printer) printStringLiteral(node *ast.StringLiteral) string {
 	return fmt.Sprintf("StringLiteral { Value: %s }", node.Value)
 }
 
-func (p *printer) printIntLiteral(node ast.IntLiteral) string {
+func (p *printer) printIntLiteral(node *ast.IntLiteral) string {
 	return fmt.Sprintf("IntLiteral { Value: %d }", node.Value)
 }
 
-func (p *printer) printFloatLiteral(node ast.FloatLiteral) string {
+func (p *printer) printFloatLiteral(node *ast.FloatLiteral) string {
 	return fmt.Sprintf("FloatLiteral { Value: %f }", node.Value)
 }
