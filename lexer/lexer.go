@@ -15,9 +15,9 @@ var (
 type TokenType int
 
 type Token struct {
-	Pos   token.Pos
-	Type  token.Type
-	Value string
+	Pos  token.Pos
+	Type token.Type
+	Lit  string
 }
 
 type Lexer struct {
@@ -103,7 +103,7 @@ func (l *Lexer) NextToken() (tok Token) {
 		l.error(pos, err)
 	}
 	tok.Pos = pos
-	tok.Value = lit
+	tok.Lit = lit
 	tok.Type = typ
 	l.prevToken = tok
 	return

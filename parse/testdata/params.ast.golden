@@ -1,11 +1,24 @@
-FuncDecl {
-    Name: params
-    Exported: false
-    Parameters: [
-        Identifier { Name: a }
-        Identifier { Name: b }
-        Identifier { Name: c }
-    ]
-    Statements: [
-    ]
-}
+     0  *ast.FuncDecl {
+     1  .  Func: 1
+     2  .  Export: 0
+     3  .  LeftBrace: 22
+     4  .  RightBrace: 23
+     5  .  Name: *ast.Identifier {
+     6  .  .  NamePos: 6
+     7  .  .  Name: "params"
+     8  .  }
+     9  .  Parameters: []*ast.Identifier (len = 3) {
+    10  .  .  0: *ast.Identifier {
+    11  .  .  .  NamePos: 13
+    12  .  .  .  Name: "a"
+    13  .  .  }
+    14  .  .  1: *ast.Identifier {
+    15  .  .  .  NamePos: 16
+    16  .  .  .  Name: "b"
+    17  .  .  }
+    18  .  .  2: *ast.Identifier {
+    19  .  .  .  NamePos: 19
+    20  .  .  .  Name: "c"
+    21  .  .  }
+    22  .  }
+    23  }

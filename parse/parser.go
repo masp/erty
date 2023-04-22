@@ -74,7 +74,7 @@ func (p *Parser) eatOnly(tokenType token.Type, errfmt string, args ...any) lexer
 	}
 	if tok.Type != tokenType {
 		errmsg := fmt.Sprintf(errfmt, args...)
-		p.error(fmt.Errorf("%s, got %s", errmsg, tok.Value))
+		p.error(fmt.Errorf("%s, got %s", errmsg, tok.Lit))
 	}
 	return tok
 }
@@ -113,7 +113,7 @@ func Module(filename string, src string) (mod *ast.Module, err error) {
 		tokens: tokens,
 	}
 
-	mod = parser.parseModuleHeader()
+	mod = parser.parseModuleHeader(lex.File())
 
 	defer parser.catchErrors(&err)
 
@@ -122,23 +122,16 @@ func Module(filename string, src string) (mod *ast.Module, err error) {
 		if tok.Type == token.EOF {
 			break
 		}
-		tok = parser.eat()
 
 		switch tok.Type {
-		case token.Func:
+		case token.Func, token.Export:
 			mod.Decls = append(mod.Decls, parser.parseFunction())
-		case token.Export:
-			if tok := parser.eatOnly(token.Func, "expected 'func' after 'export' keyword"); tok.Type != token.Func {
-				parser.advance(declStart)
-				continue
-			}
-			fn := parser.parseFunction()
-			fn.Exported = true
-			mod.Decls = append(mod.Decls, fn)
 		case token.Semicolon:
+			parser.eat()
 			continue
 		default:
-			parser.error(fmt.Errorf("expected func, got %q (%s)", tok.Value, tok.Type.String()))
+			parser.eat() // skip next token
+			parser.error(fmt.Errorf("expected func, got %q (%s)", tok.Lit, tok.Type.String()))
 			parser.advance(declStart)
 		}
 	}
@@ -155,7 +148,7 @@ func (p *Parser) catchErrors(out *error) {
 	}
 }
 
-func (p *Parser) parseModuleHeader() *ast.Module {
+func (p *Parser) parseModuleHeader(file *token.File) *ast.Module {
 	if tok := p.eatOnly(token.Module, "epxected 'module' keyword at start of file"); tok.Type != token.Module {
 		p.advance(declStart)
 		return &ast.Module{}
@@ -166,7 +159,8 @@ func (p *Parser) parseModuleHeader() *ast.Module {
 		return &ast.Module{}
 	}
 	return &ast.Module{
-		Name: name.Value,
+		File: file,
+		Id:   ast.NewIdent(name),
 	}
 }
 
@@ -180,22 +174,35 @@ func Function(src string) (function *ast.FuncDecl, err error) {
 		tokens: tokens,
 	}
 	defer parser.catchErrors(&err)
-
-	parser.eatOnly(token.Func, "expected 'func' keyword at start of function")
 	return parser.parseFunction(), errors.Join(parser.errors...)
 }
 
 func (p *Parser) parseFunction() *ast.FuncDecl {
-	identifier := p.eatOnly(token.Identifier, "expected function name after 'func' keyword")
+	var exportTok lexer.Token
+	if p.matches(token.Export) {
+		exportTok = p.eat()
+	}
+	funcTok := p.eatOnly(token.Func, "expected 'func' keyword at start of function")
+	if funcTok.Type != token.Func {
+		p.advance(declStart)
+		return nil
+	}
+
+	name := p.eatOnly(token.Identifier, "expected function name after 'func' keyword")
 	p.eatOnly(token.LeftParen, "expected '(' after function name")
 	params := p.parseParams()
 
-	p.eatOnly(token.LeftBrace, "expected '{' after function parameters")
+	lbrace := p.eatOnly(token.LeftBrace, "expected '{' after function parameters")
 	body := p.parseBody()
+	rbrace := p.eatOnly(token.RightBrace, "expected '}' to end function body")
 	return &ast.FuncDecl{
-		Name:       identifier.Value,
+		Name:       ast.NewIdent(name),
+		Export:     exportTok.Pos,
+		Func:       funcTok.Pos,
 		Statements: body,
 		Parameters: params,
+		LeftBrace:  lbrace.Pos,
+		RightBrace: rbrace.Pos,
 	}
 }
 
@@ -213,7 +220,7 @@ func (p *Parser) parseParams() []*ast.Identifier {
 			}
 		}
 		name := p.eatOnly(token.Identifier, "expected parameter name")
-		params = append(params, &ast.Identifier{Name: name})
+		params = append(params, ast.NewIdent(name))
 		i++
 	}
 	return params
@@ -224,7 +231,6 @@ func (p *Parser) parseBody() []ast.Statement {
 	for {
 		tok := p.peek()
 		if tok.Type == token.RightBrace {
-			p.eat()
 			break
 		}
 		statement := p.parseStatement(tok)
@@ -279,23 +285,25 @@ func (p *Parser) parseMatch() ast.Expression {
 	left := p.parseEquality()
 	// just if and not while because these are right-associative
 	if p.matches(token.Equal) {
-		p.eat()
+		equals := p.eat()
 		right := p.parseMatch()
 		if left, ok := left.(*ast.Identifier); ok {
 			return &ast.AssignExpr{
-				Left:  left.Name,
-				Right: right,
+				Left:   left,
+				Equals: equals.Pos,
+				Right:  right,
 			}
 		} else {
 			p.error(fmt.Errorf("left hand side of assignment must be an identifier"))
 			return nil
 		}
 	} else if p.matches(token.ColonEqual) {
-		p.eat()
+		equals := p.eat()
 		right := p.parseEquality()
 		left = &ast.MatchAssignExpr{
-			Left:  left,
-			Right: right,
+			Left:   left,
+			Equals: equals.Pos,
+			Right:  right,
 		}
 	}
 	return left
@@ -307,9 +315,10 @@ func (p *Parser) parseEquality() ast.Expression {
 		op := p.eat()
 		right := p.parseComparison()
 		left = &ast.BinaryExpr{
-			Left:     left,
-			Operator: op.Value,
-			Right:    right,
+			Left:  left,
+			Op:    op.Type,
+			OpPos: op.Pos,
+			Right: right,
 		}
 	}
 	return left
@@ -321,9 +330,10 @@ func (p *Parser) parseComparison() ast.Expression {
 		op := p.eat()
 		right := p.parseTerm()
 		left = &ast.BinaryExpr{
-			Left:     left,
-			Operator: op.Value,
-			Right:    right,
+			Left:  left,
+			Op:    op.Type,
+			OpPos: op.Pos,
+			Right: right,
 		}
 	}
 	return left
@@ -335,9 +345,10 @@ func (p *Parser) parseTerm() ast.Expression {
 		op := p.eat()
 		right := p.parseFactor()
 		left = &ast.BinaryExpr{
-			Left:     left,
-			Operator: op.Value,
-			Right:    right,
+			Left:  left,
+			Op:    op.Type,
+			OpPos: op.Pos,
+			Right: right,
 		}
 	}
 	return left
@@ -349,9 +360,10 @@ func (p *Parser) parseFactor() ast.Expression {
 		op := p.eat()
 		right := p.parseUnary()
 		left = &ast.BinaryExpr{
-			Left:     left,
-			Operator: op.Value,
-			Right:    right,
+			Left:  left,
+			Op:    op.Type,
+			OpPos: op.Pos,
+			Right: right,
 		}
 	}
 	return left
@@ -361,8 +373,9 @@ func (p *Parser) parseUnary() ast.Expression {
 	if p.matches(token.Minus, token.Plus) {
 		op := p.eat()
 		return &ast.UnaryExpr{
-			Operator: op.Value,
-			Right:    p.parseUnary(),
+			Op:    op.Type,
+			OpPos: op.Pos,
+			Right: p.parseUnary(),
 		}
 	}
 	return p.parseCall()
@@ -372,18 +385,22 @@ func (p *Parser) parseCall() ast.Expression {
 	callee := p.parsePrimary()
 	for {
 		if p.matches(token.LeftParen) {
-			p.eat()
+			lparen := p.eat()
 			args := p.parseArguments()
+			rparen := p.eat()
 			callee = &ast.CallExpr{
-				Callee:    callee,
-				Arguments: args,
+				Callee:     callee,
+				Arguments:  args,
+				LeftParen:  lparen.Pos,
+				RightParen: rparen.Pos,
 			}
 		} else if p.matches(token.Period) {
-			p.eat()
+			dot := p.eat()
 			name := p.eatOnly(token.Identifier, "expected identifier after '.'")
 			callee = &ast.DotExpr{
+				Dot:       dot.Pos,
 				Target:    callee,
-				Attribute: name,
+				Attribute: ast.NewIdent(name),
 			}
 		} else {
 			break
@@ -405,7 +422,6 @@ func (p *Parser) parseArguments() []ast.Expression {
 			args = append(args, p.parseExpression())
 		}
 	}
-	p.eat()
 	return args
 }
 
@@ -414,28 +430,36 @@ func (p *Parser) parsePrimary() ast.Expression {
 	switch tok.Type {
 	case token.Integer:
 		return &ast.IntLiteral{
-			Value: p.parseInt(tok),
+			IntPos: tok.Pos,
+			Lit:    tok.Lit,
+			Value:  p.parseInt(tok),
 		}
 	case token.Float:
 		return &ast.FloatLiteral{
-			Value: p.parseFloat(tok),
+			FloatPos: tok.Pos,
+			Lit:      tok.Lit,
+			Value:    p.parseFloat(tok),
 		}
 	case token.Identifier:
-		return &ast.Identifier{
-			Name: tok,
-		}
+		return &ast.Identifier{NamePos: tok.Pos, Name: tok.Lit}
 	case token.String:
 		return &ast.StringLiteral{
-			Value: tok.Value,
+			QuotePos: tok.Pos,
+			Value:    tok.Lit,
 		}
 	case token.Atom:
 		return &ast.AtomLiteral{
-			Value: tok.Value,
+			QuotePos: tok.Pos,
+			Value:    tok.Lit,
 		}
 	case token.LeftParen:
 		expr := p.parseExpression()
-		p.eatOnly(token.RightParen, "unclosed '(' around expression")
-		return &ast.ParenExpr{Expression: expr}
+		rparen := p.eatOnly(token.RightParen, "unclosed '(' around expression")
+		return &ast.ParenExpr{
+			Expression: expr,
+			LParen:     tok.Pos,
+			RParen:     rparen.Pos,
+		}
 	default:
 		p.error(fmt.Errorf("expected expression, got %s", tok.Type.String()))
 		return nil
@@ -444,7 +468,7 @@ func (p *Parser) parsePrimary() ast.Expression {
 
 // parseInt converts a string to an integer.
 func (p *Parser) parseInt(token lexer.Token) int64 {
-	v, err := strconv.ParseInt(token.Value, 10, 64)
+	v, err := strconv.ParseInt(token.Lit, 10, 64)
 	if err != nil {
 		p.error(fmt.Errorf("parse int: %s", err))
 	}
@@ -453,7 +477,7 @@ func (p *Parser) parseInt(token lexer.Token) int64 {
 
 // parseFloat converts a string to a floating point number
 func (p *Parser) parseFloat(token lexer.Token) float64 {
-	v, err := strconv.ParseFloat(token.Value, 64)
+	v, err := strconv.ParseFloat(token.Lit, 64)
 	if err != nil {
 		p.error(fmt.Errorf("parse float: %s", err))
 	}

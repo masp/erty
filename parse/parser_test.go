@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/masp/garlang/ast"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,7 +18,7 @@ func TestParseFunc(t *testing.T) {
 	}{
 		{
 			input: `func expr() {
-				test = "hello world"
+				test = 'hello'
 				a = 3 + 5
 			}`,
 			expectedAst: "expr.ast",
@@ -51,8 +52,7 @@ func TestParseFunc(t *testing.T) {
 			}
 
 			var out bytes.Buffer
-			printer := NewPrinter(&out)
-			printer.Print(fn)
+			ast.Fprint(&out, nil, fn, ast.NotNilFilter)
 			g := goldie.New(t)
 			g.Assert(t, test.expectedAst, out.Bytes())
 		})
@@ -81,8 +81,7 @@ func TestParseModule(t *testing.T) {
 			}
 
 			var out bytes.Buffer
-			printer := NewPrinter(&out)
-			printer.Print(mod)
+			ast.Fprint(&out, mod.File, mod, ast.NotNilFilter)
 			g := goldie.New(t)
 			g.Assert(t, test.expectedAst, out.Bytes())
 		})

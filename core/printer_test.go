@@ -14,12 +14,12 @@ import (
 func TestPrintModule(t *testing.T) {
 	tests := []struct {
 		name     string
-		input    Module
+		input    *Module
 		expected string
 	}{
 		{
 			name: "one_func_annotated",
-			input: Module{
+			input: &Module{
 				Name: "one_func_annotated",
 				Functions: []Func{
 					{
@@ -40,7 +40,7 @@ func TestPrintModule(t *testing.T) {
 		},
 		{
 			name: "exports",
-			input: Module{
+			input: &Module{
 				Name: "exports",
 				Exports: []FuncName{
 					{Name: "a", Arity: 0},
@@ -61,7 +61,7 @@ func TestPrintModule(t *testing.T) {
 		},
 		{
 			name: "attributes",
-			input: Module{
+			input: &Module{
 				Name: "attributes",
 				Attributes: []Attribute{
 					{Key: Atom{Value: "a"}, Value: Atom{Value: "b"}},
@@ -82,7 +82,7 @@ func TestPrintModule(t *testing.T) {
 		},
 		{
 			name: "intermodule",
-			input: Module{
+			input: &Module{
 				Name: "intermodule",
 				Functions: []Func{
 					{

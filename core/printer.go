@@ -37,7 +37,7 @@ func (c *Printer) emitf(format string, args ...interface{}) {
 	fmt.Fprintf(c.Output, format, args...)
 }
 
-func (c *Printer) PrintModule(mod Module) {
+func (c *Printer) PrintModule(mod *Module) {
 	c.emitf("module '%s' [", mod.Name)
 	for i, fn := range mod.Exports {
 		if i > 0 {

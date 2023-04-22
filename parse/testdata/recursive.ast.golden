@@ -1,45 +1,72 @@
-FuncDecl {
-    Name: recursive
-    Exported: false
-    Parameters: [
-    ]
-    Statements: [
-        ExprStatement {
-            CallExpr {
-                Callee: {
-                    DotExpr {
-                        Target: {
-                            CallExpr {
-                                Callee: {
-                                    DotExpr {
-                                        Target: {
-                                            CallExpr {
-                                                Callee: {
-                                                    DotExpr {
-                                                        Target: Identifier { Name: mod }
-                                                        Attribute: fn
-                                                    }
-                                                }
-                                                Arguments: [
-                                                    IntLiteral { Value: 1 }
-                                                ]
-                                            }
-                                        }
-                                        Attribute: fn
-                                    }
-                                }
-                                Arguments: [
-                                    IntLiteral { Value: 2 }
-                                ]
-                            }
-                        }
-                        Attribute: fn
-                    }
-                }
-                Arguments: [
-                    IntLiteral { Value: 3 }
-                ]
-            }
-        }
-    ]
-}
+     0  *ast.FuncDecl {
+     1  .  Func: 1
+     2  .  Export: 0
+     3  .  LeftBrace: 18
+     4  .  RightBrace: 42
+     5  .  Name: *ast.Identifier {
+     6  .  .  NamePos: 6
+     7  .  .  Name: "recursive"
+     8  .  }
+     9  .  Statements: []ast.Statement (len = 1) {
+    10  .  .  0: *ast.ExprStatement {
+    11  .  .  .  Expression: *ast.CallExpr {
+    12  .  .  .  .  Callee: *ast.DotExpr {
+    13  .  .  .  .  .  Target: *ast.CallExpr {
+    14  .  .  .  .  .  .  Callee: *ast.DotExpr {
+    15  .  .  .  .  .  .  .  Target: *ast.CallExpr {
+    16  .  .  .  .  .  .  .  .  Callee: *ast.DotExpr {
+    17  .  .  .  .  .  .  .  .  .  Target: *ast.Identifier {
+    18  .  .  .  .  .  .  .  .  .  .  NamePos: 20
+    19  .  .  .  .  .  .  .  .  .  .  Name: "mod"
+    20  .  .  .  .  .  .  .  .  .  }
+    21  .  .  .  .  .  .  .  .  .  Dot: 23
+    22  .  .  .  .  .  .  .  .  .  Attribute: *ast.Identifier {
+    23  .  .  .  .  .  .  .  .  .  .  NamePos: 24
+    24  .  .  .  .  .  .  .  .  .  .  Name: "fn"
+    25  .  .  .  .  .  .  .  .  .  }
+    26  .  .  .  .  .  .  .  .  }
+    27  .  .  .  .  .  .  .  .  Arguments: []ast.Expression (len = 1) {
+    28  .  .  .  .  .  .  .  .  .  0: *ast.IntLiteral {
+    29  .  .  .  .  .  .  .  .  .  .  IntPos: 27
+    30  .  .  .  .  .  .  .  .  .  .  Lit: "1"
+    31  .  .  .  .  .  .  .  .  .  .  Value: 1
+    32  .  .  .  .  .  .  .  .  .  }
+    33  .  .  .  .  .  .  .  .  }
+    34  .  .  .  .  .  .  .  .  LeftParen: 26
+    35  .  .  .  .  .  .  .  .  RightParen: 28
+    36  .  .  .  .  .  .  .  }
+    37  .  .  .  .  .  .  .  Dot: 29
+    38  .  .  .  .  .  .  .  Attribute: *ast.Identifier {
+    39  .  .  .  .  .  .  .  .  NamePos: 30
+    40  .  .  .  .  .  .  .  .  Name: "fn"
+    41  .  .  .  .  .  .  .  }
+    42  .  .  .  .  .  .  }
+    43  .  .  .  .  .  .  Arguments: []ast.Expression (len = 1) {
+    44  .  .  .  .  .  .  .  0: *ast.IntLiteral {
+    45  .  .  .  .  .  .  .  .  IntPos: 33
+    46  .  .  .  .  .  .  .  .  Lit: "2"
+    47  .  .  .  .  .  .  .  .  Value: 2
+    48  .  .  .  .  .  .  .  }
+    49  .  .  .  .  .  .  }
+    50  .  .  .  .  .  .  LeftParen: 32
+    51  .  .  .  .  .  .  RightParen: 34
+    52  .  .  .  .  .  }
+    53  .  .  .  .  .  Dot: 35
+    54  .  .  .  .  .  Attribute: *ast.Identifier {
+    55  .  .  .  .  .  .  NamePos: 36
+    56  .  .  .  .  .  .  Name: "fn"
+    57  .  .  .  .  .  }
+    58  .  .  .  .  }
+    59  .  .  .  .  Arguments: []ast.Expression (len = 1) {
+    60  .  .  .  .  .  0: *ast.IntLiteral {
+    61  .  .  .  .  .  .  IntPos: 39
+    62  .  .  .  .  .  .  Lit: "3"
+    63  .  .  .  .  .  .  Value: 3
+    64  .  .  .  .  .  }
+    65  .  .  .  .  }
+    66  .  .  .  .  LeftParen: 38
+    67  .  .  .  .  RightParen: 40
+    68  .  .  .  }
+    69  .  .  }
+    70  .  }
+    71  }

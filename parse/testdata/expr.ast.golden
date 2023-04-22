@@ -1,25 +1,48 @@
-FuncDecl {
-    Name: expr
-    Exported: false
-    Parameters: [
-    ]
-    Statements: [
-        ExprStatement {
-            AssignExpr {
-                Left: test
-                Right: StringLiteral { Value: hello world }
-            }
-        }
-        ExprStatement {
-            AssignExpr {
-                Left: a
-                Right: {
-                    + {
-                        Left: IntLiteral { Value: 3 }
-                        Right: IntLiteral { Value: 5 }
-                    }
-                }
-            }
-        }
-    ]
-}
+     0  *ast.FuncDecl {
+     1  .  Func: 1
+     2  .  Export: 0
+     3  .  LeftBrace: 13
+     4  .  RightBrace: 51
+     5  .  Name: *ast.Identifier {
+     6  .  .  NamePos: 6
+     7  .  .  Name: "expr"
+     8  .  }
+     9  .  Statements: []ast.Statement (len = 2) {
+    10  .  .  0: *ast.ExprStatement {
+    11  .  .  .  Expression: *ast.AssignExpr {
+    12  .  .  .  .  Left: *ast.Identifier {
+    13  .  .  .  .  .  NamePos: 19
+    14  .  .  .  .  .  Name: "test"
+    15  .  .  .  .  }
+    16  .  .  .  .  Equals: 24
+    17  .  .  .  .  Right: *ast.AtomLiteral {
+    18  .  .  .  .  .  QuotePos: 26
+    19  .  .  .  .  .  Value: "hello"
+    20  .  .  .  .  }
+    21  .  .  .  }
+    22  .  .  }
+    23  .  .  1: *ast.ExprStatement {
+    24  .  .  .  Expression: *ast.AssignExpr {
+    25  .  .  .  .  Left: *ast.Identifier {
+    26  .  .  .  .  .  NamePos: 38
+    27  .  .  .  .  .  Name: "a"
+    28  .  .  .  .  }
+    29  .  .  .  .  Equals: 40
+    30  .  .  .  .  Right: *ast.BinaryExpr {
+    31  .  .  .  .  .  Left: *ast.IntLiteral {
+    32  .  .  .  .  .  .  IntPos: 42
+    33  .  .  .  .  .  .  Lit: "3"
+    34  .  .  .  .  .  .  Value: 3
+    35  .  .  .  .  .  }
+    36  .  .  .  .  .  OpPos: 44
+    37  .  .  .  .  .  Op: Plus
+    38  .  .  .  .  .  Right: *ast.IntLiteral {
+    39  .  .  .  .  .  .  IntPos: 46
+    40  .  .  .  .  .  .  Lit: "5"
+    41  .  .  .  .  .  .  Value: 5
+    42  .  .  .  .  .  }
+    43  .  .  .  .  }
+    44  .  .  .  }
+    45  .  .  }
+    46  .  }
+    47  }

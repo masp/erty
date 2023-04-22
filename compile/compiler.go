@@ -22,15 +22,15 @@ func New() *Compiler {
 	return &Compiler{}
 }
 
-func (c *Compiler) CompileModule(mod *ast.Module) (core.Module, error) {
+func (c *Compiler) CompileModule(mod *ast.Module) (*core.Module, error) {
 	mod = addBaseFuncs(mod)
 	return c.compileModule(mod)
 }
 
 // compileModule compiles a module AST into a Core Erlang module.
-func (c *Compiler) compileModule(mod *ast.Module) (core.Module, error) {
-	coreMod := core.Module{
-		Name: mod.Name,
+func (c *Compiler) compileModule(mod *ast.Module) (*core.Module, error) {
+	coreMod := &core.Module{
+		Name: mod.Id.Name,
 	}
 
 	for _, decl := range mod.Decls {
@@ -57,19 +57,19 @@ func (c *Compiler) CompileFunction(fn *ast.FuncDecl) (core.Func, error) {
 
 func (c *Compiler) compileFunction(fn *ast.FuncDecl) (core.Func, error) {
 	coreFn := core.Func{
-		Name: core.FuncName{Name: fn.Name, Arity: len(fn.Parameters)},
+		Name: core.FuncName{Name: fn.Name.Name, Arity: len(fn.Parameters)},
 		Annotation: core.Annotation{Attrs: []core.Const{
 			core.ConstTuple{Elements: []core.Const{
 				core.Atom{Value: "function"},
 				core.ConstTuple{
-					Elements: []core.Const{core.Atom{Value: fn.Name}, core.Integer{Value: int64(len(fn.Parameters))}},
+					Elements: []core.Const{core.Atom{Value: fn.Name.Name}, core.Integer{Value: int64(len(fn.Parameters))}},
 				},
 			}},
 		}},
 	}
 
 	for _, arg := range fn.Parameters {
-		coreFn.Parameters = append(coreFn.Parameters, core.Var{Name: arg.Name.Value})
+		coreFn.Parameters = append(coreFn.Parameters, core.Var{Name: arg.Name})
 	}
 
 	var err error
@@ -103,7 +103,7 @@ func (c *Compiler) compileExpr(expr ast.Expression) core.Expr {
 	case *ast.StringLiteral:
 		return core.String{Value: expr.Value}
 	case *ast.Identifier:
-		return core.Var{Name: expr.Name.Value}
+		return core.Var{Name: expr.Name}
 	case *ast.AtomLiteral:
 		return core.Atom{Value: expr.Value}
 	case *ast.CallExpr:
@@ -126,7 +126,7 @@ func (c *Compiler) compileLocalCallExpr(expr *ast.CallExpr) core.Expr {
 	// If an identifier and identifier is not defined in function as variable,
 	// treat as an atom
 	if ident, ok := expr.Callee.(*ast.Identifier); ok {
-		expr.Callee = &ast.AtomLiteral{Value: ident.Name.Value}
+		expr.Callee = &ast.AtomLiteral{Value: ident.Name}
 	}
 
 	return core.Application{
@@ -139,11 +139,11 @@ func (c *Compiler) compileDotCallExpr(call *ast.CallExpr, dot *ast.DotExpr) core
 	// If an identifier and identifier is not defined in function as variable,
 	// treat as an atom
 	if ident, ok := dot.Target.(*ast.Identifier); ok {
-		dot.Target = &ast.AtomLiteral{Value: ident.Name.Value}
+		dot.Target = &ast.AtomLiteral{Value: ident.Name}
 	}
 	return core.InterModuleCall{
 		Module: c.compileExpr(dot.Target),
-		Func:   core.Atom{Value: dot.Attribute.Value},
+		Func:   core.Atom{Value: dot.Attribute.Name},
 		Args:   c.compileExprs(call.Arguments),
 	}
 }
@@ -151,7 +151,7 @@ func (c *Compiler) compileDotCallExpr(call *ast.CallExpr, dot *ast.DotExpr) core
 // commonModFuncs are default funcs that are included in every Erlang module
 // If these are not included, the Erlang VM will not be able to load the module.
 func commonModFuncs(mod *ast.Module) string {
-	return strings.NewReplacer("{{mod}}", mod.Name).Replace(`
+	return strings.NewReplacer("{{mod}}", mod.Id.Name).Replace(`
 module common
 
 export func module_info() {
