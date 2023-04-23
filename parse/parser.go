@@ -13,7 +13,7 @@ import (
 const maxErrors = 10
 
 var (
-	ErrTooManyErrors = errors.New("too many errors")
+	ErrBailout = errors.New("too many errors")
 )
 
 var (
@@ -37,9 +37,10 @@ var (
 
 type Parser struct {
 	tokens []lexer.Token
+	file   *token.File
 	pos    int
 
-	errors []error
+	errors token.ErrorList
 }
 
 func (p *Parser) advance(to map[token.Type]bool) {
@@ -50,7 +51,7 @@ func (p *Parser) advance(to map[token.Type]bool) {
 
 func (p *Parser) eat() lexer.Token {
 	if p.pos >= len(p.tokens) {
-		p.error(fmt.Errorf("unexpected end of file"))
+		p.error(p.file.Pos(p.file.Size-1), fmt.Errorf("unexpected end of file"))
 		return lexer.Token{Type: token.EOF}
 	}
 	token := p.tokens[p.pos]
@@ -58,13 +59,14 @@ func (p *Parser) eat() lexer.Token {
 	return token
 }
 
-func (p *Parser) eatAll(tokenType token.Type) {
+func (p *Parser) eatAll(tokenType token.Type) token.Type {
 	if p.pos >= len(p.tokens) {
-		return
+		return token.EOF
 	}
 	for p.tokens[p.pos].Type == tokenType {
 		p.pos++
 	}
+	return tokenType
 }
 
 func (p *Parser) eatOnly(tokenType token.Type, errfmt string, args ...any) lexer.Token {
@@ -74,7 +76,7 @@ func (p *Parser) eatOnly(tokenType token.Type, errfmt string, args ...any) lexer
 	}
 	if tok.Type != tokenType {
 		errmsg := fmt.Sprintf(errfmt, args...)
-		p.error(fmt.Errorf("%s, got %s", errmsg, tok.Lit))
+		p.error(tok.Pos, fmt.Errorf("%s, got %s", errmsg, tok.Lit))
 	}
 	return tok
 }
@@ -95,57 +97,27 @@ func (p *Parser) matches(types ...token.Type) bool {
 	return false
 }
 
-func (p *Parser) error(err error) {
+func (p *Parser) error(pos token.Pos, err error) {
+	epos := p.file.Position(pos)
+	n := len(p.errors)
+	if n > 0 && p.errors[n-1].Pos.Line == epos.Line {
+		return // discard - likely a spurious error
+	}
 	if len(p.errors) > maxErrors {
-		panic(ErrTooManyErrors)
+		panic(ErrBailout)
 	}
-	p.errors = append(p.errors, err)
+	p.errors.Add(epos, err)
 }
 
-func Module(filename string, src string) (mod *ast.Module, err error) {
-	lex := lexer.NewLexer(filename, src)
-	tokens := lex.All()
-	if lex.HasErrors() {
-		return nil, lex.Errors()
-	}
-
-	parser := &Parser{
-		tokens: tokens,
-	}
-
-	mod = parser.parseModuleHeader(lex.File())
-
-	defer parser.catchErrors(&err)
-
-	for {
-		tok := parser.peek()
-		if tok.Type == token.EOF {
-			break
-		}
-
-		switch tok.Type {
-		case token.Func, token.Export:
-			mod.Decls = append(mod.Decls, parser.parseFunction())
-		case token.Semicolon:
-			parser.eat()
-			continue
-		default:
-			parser.eat() // skip next token
-			parser.error(fmt.Errorf("expected func, got %q (%s)", tok.Lit, tok.Type.String()))
-			parser.advance(declStart)
-		}
-	}
-	return mod, errors.Join(parser.errors...)
-}
-
-func (p *Parser) catchErrors(out *error) {
+func (p *Parser) catchErrors() token.ErrorList {
 	if r := recover(); r != nil {
-		if r == ErrTooManyErrors {
-			*out = errors.Join(p.errors...)
+		if r == ErrBailout {
+			return p.errors
 		} else {
 			panic(r)
 		}
 	}
+	return p.errors
 }
 
 func (p *Parser) parseModuleHeader(file *token.File) *ast.Module {
@@ -162,19 +134,6 @@ func (p *Parser) parseModuleHeader(file *token.File) *ast.Module {
 		File: file,
 		Id:   ast.NewIdent(name),
 	}
-}
-
-func Function(src string) (function *ast.FuncDecl, err error) {
-	tokens, err := lexer.Lex(src)
-	if err != nil {
-		return nil, fmt.Errorf("lex: %w", err)
-	}
-
-	parser := &Parser{
-		tokens: tokens,
-	}
-	defer parser.catchErrors(&err)
-	return parser.parseFunction(), errors.Join(parser.errors...)
 }
 
 func (p *Parser) parseFunction() *ast.FuncDecl {
@@ -237,7 +196,9 @@ func (p *Parser) parseBody() []ast.Statement {
 		if statement != nil {
 			body = append(body, statement)
 		}
-		p.eatAll(token.Semicolon)
+		if tok := p.eatAll(token.Semicolon); tok == token.EOF {
+			break
+		}
 	}
 	return body
 }
@@ -287,14 +248,18 @@ func (p *Parser) parseMatch() ast.Expression {
 	if p.matches(token.Equal) {
 		equals := p.eat()
 		right := p.parseMatch()
-		if left, ok := left.(*ast.Identifier); ok {
+		if leftId, ok := left.(*ast.Identifier); ok {
 			return &ast.AssignExpr{
-				Left:   left,
+				Left:   leftId,
 				Equals: equals.Pos,
 				Right:  right,
 			}
 		} else {
-			p.error(fmt.Errorf("left hand side of assignment must be an identifier"))
+			pos := equals.Pos
+			if left != nil {
+				pos = left.Pos()
+			}
+			p.error(pos, fmt.Errorf("left hand side of assignment must be an identifier"))
 			return nil
 		}
 	} else if p.matches(token.ColonEqual) {
@@ -414,11 +379,11 @@ func (p *Parser) parseArguments() []ast.Expression {
 	if !p.matches(token.RightParen) {
 		args = append(args, p.parseExpression())
 		for p.matches(token.Comma) {
+			comma := p.eat()
 			if len(args) >= 255 {
-				p.error(fmt.Errorf("cannot have more than 255 arguments"))
+				p.error(comma.Pos, fmt.Errorf("cannot have more than 255 arguments"))
 				return args
 			}
-			p.eat()
 			args = append(args, p.parseExpression())
 		}
 	}
@@ -461,25 +426,25 @@ func (p *Parser) parsePrimary() ast.Expression {
 			RParen:     rparen.Pos,
 		}
 	default:
-		p.error(fmt.Errorf("expected expression, got %s", tok.Type.String()))
+		p.error(tok.Pos, fmt.Errorf("expected expression, got %s", tok.Type.String()))
 		return nil
 	}
 }
 
 // parseInt converts a string to an integer.
-func (p *Parser) parseInt(token lexer.Token) int64 {
-	v, err := strconv.ParseInt(token.Lit, 10, 64)
+func (p *Parser) parseInt(tok lexer.Token) int64 {
+	v, err := strconv.ParseInt(tok.Lit, 10, 64)
 	if err != nil {
-		p.error(fmt.Errorf("parse int: %s", err))
+		p.error(tok.Pos, fmt.Errorf("parse int: %s", err))
 	}
 	return v
 }
 
 // parseFloat converts a string to a floating point number
-func (p *Parser) parseFloat(token lexer.Token) float64 {
-	v, err := strconv.ParseFloat(token.Lit, 64)
+func (p *Parser) parseFloat(tok lexer.Token) float64 {
+	v, err := strconv.ParseFloat(tok.Lit, 64)
 	if err != nil {
-		p.error(fmt.Errorf("parse float: %s", err))
+		p.error(tok.Pos, fmt.Errorf("parse float: %s", err))
 	}
 	return v
 }

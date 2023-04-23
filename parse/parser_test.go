@@ -95,7 +95,7 @@ func TestParseFail(t *testing.T) {
 	}{
 		{
 			input:   "module abc; func foo() {",
-			wantErr: "unexpected end of file",
+			wantErr: "expected expression, got EOF",
 		},
 		{
 			input:   "module abc; fn foo() { return 1 }",
