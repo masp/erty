@@ -1,0 +1,48 @@
+     0  *ast.Module {
+     1  .  File: *token.File {
+     2  .  .  Name: "<test>"
+     3  .  .  Size: 52
+     4  .  }
+     5  .  Id: *ast.Identifier {
+     6  .  .  NamePos: <test>:1:8
+     7  .  .  Name: "test"
+     8  .  }
+     9  .  Decls: []ast.Decl (len = 1) {
+    10  .  .  0: *ast.FuncDecl {
+    11  .  .  .  Func: <test>:2:1
+    12  .  .  .  Export: <test>
+    13  .  .  .  LeftBrace: <test>:2:12
+    14  .  .  .  RightBrace: <test>:7:1
+    15  .  .  .  Name: *ast.Identifier {
+    16  .  .  .  .  NamePos: <test>:2:6
+    17  .  .  .  .  Name: "bad"
+    18  .  .  .  }
+    19  .  .  .  Statements: []ast.Statement (len = 3) {
+    20  .  .  .  .  0: *ast.ExprStatement {
+    21  .  .  .  .  .  Expression: *ast.Identifier {
+    22  .  .  .  .  .  .  NamePos: <test>:3:2
+    23  .  .  .  .  .  .  Name: "go"
+    24  .  .  .  .  .  }
+    25  .  .  .  .  }
+    26  .  .  .  .  1: *ast.BadStmt {
+    27  .  .  .  .  .  From: <test>:3:5
+    28  .  .  .  .  .  To: <test>:5:3
+    29  .  .  .  .  }
+    30  .  .  .  .  2: *ast.ExprStatement {
+    31  .  .  .  .  .  Expression: *ast.AssignExpr {
+    32  .  .  .  .  .  .  Left: *ast.Identifier {
+    33  .  .  .  .  .  .  .  NamePos: <test>:6:2
+    34  .  .  .  .  .  .  .  Name: "a"
+    35  .  .  .  .  .  .  }
+    36  .  .  .  .  .  .  Equals: <test>:6:4
+    37  .  .  .  .  .  .  Right: *ast.IntLiteral {
+    38  .  .  .  .  .  .  .  IntPos: <test>:6:6
+    39  .  .  .  .  .  .  .  Lit: "12"
+    40  .  .  .  .  .  .  .  Value: 12
+    41  .  .  .  .  .  .  }
+    42  .  .  .  .  .  }
+    43  .  .  .  .  }
+    44  .  .  .  }
+    45  .  .  }
+    46  .  }
+    47  }
