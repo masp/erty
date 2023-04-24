@@ -7,6 +7,7 @@ import (
 	"github.com/masp/garlang/ast"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestParseFunc will take an input func decl, print it to a string, and then compare that matches what's
@@ -22,6 +23,11 @@ func TestParseFunc(t *testing.T) {
 				a = 3 + 5
 			}`,
 			expectedAst: "expr.ast",
+		},
+		// empty statement (many semis)
+		{
+			input:       "func empty() { ; ; ; ; ; ; ; ; ; }",
+			expectedAst: "empty.ast",
 		},
 		{
 			input:       "func foo() {}",
@@ -95,7 +101,7 @@ func TestParseFail(t *testing.T) {
 	}{
 		{
 			input:   "module abc; func foo() {",
-			wantErr: "expected expression, got EOF",
+			wantErr: "unexpected end of file",
 		},
 		{
 			input:   "module abc; fn foo() { return 1 }",
@@ -109,6 +115,44 @@ func TestParseFail(t *testing.T) {
 				t.Fatalf("expected error")
 			}
 			assert.ErrorContainsf(t, err, tt.wantErr, "expected error %q, got %q", tt.wantErr, err.Error())
+		})
+	}
+
+}
+
+func TestParseBadNodes(t *testing.T) {
+	tests := []struct {
+		input       string
+		expectedAst string
+	}{
+		{
+			input: `module test
+fn bad() { return 1 }
+func hello() { return 'abc' }`,
+			expectedAst: "badfunc.ast",
+		},
+		{
+			input: `module test
+func bad() {
+	go home {
+		
+	}
+	a = 12
+}`,
+			expectedAst: "badstmt.ast",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			mod, err := Module("<test>", tt.input)
+			require.Error(t, err, "there should be at least 1 error in the program")
+			require.NotNil(t, mod)
+
+			var out bytes.Buffer
+			ast.Fprint(&out, mod.File, mod, ast.NotNilFilter)
+			g := goldie.New(t)
+			g.Assert(t, tt.expectedAst, out.Bytes())
 		})
 	}
 

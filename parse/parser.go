@@ -31,7 +31,9 @@ var (
 	}
 
 	stmtStart = map[token.Type]bool{
-		token.Return: true,
+		token.Return:     true,
+		token.Identifier: true, // assignment
+		token.LeftBrace:  true, // block/tuple
 	}
 )
 
@@ -43,10 +45,11 @@ type Parser struct {
 	errors token.ErrorList
 }
 
-func (p *Parser) advance(to map[token.Type]bool) {
+func (p *Parser) advance(to map[token.Type]bool) (tok lexer.Token) {
 	for p.peek().Type != token.EOF && !to[p.peek().Type] {
-		p.eat()
+		tok = p.eat()
 	}
+	return
 }
 
 func (p *Parser) eat() lexer.Token {
@@ -121,7 +124,7 @@ func (p *Parser) catchErrors() token.ErrorList {
 }
 
 func (p *Parser) parseModuleHeader(file *token.File) *ast.Module {
-	if tok := p.eatOnly(token.Module, "epxected 'module' keyword at start of file"); tok.Type != token.Module {
+	if tok := p.eatOnly(token.Module, "expected 'module' keyword at start of file"); tok.Type != token.Module {
 		p.advance(declStart)
 		return &ast.Module{}
 	}
@@ -136,15 +139,15 @@ func (p *Parser) parseModuleHeader(file *token.File) *ast.Module {
 	}
 }
 
-func (p *Parser) parseFunction() *ast.FuncDecl {
+func (p *Parser) parseFunction() ast.Decl {
 	var exportTok lexer.Token
 	if p.matches(token.Export) {
 		exportTok = p.eat()
 	}
 	funcTok := p.eatOnly(token.Func, "expected 'func' keyword at start of function")
 	if funcTok.Type != token.Func {
-		p.advance(declStart)
-		return nil
+		to := p.advance(declStart)
+		return &ast.BadDecl{From: funcTok.Pos, To: to.Pos}
 	}
 
 	name := p.eatOnly(token.Identifier, "expected function name after 'func' keyword")
@@ -187,17 +190,23 @@ func (p *Parser) parseParams() []*ast.Identifier {
 
 func (p *Parser) parseBody() []ast.Statement {
 	var body []ast.Statement
-	for {
+	for !p.matches(token.EOF) {
+		p.eatAll(token.Semicolon) // eat all empty statements
 		tok := p.peek()
 		if tok.Type == token.RightBrace {
 			break
 		}
+
 		statement := p.parseStatement(tok)
 		if statement != nil {
 			body = append(body, statement)
 		}
-		if tok := p.eatAll(token.Semicolon); tok == token.EOF {
-			break
+		if !p.matches(token.Semicolon, token.RightBrace, token.EOF) {
+			from := p.eat()
+			p.error(from.Pos, fmt.Errorf("expected ';' at end of statement"))
+			p.advance(exprEnd) // make sure we clear the line before we try to find a new statement
+			to := p.advance(stmtStart)
+			body = append(body, &ast.BadStmt{From: from.Pos, To: to.Pos})
 		}
 	}
 	return body

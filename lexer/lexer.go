@@ -50,8 +50,12 @@ func (l *Lexer) HasErrors() bool {
 // one of the keywords break, continue, fallthrough, or return
 // one of the operators and delimiters ++, --, ), ], or }
 func (l *Lexer) insertSemi() bool {
+	if l.prevToken.Type.IsLiteral() {
+		return true
+	}
+
 	switch l.prevToken.Type {
-	case token.Identifier, token.String, token.RightParen, token.RightBrace, token.Integer, token.Float:
+	case token.Identifier, token.RightParen, token.RightBrace:
 		return true
 	}
 	return false

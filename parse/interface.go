@@ -42,9 +42,10 @@ func Module(filename string, src string) (mod *ast.Module, err error) {
 			parser.eat()
 			continue
 		default:
-			parser.eat() // skip next token
+			from := parser.eat() // skip next token
 			parser.error(tok.Pos, fmt.Errorf("expected func, got %q (%s)", tok.Lit, tok.Type.String()))
-			parser.advance(declStart)
+			to := parser.advance(declStart)
+			mod.Decls = append(mod.Decls, &ast.BadDecl{From: from.Pos, To: to.Pos})
 		}
 	}
 	return mod, err
@@ -68,5 +69,9 @@ func Function(src string) (function *ast.FuncDecl, err error) {
 			err = errlist.Err()
 		}
 	}()
-	return parser.parseFunction(), err
+	fn := parser.parseFunction()
+	if fn, ok := fn.(*ast.FuncDecl); ok {
+		return fn, err
+	}
+	return nil, err
 }

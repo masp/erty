@@ -93,9 +93,35 @@ func (f *FuncDecl) End() token.Pos {
 	return f.RightBrace + 1
 }
 
+type BadDecl struct {
+	From, To token.Pos
+}
+
+func (b *BadDecl) isDeclaration() {}
+func (b *BadDecl) isNode()        {}
+func (b *BadDecl) Pos() token.Pos {
+	return b.From
+}
+func (b *BadDecl) End() token.Pos {
+	return b.To
+}
+
 type Statement interface {
 	Node
 	isStatement()
+}
+
+type BadStmt struct {
+	From, To token.Pos
+}
+
+func (b *BadStmt) isStatement() {}
+func (b *BadStmt) isNode()      {}
+func (b *BadStmt) Pos() token.Pos {
+	return b.From
+}
+func (b *BadStmt) End() token.Pos {
+	return b.To
 }
 
 type ExprStatement struct {
