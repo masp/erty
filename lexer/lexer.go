@@ -22,7 +22,7 @@ type Token struct {
 
 type Lexer struct {
 	file      *token.File
-	input     string
+	input     []byte
 	cursor    int // internal use by lexer
 	marker    int // internal use by lexer for backtracking
 	token     int // marks the start of the currently scanned token
@@ -61,7 +61,7 @@ func (l *Lexer) insertSemi() bool {
 	return false
 }
 
-func Lex(input string) ([]Token, error) {
+func Lex(input []byte) ([]Token, error) {
 	lex := NewLexer("<string>", input)
 	tokens := lex.All()
 	if lex.HasErrors() {
@@ -70,10 +70,10 @@ func Lex(input string) ([]Token, error) {
 	return tokens, nil
 }
 
-func NewLexer(filename string, input string) *Lexer {
+func NewLexer(filename string, input []byte) *Lexer {
 	if len(input) == 0 || input[len(input)-1] != '\x00' {
 		// termination char, faster copying than branching every time in the lexer
-		input += "\x00"
+		input = append(input, '\x00')
 	}
 	file := token.NewFile(filename, len(input))
 	return &Lexer{file: file, input: input}

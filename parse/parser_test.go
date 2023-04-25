@@ -52,7 +52,7 @@ func TestParseFunc(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			fn, err := Function(test.input)
+			fn, err := Function([]byte(test.input))
 			if err != nil {
 				t.Fatalf("parse program: %v", err)
 			}
@@ -81,7 +81,7 @@ func TestParseModule(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			mod, err := Module("<test>", test.input)
+			mod, err := Module("<test>", []byte(test.input))
 			if err != nil {
 				t.Fatalf("parse program: %v", err)
 			}
@@ -110,7 +110,7 @@ func TestParseFail(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			_, err := Module("<test>", tt.input)
+			_, err := Module("<test>", []byte(tt.input))
 			if err == nil {
 				t.Fatalf("expected error")
 			}
@@ -135,7 +135,7 @@ func hello() { return 'abc' }`,
 			input: `module test
 func bad() {
 	go home {
-		
+
 	}
 	a = 12
 }`,
@@ -145,7 +145,7 @@ func bad() {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			mod, err := Module("<test>", tt.input)
+			mod, err := Module("<test>", []byte(tt.input))
 			require.Error(t, err, "there should be at least 1 error in the program")
 			require.NotNil(t, mod)
 

@@ -23,7 +23,7 @@ func TestCompileModule(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			mod, err := parse.Module("<test>", tt.input)
+			mod, err := parse.Module("<test>", []byte(tt.input))
 			if err != nil {
 				t.Fatalf("parse program: %v", err)
 			}
@@ -57,7 +57,7 @@ func TestCompileFunc(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			fn, err := parse.Function(test.input)
+			fn, err := parse.Function([]byte(test.input))
 			if err != nil {
 				t.Fatalf("parse program: %v", err)
 			}

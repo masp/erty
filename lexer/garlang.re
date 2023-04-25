@@ -166,7 +166,7 @@ func (l *Lexer) lexRawString(quote byte) (pos token.Pos, tok token.Type, lit str
 			if yych == quote {
 				tok = token.String
 				pos = l.file.Pos(l.token)
-				lit = l.input[l.token+1:l.cursor-1]
+				lit = string(l.input[l.token+1:l.cursor-1])
 				return
 			}
 			continue

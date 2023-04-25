@@ -152,7 +152,7 @@ func TestLex(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
 			var prev Token
-			lex := NewLexer("<test>", test.input)
+			lex := NewLexer("<test>", []byte(test.input))
 			for _, expected := range test.expected {
 				tok := lex.NextToken()
 				require.Equal(t, expected.Type.String(), tok.Type.String(), "Expected token type to match. Prev: %s(%s)", prev.Type.String(), prev.Lit)
@@ -180,7 +180,7 @@ func TestLexErrors(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			lex := NewLexer("<test>", test.input)
+			lex := NewLexer("<test>", []byte(test.input))
 			for {
 				tok := lex.NextToken()
 				if tok.Type == token.EOF {
@@ -210,7 +210,7 @@ func FuzzLex(f *testing.F) {
 	f.Add([]byte(`'0`))
 
 	f.Fuzz(func(t *testing.T, input []byte) {
-		lex := NewLexer("<test>", string(input))
+		lex := NewLexer("<test>", input)
 		for {
 			tok := lex.NextToken()
 			if tok.Type == token.EOF {

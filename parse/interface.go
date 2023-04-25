@@ -8,7 +8,7 @@ import (
 	"github.com/masp/garlang/token"
 )
 
-func Module(filename string, src string) (mod *ast.Module, err error) {
+func Module(filename string, src []byte) (mod *ast.Module, err error) {
 	lex := lexer.NewLexer(filename, src)
 	tokens := lex.All()
 	if lex.HasErrors() {
@@ -51,7 +51,7 @@ func Module(filename string, src string) (mod *ast.Module, err error) {
 	return mod, err
 }
 
-func Function(src string) (function *ast.FuncDecl, err error) {
+func Function(src []byte) (function *ast.FuncDecl, err error) {
 	lex := lexer.NewLexer("<string>", src)
 	tokens := lex.All()
 	if lex.HasErrors() {

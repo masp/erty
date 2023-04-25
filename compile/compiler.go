@@ -169,7 +169,7 @@ export func module_info(Value) {
 //
 // The functions are very simple: just call 'erlang':module_info/1 with the appropriate atom.
 func addBaseFuncs(mod *ast.Module) *ast.Module {
-	commonMod, err := parse.Module("<builtin>", commonModFuncs(mod))
+	commonMod, err := parse.Module("<builtin>", []byte(commonModFuncs(mod)))
 	if err != nil {
 		panic(err)
 	}
