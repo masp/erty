@@ -124,6 +124,18 @@ func (f *File) Pos(offset int) Pos {
 	return Pos(offset + 1)
 }
 
+// Offset returns the offset for the given line and column
+func (f *File) Offset(p Position) int {
+	if p.Line <= 0 || p.Line > len(f.lines) {
+		return -1
+	}
+	offset := f.lines[p.Line-1]
+	if p.Column > 0 && p.Column <= f.Size-offset {
+		offset += p.Column - 1
+	}
+	return offset
+}
+
 // Line returns the line number for the given file position p;
 // p must be a Pos value in that file or NoPos.
 func (f *File) Line(p Pos) int {
