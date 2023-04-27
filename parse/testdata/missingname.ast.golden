@@ -1,0 +1,16 @@
+     0  *ast.Module {
+     1  .  File: *token.File {
+     2  .  .  Name: "<test>"
+     3  .  .  Size: 41
+     4  .  }
+     5  .  Id: *ast.Identifier {
+     6  .  .  NamePos: <test>:1:8
+     7  .  .  Name: "test"
+     8  .  }
+     9  .  Decls: []ast.Decl (len = 1) {
+    10  .  .  0: *ast.BadDecl {
+    11  .  .  .  From: <test>:1:14
+    12  .  .  .  To: <test>:2:22
+    13  .  .  }
+    14  .  }
+    15  }

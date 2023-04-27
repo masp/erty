@@ -143,6 +143,10 @@ func bad() {
 }`,
 			expectedAst: "badstmt.ast",
 		},
+		{
+			input:       "module test; func\nfunc test() {return 1}",
+			expectedAst: "missingname.ast",
+		},
 	}
 
 	for _, tt := range tests {
@@ -176,6 +180,14 @@ fn bad() { return 1 }
 		{
 			input:        `module test; func (){}`,
 			expectedErrs: "badid.errors",
+		},
+		{
+			input:        "module test; func\n\n\nfunc test() {return 1}",
+			expectedErrs: "missingname.errors",
+		},
+		{
+			input:        "mo",
+			expectedErrs: "nomodule.errors",
 		},
 	}
 
