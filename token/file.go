@@ -72,6 +72,11 @@ func (p Pos) IsValid() bool {
 	return p != NoPos
 }
 
+// Offset returns file offset
+func (p Pos) Offset() int {
+	return int(p) - 1
+}
+
 // -----------------------------------------------------------------------------
 // File
 
