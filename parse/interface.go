@@ -10,6 +10,7 @@ import (
 
 func Module(filename string, src []byte) (mod *ast.Module, err error) {
 	lex := lexer.NewLexer(filename, src)
+	mod = &ast.Module{File: lex.File()}
 	tokens := lex.All()
 	if lex.HasErrors() {
 		return nil, lex.Errors()
