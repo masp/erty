@@ -21,7 +21,7 @@ import (
 // A Position is valid if the line number is > 0.
 type Position struct {
 	Filename string // filename, if any
-	Offset   Pos    // offset, starting at 0
+	Offset   Pos    // offset, starting at 1
 	Line     int    // line number, starting at 1
 	Column   int    // column number, starting at 1 (byte count)
 }
@@ -124,16 +124,19 @@ func (f *File) Pos(offset int) Pos {
 	return Pos(offset + 1)
 }
 
-// Offset returns the offset for the given line and column
-func (f *File) Offset(p Position) int {
-	if p.Line <= 0 || p.Line > len(f.lines) {
-		return -1
+// LineStart returns the offset in the file for the start of line X, line starting at 1.
+// If out of bounds, the line returned is closest to the requested line.
+func (f *File) LineStart(line int) int {
+	if line <= 0 {
+		panic("line must be >0")
 	}
-	offset := f.lines[p.Line-1]
-	if p.Column > 0 && p.Column <= f.Size-offset {
-		offset += p.Column - 1
+	if line > f.LineCount() {
+		panic("line must be <=LineCount()")
 	}
-	return offset
+	f.lineMut.Lock()
+	defer f.lineMut.Unlock()
+	// f.lines is the offset of the newline character before the line (with -1 at the start)
+	return f.lines[line-1] + 1
 }
 
 // Line returns the line number for the given file position p;
@@ -154,10 +157,9 @@ func (f *File) Position(p Pos) (pos Position) {
 			panic(fmt.Sprintf("invalid Pos value %d (should be in [%d, %d])", p, 1, f.Size))
 		}
 		f.lineMut.Lock()
-		if i := sort.SearchInts(f.lines, offset) - 1; i >= 0 {
-			pos.Line, pos.Column = i+1, offset-f.lines[i]
-		}
-		f.lineMut.Unlock()
+		defer f.lineMut.Unlock()
+		pos.Line = sort.SearchInts(f.lines, offset)
+		pos.Column = offset - f.lines[pos.Line-1]
 	}
 	return
 }

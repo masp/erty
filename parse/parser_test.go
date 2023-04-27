@@ -2,9 +2,11 @@ package parse
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/masp/garlang/ast"
+	"github.com/masp/garlang/token"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -156,4 +158,37 @@ func bad() {
 		})
 	}
 
+}
+
+func TestAllErrors(t *testing.T) {
+	tests := []struct {
+		input        string
+		expectedErrs string
+	}{
+		{
+			input: `module test
+
+
+fn bad() { return 1 }
+`,
+			expectedErrs: "badfunc.errors",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			mod, err := Module("<test>", []byte(tt.input))
+			require.Error(t, err, "there should be at least 1 error in the program")
+			require.NotNil(t, mod)
+
+			errlist := err.(token.ErrorList)
+
+			var out bytes.Buffer
+			for _, err := range errlist {
+				fmt.Fprintf(&out, "%s: %v\n", err.Pos, err.Msg)
+			}
+			g := goldie.New(t)
+			g.Assert(t, tt.expectedErrs, out.Bytes())
+		})
+	}
 }
