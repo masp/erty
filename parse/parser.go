@@ -151,6 +151,10 @@ func (p *Parser) parseFunction() ast.Decl {
 	}
 
 	name := p.eatOnly(token.Identifier, "expected function name after 'func' keyword")
+	if name.Type != token.Identifier {
+		to := p.advance(declStart)
+		return &ast.BadDecl{From: funcTok.Pos, To: to.Pos}
+	}
 	p.eatOnly(token.LeftParen, "expected '(' after function name")
 	params := p.parseParams()
 

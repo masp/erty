@@ -136,7 +136,7 @@ func (f *File) LineStart(line int) int {
 		panic("line must be >0")
 	}
 	if line > f.LineCount() {
-		panic("line must be <=LineCount()")
+		return f.Size - 1
 	}
 	f.lineMut.Lock()
 	defer f.lineMut.Unlock()

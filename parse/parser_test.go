@@ -173,6 +173,10 @@ fn bad() { return 1 }
 `,
 			expectedErrs: "badfunc.errors",
 		},
+		{
+			input:        `module test; func (){}`,
+			expectedErrs: "badid.errors",
+		},
 	}
 
 	for _, tt := range tests {
@@ -187,7 +191,7 @@ fn bad() { return 1 }
 			for _, err := range errlist {
 				fmt.Fprintf(&out, "%s: %v\n", err.Pos, err.Msg)
 			}
-			g := goldie.New(t)
+			g := goldie.New(t, goldie.WithFixtureDir("testdata/errors"))
 			g.Assert(t, tt.expectedErrs, out.Bytes())
 		})
 	}
