@@ -13,7 +13,8 @@ func Module(filename string, src []byte) (mod *ast.Module, err error) {
 	mod = &ast.Module{File: lex.File()}
 	tokens := lex.All()
 	if lex.HasErrors() {
-		return nil, lex.Errors()
+		err = lex.Errors()
+		return
 	}
 
 	parser := &Parser{
@@ -49,7 +50,7 @@ func Module(filename string, src []byte) (mod *ast.Module, err error) {
 			mod.Decls = append(mod.Decls, &ast.BadDecl{From: from.Pos, To: to.Pos})
 		}
 	}
-	return mod, err
+	return
 }
 
 func Function(src []byte) (function *ast.FuncDecl, err error) {
