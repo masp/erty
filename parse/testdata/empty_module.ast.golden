@@ -1,0 +1,10 @@
+     0  *ast.Module {
+     1  .  File: *token.File {
+     2  .  .  Name: "<test>"
+     3  .  .  Size: 12
+     4  .  }
+     5  .  Id: *ast.Identifier {
+     6  .  .  NamePos: <test>:1:8
+     7  .  .  Name: "test"
+     8  .  }
+     9  }
