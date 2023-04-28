@@ -108,7 +108,7 @@ func TestParseFail(t *testing.T) {
 	}{
 		{
 			input:   "module abc; func foo() {",
-			wantErr: "unexpected end of file",
+			wantErr: "expected '}' to end function body, got EOF",
 		},
 		{
 			input:   "module abc; fn foo() { return 1 }",
@@ -175,6 +175,10 @@ func TestAllErrors(t *testing.T) {
 		expectedErrs string
 	}{
 		{
+			input:        "module test; func bad(a b c) {}",
+			expectedErrs: "nocommaparam.errors",
+		},
+		{
 			input: `module test
 
 
@@ -197,10 +201,6 @@ fn bad() { return 1 }
 		{
 			input:        "module {}",
 			expectedErrs: "badmodule.errors",
-		},
-		{
-			input:        "module test; func bad(a b c) {}",
-			expectedErrs: "nocommaparam.errors",
 		},
 	}
 

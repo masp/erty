@@ -36,6 +36,10 @@ var (
 		token.Identifier: true, // assignment
 		token.LeftBrace:  true, // block/tuple
 	}
+
+	paramStart = map[token.Type]bool{
+		token.Identifier: true,
+	}
 )
 
 type Parser struct {
@@ -55,7 +59,6 @@ func (p *Parser) advance(to map[token.Type]bool) (tok lexer.Token) {
 
 func (p *Parser) eat() lexer.Token {
 	if p.pos >= len(p.tokens) {
-		p.error(p.file.Pos(p.file.Size-1), fmt.Errorf("unexpected end of file"))
 		return lexer.Token{Type: token.EOF}
 	}
 	token := p.tokens[p.pos]
@@ -75,12 +78,9 @@ func (p *Parser) eatAll(tokenType token.Type) token.Type {
 
 func (p *Parser) eatOnly(tokenType token.Type, errfmt string, args ...any) lexer.Token {
 	tok := p.eat()
-	if tok.Type == token.EOF {
-		return tok
-	}
 	if tok.Type != tokenType {
 		errmsg := fmt.Sprintf(errfmt, args...)
-		p.error(tok.Pos, fmt.Errorf("%s, got %s", errmsg, tok.Lit))
+		p.error(tok.Pos, fmt.Errorf("%s, got %s", errmsg, tok.String()))
 	}
 	return tok
 }
@@ -185,7 +185,7 @@ func (p *Parser) parseParams() []*ast.Identifier {
 		}
 		if i > 0 {
 			if tok := p.eatOnly(token.Comma, "expected ',' between parameters"); tok.Type != token.Comma {
-				p.advance(exprEnd)
+				p.advance(paramStart)
 			}
 		}
 		name := p.eatOnly(token.Identifier, "expected parameter name")

@@ -20,6 +20,14 @@ type Token struct {
 	Lit  string
 }
 
+func (t Token) String() string {
+	if t.Lit != "" {
+		return t.Lit
+	} else {
+		return t.Type.String()
+	}
+}
+
 type Lexer struct {
 	file      *token.File
 	input     []byte
