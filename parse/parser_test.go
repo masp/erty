@@ -80,6 +80,11 @@ func TestParseModule(t *testing.T) {
 				}`,
 			expectedAst: "module.ast",
 		},
+		{
+			// empty module
+			input:       "module test",
+			expectedAst: "empty_module.ast",
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
@@ -192,6 +197,10 @@ fn bad() { return 1 }
 		{
 			input:        "module {}",
 			expectedErrs: "badmodule.errors",
+		},
+		{
+			input:        "module test; func bad(a b c) {}",
+			expectedErrs: "nocommaparam.errors",
 		},
 	}
 

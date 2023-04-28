@@ -135,6 +135,10 @@ func (p *Parser) parseModuleHeader(mod *ast.Module, file *token.File) error {
 		return ErrBadModule
 	}
 	mod.Id = ast.NewIdent(name)
+
+	if !p.matches(token.Semicolon, token.EOF) {
+		p.eatOnly(token.Semicolon, "expected ';' after module name")
+	}
 	return nil
 }
 
@@ -174,7 +178,7 @@ func (p *Parser) parseFunction() ast.Decl {
 func (p *Parser) parseParams() []*ast.Identifier {
 	var params []*ast.Identifier
 	i := 0
-	for {
+	for !p.matches(token.EOF) {
 		if p.matches(token.RightParen) {
 			p.eat()
 			break
@@ -185,7 +189,9 @@ func (p *Parser) parseParams() []*ast.Identifier {
 			}
 		}
 		name := p.eatOnly(token.Identifier, "expected parameter name")
-		params = append(params, ast.NewIdent(name))
+		if name.Type == token.Identifier {
+			params = append(params, ast.NewIdent(name))
+		}
 		i++
 	}
 	return params
