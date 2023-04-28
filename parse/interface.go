@@ -30,7 +30,12 @@ func Module(filename string, src []byte) (mod *ast.Module, err error) {
 		}
 	}()
 
-	mod = parser.parseModuleHeader(lex.File())
+	err = parser.parseModuleHeader(mod, lex.File())
+	if err != nil {
+		// exit early if module header is bad (likely not our file)
+		return mod, err
+	}
+
 	for {
 		tok := parser.peek()
 		if tok.Type == token.EOF {

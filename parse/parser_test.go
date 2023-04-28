@@ -189,6 +189,10 @@ fn bad() { return 1 }
 			input:        "mo",
 			expectedErrs: "nomodule.errors",
 		},
+		{
+			input:        "module {}",
+			expectedErrs: "badmodule.errors",
+		},
 	}
 
 	for _, tt := range tests {

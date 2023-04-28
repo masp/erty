@@ -13,7 +13,8 @@ import (
 const maxErrors = 10
 
 var (
-	ErrBailout = errors.New("too many errors")
+	ErrBailout   = errors.New("too many errors")
+	ErrBadModule = errors.New("module header is not valid")
 )
 
 var (
@@ -123,20 +124,18 @@ func (p *Parser) catchErrors() token.ErrorList {
 	return p.errors
 }
 
-func (p *Parser) parseModuleHeader(file *token.File) *ast.Module {
+func (p *Parser) parseModuleHeader(mod *ast.Module, file *token.File) error {
 	if tok := p.eatOnly(token.Module, "expected 'module' keyword at start of file"); tok.Type != token.Module {
 		p.advance(declStart)
-		return &ast.Module{}
+		return ErrBadModule
 	}
 	name := p.eatOnly(token.Identifier, "expected module name after 'module' keyword")
 	if name.Type != token.Identifier {
 		p.advance(declStart)
-		return &ast.Module{}
+		return ErrBadModule
 	}
-	return &ast.Module{
-		File: file,
-		Id:   ast.NewIdent(name),
-	}
+	mod.Id = ast.NewIdent(name)
+	return nil
 }
 
 func (p *Parser) parseFunction() ast.Decl {
