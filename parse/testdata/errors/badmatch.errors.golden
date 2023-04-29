@@ -1,0 +1,2 @@
+<test>: expected '}' to end function body, got EOF
+<test>:1:28: expected expression, got RightParen
