@@ -67,13 +67,16 @@ func (p *Parser) eat() lexer.Token {
 }
 
 func (p *Parser) eatAll(tokenType token.Type) token.Type {
-	if p.pos >= len(p.tokens) {
-		return token.EOF
+	for {
+		if p.pos >= len(p.tokens) {
+			return token.EOF
+		}
+		if p.tokens[p.pos].Type == tokenType {
+			p.pos++
+		} else {
+			return tokenType
+		}
 	}
-	for p.tokens[p.pos].Type == tokenType {
-		p.pos++
-	}
-	return tokenType
 }
 
 func (p *Parser) eatOnly(tokenType token.Type, errfmt string, args ...any) lexer.Token {
@@ -380,6 +383,10 @@ func (p *Parser) parseCall() ast.Expression {
 		} else if p.matches(token.Period) {
 			dot := p.eat()
 			name := p.eatOnly(token.Identifier, "expected identifier after '.'")
+			if name.Type != token.Identifier {
+				p.advance(exprEnd)
+				return &ast.BadExpr{From: name.Pos, To: name.Pos}
+			}
 			callee = &ast.DotExpr{
 				Dot:       dot.Pos,
 				Target:    callee,

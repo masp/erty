@@ -51,6 +51,11 @@ func TestParseFunc(t *testing.T) {
 			input:       "func recursive() { mod.fn(1).fn(2).fn(3) }",
 			expectedAst: "recursive.ast",
 		},
+		{
+			// assignment
+			input:       "func assign() { a = 1.23; b = (2+3)*4; c = 'atom' }",
+			expectedAst: "assign.ast",
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
@@ -174,6 +179,11 @@ func TestAllErrors(t *testing.T) {
 		input        string
 		expectedErrs string
 	}{
+		{
+			// bad match expressoin
+			input:        "module test; func bad() { () := 10 }",
+			expectedErrs: "badmatch.errors",
+		},
 		{
 			input:        "module test; func bad(a b c) {}",
 			expectedErrs: "nocommaparam.errors",

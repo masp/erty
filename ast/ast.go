@@ -150,6 +150,19 @@ type Expression interface {
 	isExpression()
 }
 
+type BadExpr struct {
+	From, To token.Pos
+}
+
+func (b *BadExpr) isExpression() {}
+func (b *BadExpr) isNode()       {}
+func (b *BadExpr) Pos() token.Pos {
+	return b.From
+}
+func (b *BadExpr) End() token.Pos {
+	return b.To
+}
+
 type CallExpr struct {
 	Callee    Expression
 	Arguments []Expression
