@@ -51,6 +51,27 @@ type Decl interface {
 	isDeclaration()
 }
 
+// TypeDecl defines a new type, and looks like `[export] type <name> <definition>`
+type TypeDecl struct {
+	Type   token.Pos // `type` keyword
+	Export token.Pos // IsValid() if `export` keyword exists
+
+	Name       *Identifier // the new type name
+	Definition Expression  // the type value
+}
+
+func (t *TypeDecl) isDeclaration() {}
+func (t *TypeDecl) isNode()        {}
+func (t *TypeDecl) Pos() token.Pos {
+	if t.Export.IsValid() {
+		return t.Export
+	}
+	return t.Type
+}
+func (t *TypeDecl) End() token.Pos {
+	return t.Definition.End()
+}
+
 type ConstDecl struct {
 	Const      token.Pos   // `const` keyword
 	Identifier *Identifier // left hand of assignment
@@ -167,7 +188,6 @@ func (b *BadExpr) End() token.Pos {
 // a method list in an interface type, or a parameter/result declaration
 // in a signature.
 // Field.Names is nil for unnamed parameters (parameter lists which only contain types)
-// and embedded struct fields. In the latter case, the field name is the type name.
 type Field struct {
 	Names []*Identifier // field/method/(type) parameter names; or nil
 	Type  Expression    // field/method/parameter type; or nil
@@ -241,10 +261,8 @@ func (f *FieldList) NumFields() int {
 }
 
 type TupleType struct {
-	Tuple    token.Pos  // `tuple` keyword
-	LBracket token.Pos  // `[` token
-	Elts     *FieldList // types for elements
-	RBracket token.Pos  // `]` token
+	Tuple token.Pos  // `tuple` keyword
+	Elts  *FieldList // types for elements
 }
 
 func (t *TupleType) isExpression() {}
@@ -253,7 +271,7 @@ func (t *TupleType) Pos() token.Pos {
 	return t.Tuple
 }
 func (t *TupleType) End() token.Pos {
-	return t.RBracket + 1
+	return t.Elts.End()
 }
 
 type CallExpr struct {

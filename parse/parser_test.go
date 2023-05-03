@@ -90,6 +90,11 @@ func TestParseModule(t *testing.T) {
 			input:       "module test",
 			expectedAst: "empty_module.ast",
 		},
+		{
+			// type decl
+			input:       "module test; type Foo tuple[int, int, int]",
+			expectedAst: "type.ast",
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {

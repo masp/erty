@@ -1,5 +1,7 @@
 package lexer
 
+//go:generate re2go garlang.re -o garlang.go -i
+
 import (
 	"errors"
 
@@ -107,8 +109,6 @@ func (l *Lexer) All() []Token {
 func (l *Lexer) literal() string          { return string(l.input[l.token:l.cursor]) }
 func (l *Lexer) pos() token.Pos           { return l.file.Pos(l.cursor) }
 func (l *Lexer) position() token.Position { return l.file.Position(l.pos()) }
-
-//go:generate re2go garlang.re -o garlang.go -i
 
 func (l *Lexer) NextToken() (tok Token) {
 	pos, typ, lit, err := l.lex()

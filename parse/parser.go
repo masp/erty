@@ -145,6 +145,33 @@ func (p *Parser) parseModuleHeader(mod *ast.Module, file *token.File) error {
 	return nil
 }
 
+func (p *Parser) parseTypeDecl() ast.Decl {
+	var exportTok lexer.Token
+	if p.matches(token.Export) {
+		exportTok = p.eat()
+	}
+
+	typeTok := p.eatOnly(token.TypeKeyword, "expected 'type' keyword at start of type declaration")
+	if typeTok.Type != token.TypeKeyword {
+		to := p.advance(declStart)
+		return &ast.BadDecl{From: typeTok.Pos, To: to.Pos}
+	}
+
+	name := p.eatOnly(token.Identifier, "expected type name after 'type' keyword")
+	if name.Type != token.Identifier {
+		to := p.advance(declStart)
+		return &ast.BadDecl{From: typeTok.Pos, To: to.Pos}
+	}
+
+	def := p.parseType()
+	return &ast.TypeDecl{
+		Export:     exportTok.Pos,
+		Type:       typeTok.Pos,
+		Name:       ast.NewIdent(name),
+		Definition: def,
+	}
+}
+
 func (p *Parser) parseFunction() ast.Decl {
 	var exportTok lexer.Token
 	if p.matches(token.Export) {
@@ -452,7 +479,8 @@ func (p *Parser) parsePrimary() ast.Expression {
 		}
 	default:
 		p.error(tok.Pos, fmt.Errorf("expected expression, got %s", tok.Type.String()))
-		return nil
+		to := p.advance(exprEnd)
+		return &ast.BadExpr{From: tok.Pos, To: to.Pos}
 	}
 }
 
@@ -472,4 +500,54 @@ func (p *Parser) parseFloat(tok lexer.Token) float64 {
 		p.error(tok.Pos, fmt.Errorf("parse float: %s", err))
 	}
 	return v
+}
+
+// parseType only parses types expressions. Types can either be identifiers,
+// or one of the built in types like lists, tuples, binaries, etc...
+func (p *Parser) parseType() ast.Expression {
+	tok := p.eat()
+	switch tok.Type {
+	case token.Identifier: // external type, built-in type (like string)
+		ident := ast.NewIdent(tok)
+		if p.matches(token.Period) {
+			// dot expr
+			dot := p.eat()
+			attr := p.eatOnly(token.Identifier, "expected identifier after '.'")
+			if attr.Type != token.Identifier {
+				return &ast.BadExpr{From: dot.Pos, To: attr.Pos}
+			}
+			return &ast.DotExpr{Target: ident, Dot: dot.Pos, Attribute: ast.NewIdent(attr)}
+		}
+		return ident
+	case token.Tuple: // tuple[...]
+		return p.parseTupleType(tok)
+	default:
+		p.error(tok.Pos, fmt.Errorf("expected type, got %s", tok.Type.String()))
+		return &ast.BadExpr{From: tok.Pos, To: tok.Pos}
+	}
+}
+
+// parseTupleType parses a tuple of the form `tuple[<fieldlist>]` and returns
+// the resulting expression. A tuple can look like:
+// - tuple[] (only empty tuple {} allowed)
+// - tuple[int, int] (2 ints)
+func (p *Parser) parseTupleType(tupleTok lexer.Token) *ast.TupleType {
+	lbracket := p.eatOnly(token.LSquareBracket, "expected '[' after 'tuple'")
+	fields := &ast.FieldList{}
+	for !p.matches(token.RSquareBracket) {
+		typExpr := p.parseType()
+		fields.List = append(fields.List, &ast.Field{Type: typExpr})
+		if p.matches(token.RSquareBracket) {
+			break
+		}
+		p.eatOnly(token.Comma, "missing ',' in tuple type list")
+	}
+
+	fields.Opening = lbracket.Pos
+	rbracket := p.eatOnly(token.RSquareBracket, "expected ']' after tuple field list")
+	fields.Closing = rbracket.Pos
+	return &ast.TupleType{
+		Tuple: tupleTok.Pos,
+		Elts:  fields,
+	}
 }

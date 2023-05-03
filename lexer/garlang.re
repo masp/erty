@@ -53,6 +53,7 @@ func (l *Lexer) lex() (pos token.Pos, tok token.Type, lit string, err error) {
         "export" { tok = token.Export; lit = "export"; return }
 		"map" { tok = token.Map; lit = "map"; return }
 		"tuple" { tok = token.Tuple; lit = "tuple"; return }
+		"type" { tok = token.TypeKeyword; lit = "type"; return }
 
 		// Operators and punctuation
 		"(" { tok = token.LParen; lit = "("; return }

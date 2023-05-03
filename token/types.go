@@ -54,6 +54,7 @@ const (
 	Module
 	Tuple
 	Map
+	TypeKeyword
 
 	EOF Type = 999 // must be at end
 )

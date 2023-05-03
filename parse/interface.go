@@ -36,6 +36,10 @@ func Module(filename string, src []byte) (mod *ast.Module, err error) {
 		return mod, err
 	}
 
+	if !parser.matches(token.EOF) {
+		parser.eatOnly(token.Semicolon, "expected ';' after module declaration")
+	}
+
 	for {
 		tok := parser.peek()
 		if tok.Type == token.EOF {
@@ -45,6 +49,14 @@ func Module(filename string, src []byte) (mod *ast.Module, err error) {
 		switch tok.Type {
 		case token.Func, token.Export:
 			mod.Decls = append(mod.Decls, parser.parseFunction())
+			if !parser.matches(token.EOF) {
+				parser.eatOnly(token.Semicolon, "expected ';' after function declaration")
+			}
+		case token.TypeKeyword:
+			mod.Decls = append(mod.Decls, parser.parseTypeDecl())
+			if !parser.matches(token.EOF) {
+				parser.eatOnly(token.Semicolon, "expected ';' after type declaration")
+			}
 		case token.Semicolon:
 			parser.eat()
 			continue
