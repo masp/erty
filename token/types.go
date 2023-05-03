@@ -35,13 +35,16 @@ const (
 
 	// Other
 	Period
+	Colon
 	Equal
 	ColonEqual
 	Semicolon
-	LeftParen
-	RightParen
-	LeftBrace
-	RightBrace
+	LParen
+	RParen
+	LCurlyBracket  // '{'
+	RCurlyBracket  // '}'
+	LSquareBracket // '['
+	RSquareBracket // ']'
 	Comma
 
 	// Keywords
@@ -49,43 +52,48 @@ const (
 	Export
 	Return
 	Module
+	Tuple
+	Map
 
 	EOF Type = 999 // must be at end
 )
 
 var types = [...]string{
-	Invalid:      "Invalid",
-	Comment:      "Comment",
-	Atom:         "Atom",
-	Identifier:   "Identifier",
-	String:       "String",
-	Integer:      "IntLiteral",
-	Float:        "FloatLiteral",
-	Bang:         "Bang",
-	EqualEqual:   "EqualEqual",
-	BangEqual:    "BangEqual",
-	LessEqual:    "LessEqual",
-	Less:         "Less",
-	GreaterEqual: "GreaterEqual",
-	Greater:      "Greater",
-	Plus:         "Plus",
-	Minus:        "Minus",
-	Slash:        "Slash",
-	Star:         "Star",
-	Period:       "Period",
-	Equal:        "Equal",
-	ColonEqual:   "ColonEqual",
-	Semicolon:    "Semicolon",
-	LeftParen:    "LeftParen",
-	RightParen:   "RightParen",
-	LeftBrace:    "LeftBrace",
-	RightBrace:   "RightBrace",
-	Comma:        "Comma",
-	Func:         "Func",
-	Export:       "Export",
-	Return:       "Return",
-	Module:       "Module",
-	EOF:          "EOF",
+	Invalid:        "Invalid",
+	Comment:        "Comment",
+	Atom:           "Atom",
+	Identifier:     "Identifier",
+	String:         "String",
+	Integer:        "IntLiteral",
+	Float:          "FloatLiteral",
+	Bang:           "Bang",
+	EqualEqual:     "EqualEqual",
+	BangEqual:      "BangEqual",
+	LessEqual:      "LessEqual",
+	Less:           "Less",
+	GreaterEqual:   "GreaterEqual",
+	Greater:        "Greater",
+	Plus:           "Plus",
+	Minus:          "Minus",
+	Slash:          "Slash",
+	Star:           "Star",
+	Period:         "Period",
+	Colon:          "Colon",
+	Equal:          "Equal",
+	ColonEqual:     "ColonEqual",
+	Semicolon:      "Semicolon",
+	LParen:         "LeftParen",
+	RParen:         "RightParen",
+	LCurlyBracket:  "LeftBrace",
+	RCurlyBracket:  "RightBrace",
+	LSquareBracket: "LeftSquareBracket",
+	RSquareBracket: "RightSquareBracket",
+	Comma:          "Comma",
+	Func:           "Func",
+	Export:         "Export",
+	Return:         "Return",
+	Module:         "Module",
+	EOF:            "EOF",
 }
 
 func (tok Type) String() string {

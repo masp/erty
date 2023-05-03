@@ -63,7 +63,8 @@ func (l *Lexer) insertSemi() bool {
 	}
 
 	switch l.prevToken.Type {
-	case token.Identifier, token.RightParen, token.RightBrace:
+	case token.Identifier, token.RParen, token.RCurlyBracket,
+		token.RSquareBracket, token.Return:
 		return true
 	}
 	return false
@@ -114,6 +115,7 @@ func (l *Lexer) NextToken() (tok Token) {
 	if err != nil {
 		l.error(pos, err)
 	}
+
 	tok.Pos = pos
 	tok.Lit = lit
 	tok.Type = typ

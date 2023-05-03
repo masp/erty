@@ -24,17 +24,17 @@ var (
 	}
 
 	exprEnd = map[token.Type]bool{
-		token.EOF:        true,
-		token.Semicolon:  true,
-		token.RightParen: true,
-		token.RightBrace: true,
-		token.Comma:      true,
+		token.EOF:           true,
+		token.Semicolon:     true,
+		token.RParen:        true,
+		token.RCurlyBracket: true,
+		token.Comma:         true,
 	}
 
 	stmtStart = map[token.Type]bool{
-		token.Return:     true,
-		token.Identifier: true, // assignment
-		token.LeftBrace:  true, // block/tuple
+		token.Return:        true,
+		token.Identifier:    true, // assignment
+		token.LCurlyBracket: true, // block/tuple
 	}
 
 	paramStart = map[token.Type]bool{
@@ -161,12 +161,12 @@ func (p *Parser) parseFunction() ast.Decl {
 		to := p.advance(declStart)
 		return &ast.BadDecl{From: funcTok.Pos, To: to.Pos}
 	}
-	p.eatOnly(token.LeftParen, "expected '(' after function name")
+	p.eatOnly(token.LParen, "expected '(' after function name")
 	params := p.parseParams()
 
-	lbrace := p.eatOnly(token.LeftBrace, "expected '{' after function parameters")
+	lbrace := p.eatOnly(token.LCurlyBracket, "expected '{' after function parameters")
 	body := p.parseBody()
-	rbrace := p.eatOnly(token.RightBrace, "expected '}' to end function body")
+	rbrace := p.eatOnly(token.RCurlyBracket, "expected '}' to end function body")
 	return &ast.FuncDecl{
 		Name:       ast.NewIdent(name),
 		Export:     exportTok.Pos,
@@ -182,7 +182,7 @@ func (p *Parser) parseParams() []*ast.Identifier {
 	var params []*ast.Identifier
 	i := 0
 	for !p.matches(token.EOF) {
-		if p.matches(token.RightParen) {
+		if p.matches(token.RParen) {
 			p.eat()
 			break
 		}
@@ -205,7 +205,7 @@ func (p *Parser) parseBody() []ast.Statement {
 	for !p.matches(token.EOF) {
 		p.eatAll(token.Semicolon) // eat all empty statements
 		tok := p.peek()
-		if tok.Type == token.RightBrace {
+		if tok.Type == token.RCurlyBracket {
 			break
 		}
 
@@ -213,7 +213,7 @@ func (p *Parser) parseBody() []ast.Statement {
 		if statement != nil {
 			body = append(body, statement)
 		}
-		if !p.matches(token.Semicolon, token.RightBrace, token.EOF) {
+		if !p.matches(token.Semicolon, token.RCurlyBracket, token.EOF) {
 			from := p.eat()
 			p.error(from.Pos, fmt.Errorf("expected ';' at end of statement"))
 			p.advance(exprEnd) // make sure we clear the line before we try to find a new statement
@@ -370,7 +370,7 @@ func (p *Parser) parseUnary() ast.Expression {
 func (p *Parser) parseCall() ast.Expression {
 	callee := p.parsePrimary()
 	for {
-		if p.matches(token.LeftParen) {
+		if p.matches(token.LParen) {
 			lparen := p.eat()
 			args := p.parseArguments()
 			rparen := p.eat()
@@ -401,7 +401,7 @@ func (p *Parser) parseCall() ast.Expression {
 
 func (p *Parser) parseArguments() []ast.Expression {
 	var args []ast.Expression
-	if !p.matches(token.RightParen) {
+	if !p.matches(token.RParen) {
 		args = append(args, p.parseExpression())
 		for p.matches(token.Comma) {
 			comma := p.eat()
@@ -442,9 +442,9 @@ func (p *Parser) parsePrimary() ast.Expression {
 			QuotePos: tok.Pos,
 			Value:    tok.Lit,
 		}
-	case token.LeftParen:
+	case token.LParen:
 		expr := p.parseExpression()
-		rparen := p.eatOnly(token.RightParen, "unclosed '(' around expression")
+		rparen := p.eatOnly(token.RParen, "unclosed '(' around expression")
 		return &ast.ParenExpr{
 			Expression: expr,
 			LParen:     tok.Pos,

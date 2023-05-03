@@ -163,6 +163,99 @@ func (b *BadExpr) End() token.Pos {
 	return b.To
 }
 
+// A Field represents a Field declaration list in a struct type,
+// a method list in an interface type, or a parameter/result declaration
+// in a signature.
+// Field.Names is nil for unnamed parameters (parameter lists which only contain types)
+// and embedded struct fields. In the latter case, the field name is the type name.
+type Field struct {
+	Names []*Identifier // field/method/(type) parameter names; or nil
+	Type  Expression    // field/method/parameter type; or nil
+}
+
+func (f *Field) Pos() token.Pos {
+	if len(f.Names) > 0 {
+		return f.Names[0].Pos()
+	}
+	if f.Type != nil {
+		return f.Type.Pos()
+	}
+	return token.NoPos
+}
+
+func (f *Field) End() token.Pos {
+	if f.Type != nil {
+		return f.Type.End()
+	}
+	if len(f.Names) > 0 {
+		return f.Names[len(f.Names)-1].End()
+	}
+	return token.NoPos
+}
+
+// A FieldList represents a list of Fields, enclosed by parentheses,
+// curly braces, or square brackets.
+type FieldList struct {
+	Opening token.Pos // position of opening parenthesis/brace/bracket, if any
+	List    []*Field  // field list; or nil
+	Closing token.Pos // position of closing parenthesis/brace/bracket, if any
+}
+
+func (f *FieldList) Pos() token.Pos {
+	if f.Opening.IsValid() {
+		return f.Opening
+	}
+	// the list should not be empty in this case;
+	// be conservative and guard against bad ASTs
+	if len(f.List) > 0 {
+		return f.List[0].Pos()
+	}
+	return token.NoPos
+}
+
+func (f *FieldList) End() token.Pos {
+	if f.Closing.IsValid() {
+		return f.Closing + 1
+	}
+	// the list should not be empty in this case;
+	// be conservative and guard against bad ASTs
+	if n := len(f.List); n > 0 {
+		return f.List[n-1].End()
+	}
+	return token.NoPos
+}
+
+// NumFields returns the number of parameters or struct fields represented by a FieldList.
+func (f *FieldList) NumFields() int {
+	n := 0
+	if f != nil {
+		for _, g := range f.List {
+			m := len(g.Names)
+			if m == 0 {
+				m = 1
+			}
+			n += m
+		}
+	}
+	return n
+}
+
+type TupleType struct {
+	Tuple    token.Pos  // `tuple` keyword
+	LBracket token.Pos  // `[` token
+	Elts     *FieldList // types for elements
+	RBracket token.Pos  // `]` token
+}
+
+func (t *TupleType) isExpression() {}
+func (t *TupleType) isNode()       {}
+func (t *TupleType) Pos() token.Pos {
+	return t.Tuple
+}
+func (t *TupleType) End() token.Pos {
+	return t.RBracket + 1
+}
+
 type CallExpr struct {
 	Callee    Expression
 	Arguments []Expression
@@ -287,6 +380,23 @@ func (s *FloatLiteral) Pos() token.Pos {
 }
 func (s *FloatLiteral) End() token.Pos {
 	return s.FloatPos + token.Pos(len(s.Lit))
+}
+
+type KVExpr struct {
+	Key, Value Expression
+	Colon      token.Pos
+	Comma      token.Pos // Invalid if no comma after element
+}
+
+func (m *KVExpr) isNode() {}
+func (m *KVExpr) Pos() token.Pos {
+	return m.Key.Pos()
+}
+func (m *KVExpr) End() token.Pos {
+	if m.Comma.IsValid() {
+		return m.Comma + 1
+	}
+	return m.Value.End()
 }
 
 func NewIdent(tok lexer.Token) *Identifier {

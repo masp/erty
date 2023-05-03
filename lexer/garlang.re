@@ -51,12 +51,17 @@ func (l *Lexer) lex() (pos token.Pos, tok token.Type, lit string, err error) {
 		"module" { tok = token.Module; lit = "module"; return }
         "func" { tok = token.Func; lit = "func"; return }
         "export" { tok = token.Export; lit = "export"; return }
+		"map" { tok = token.Map; lit = "map"; return }
+		"tuple" { tok = token.Tuple; lit = "tuple"; return }
 
 		// Operators and punctuation
-		"(" { tok = token.LeftParen; lit = "("; return }
-		")" { tok = token.RightParen; lit = ")"; return }
-		"{" { tok = token.LeftBrace; lit = "{"; return }
-		"}" { tok = token.RightBrace; lit = "}"; return }
+		"(" { tok = token.LParen; lit = "("; return }
+		")" { tok = token.RParen; lit = ")"; return }
+		"{" { tok = token.LCurlyBracket; lit = "{"; return }
+		"}" { tok = token.RCurlyBracket; lit = "}"; return }
+		"[" { tok = token.LSquareBracket; lit = "["; return }
+		"]" { tok = token.RSquareBracket; lit = "]"; return }
+		":" { tok = token.Colon; lit = ":"; return }
 		":=" { tok = token.ColonEqual; lit = ":="; return }
 		"=" { tok = token.Equal; lit = "="; return }
         "==" { tok = token.EqualEqual; lit = "=="; return }
