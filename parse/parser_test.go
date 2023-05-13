@@ -79,7 +79,7 @@ func TestParseModule(t *testing.T) {
 	}{
 		{
 			input: `module test
-				export func expr() {
+				func expr() {
 					test = "hello world"
 					a = 3 + 5
 				}`,

@@ -1,53 +1,52 @@
      0  *ast.FuncDecl {
      1  .  Func: 1
-     2  .  Export: 0
-     3  .  LeftBrace: 13
-     4  .  RightBrace: 35
-     5  .  Name: *ast.Identifier {
-     6  .  .  NamePos: 6
-     7  .  .  Name: "call"
-     8  .  }
-     9  .  Statements: []ast.Statement (len = 2) {
-    10  .  .  0: *ast.ExprStatement {
-    11  .  .  .  Expression: *ast.CallExpr {
-    12  .  .  .  .  Callee: *ast.DotExpr {
-    13  .  .  .  .  .  Target: *ast.Identifier {
-    14  .  .  .  .  .  .  NamePos: 15
-    15  .  .  .  .  .  .  Name: "mod"
-    16  .  .  .  .  .  }
-    17  .  .  .  .  .  Dot: 18
-    18  .  .  .  .  .  Attribute: *ast.Identifier {
-    19  .  .  .  .  .  .  NamePos: 19
-    20  .  .  .  .  .  .  Name: "fn"
-    21  .  .  .  .  .  }
-    22  .  .  .  .  }
-    23  .  .  .  .  Arguments: []ast.Expression (len = 1) {
-    24  .  .  .  .  .  0: *ast.IntLiteral {
-    25  .  .  .  .  .  .  IntPos: 22
-    26  .  .  .  .  .  .  Lit: "1"
-    27  .  .  .  .  .  .  Value: 1
-    28  .  .  .  .  .  }
-    29  .  .  .  .  }
-    30  .  .  .  .  LeftParen: 21
-    31  .  .  .  .  RightParen: 23
-    32  .  .  .  }
-    33  .  .  }
-    34  .  .  1: *ast.ExprStatement {
-    35  .  .  .  Expression: *ast.CallExpr {
-    36  .  .  .  .  Callee: *ast.Identifier {
-    37  .  .  .  .  .  NamePos: 26
-    38  .  .  .  .  .  Name: "local"
-    39  .  .  .  .  }
-    40  .  .  .  .  Arguments: []ast.Expression (len = 1) {
-    41  .  .  .  .  .  0: *ast.IntLiteral {
-    42  .  .  .  .  .  .  IntPos: 32
-    43  .  .  .  .  .  .  Lit: "2"
-    44  .  .  .  .  .  .  Value: 2
-    45  .  .  .  .  .  }
-    46  .  .  .  .  }
-    47  .  .  .  .  LeftParen: 31
-    48  .  .  .  .  RightParen: 33
-    49  .  .  .  }
-    50  .  .  }
-    51  .  }
-    52  }
+     2  .  LeftBrace: 13
+     3  .  RightBrace: 35
+     4  .  Name: *ast.Identifier {
+     5  .  .  NamePos: 6
+     6  .  .  Name: "call"
+     7  .  }
+     8  .  Statements: []ast.Statement (len = 2) {
+     9  .  .  0: *ast.ExprStatement {
+    10  .  .  .  Expression: *ast.CallExpr {
+    11  .  .  .  .  Callee: *ast.DotExpr {
+    12  .  .  .  .  .  Target: *ast.Identifier {
+    13  .  .  .  .  .  .  NamePos: 15
+    14  .  .  .  .  .  .  Name: "mod"
+    15  .  .  .  .  .  }
+    16  .  .  .  .  .  Dot: 18
+    17  .  .  .  .  .  Attribute: *ast.Identifier {
+    18  .  .  .  .  .  .  NamePos: 19
+    19  .  .  .  .  .  .  Name: "fn"
+    20  .  .  .  .  .  }
+    21  .  .  .  .  }
+    22  .  .  .  .  Arguments: []ast.Expression (len = 1) {
+    23  .  .  .  .  .  0: *ast.IntLiteral {
+    24  .  .  .  .  .  .  IntPos: 22
+    25  .  .  .  .  .  .  Lit: "1"
+    26  .  .  .  .  .  .  Value: 1
+    27  .  .  .  .  .  }
+    28  .  .  .  .  }
+    29  .  .  .  .  LeftParen: 21
+    30  .  .  .  .  RightParen: 23
+    31  .  .  .  }
+    32  .  .  }
+    33  .  .  1: *ast.ExprStatement {
+    34  .  .  .  Expression: *ast.CallExpr {
+    35  .  .  .  .  Callee: *ast.Identifier {
+    36  .  .  .  .  .  NamePos: 26
+    37  .  .  .  .  .  Name: "local"
+    38  .  .  .  .  }
+    39  .  .  .  .  Arguments: []ast.Expression (len = 1) {
+    40  .  .  .  .  .  0: *ast.IntLiteral {
+    41  .  .  .  .  .  .  IntPos: 32
+    42  .  .  .  .  .  .  Lit: "2"
+    43  .  .  .  .  .  .  Value: 2
+    44  .  .  .  .  .  }
+    45  .  .  .  .  }
+    46  .  .  .  .  LeftParen: 31
+    47  .  .  .  .  RightParen: 33
+    48  .  .  .  }
+    49  .  .  }
+    50  .  }
+    51  }

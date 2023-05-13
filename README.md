@@ -21,7 +21,7 @@ hello() ->
 ```garlang
 module hello
 
-export func hello() {
+func hello() {
     io.format("Hello, world!~n")
 }
 ```

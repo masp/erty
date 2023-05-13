@@ -154,11 +154,11 @@ func commonModFuncs(mod *ast.Module) string {
 	return strings.NewReplacer("{{mod}}", mod.Id.Name).Replace(`
 module common
 
-export func module_info() {
+func module_info() {
 	return erlang.module_info('{{mod}}')
 }
 
-export func module_info(Value) {
+func module_info(Value) {
 	return erlang.module_info('{{mod}}', Value)
 }
 `)

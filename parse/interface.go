@@ -47,7 +47,7 @@ func Module(filename string, src []byte) (mod *ast.Module, err error) {
 		}
 
 		switch tok.Type {
-		case token.Func, token.Export:
+		case token.Func:
 			mod.Decls = append(mod.Decls, parser.parseFunction())
 			if !parser.matches(token.EOF) {
 				parser.eatOnly(token.Semicolon, "expected ';' after function declaration")

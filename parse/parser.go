@@ -146,11 +146,6 @@ func (p *Parser) parseModuleHeader(mod *ast.Module, file *token.File) error {
 }
 
 func (p *Parser) parseTypeDecl() ast.Decl {
-	var exportTok lexer.Token
-	if p.matches(token.Export) {
-		exportTok = p.eat()
-	}
-
 	typeTok := p.eatOnly(token.TypeKeyword, "expected 'type' keyword at start of type declaration")
 	if typeTok.Type != token.TypeKeyword {
 		to := p.advance(declStart)
@@ -165,7 +160,6 @@ func (p *Parser) parseTypeDecl() ast.Decl {
 
 	def := p.parseType()
 	return &ast.TypeDecl{
-		Export:     exportTok.Pos,
 		Type:       typeTok.Pos,
 		Name:       ast.NewIdent(name),
 		Definition: def,
@@ -173,10 +167,6 @@ func (p *Parser) parseTypeDecl() ast.Decl {
 }
 
 func (p *Parser) parseFunction() ast.Decl {
-	var exportTok lexer.Token
-	if p.matches(token.Export) {
-		exportTok = p.eat()
-	}
 	funcTok := p.eatOnly(token.Func, "expected 'func' keyword at start of function")
 	if funcTok.Type != token.Func {
 		to := p.advance(declStart)
@@ -196,7 +186,6 @@ func (p *Parser) parseFunction() ast.Decl {
 	rbrace := p.eatOnly(token.RCurlyBracket, "expected '}' to end function body")
 	return &ast.FuncDecl{
 		Name:       ast.NewIdent(name),
-		Export:     exportTok.Pos,
 		Func:       funcTok.Pos,
 		Statements: body,
 		Parameters: params,

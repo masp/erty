@@ -16,7 +16,7 @@ func TestCompileModule(t *testing.T) {
 		expected string
 	}{
 		{
-			input:    `module mod; export func a() { return 1 }`,
+			input:    `module mod; func a() { return 1 }`,
 			expected: "mod.core",
 		},
 	}

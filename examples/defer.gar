@@ -1,22 +1,22 @@
 module defer
 
-export type State struct {
+type State struct {
     Count int
     Stage atom
 }
 
-export type Result interface {
+type Result interface {
     'ok'
     ('ok', state State)
     ('ok', map[atom]any)
     ('error', rc int)
 }
 
-export func map() {
+func map() {
 
 }
 
-export func add(s State) (res Result) { 
+func add(s State) (res Result) { 
     // equivalent to assigning a new variable
     // S = S#{Count => S#Count+1}
     s.Count = s.Count + 1
@@ -46,7 +46,7 @@ export func add(s State) (res Result) {
     return A+B
 }
 
-export func catch() {
+func catch() {
     defer func() {
         err = catch()
         if 

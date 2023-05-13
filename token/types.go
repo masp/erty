@@ -49,7 +49,6 @@ const (
 
 	// Keywords
 	Func
-	Export
 	Return
 	Module
 	Tuple
@@ -91,7 +90,6 @@ var types = [...]string{
 	RSquareBracket: "RightSquareBracket",
 	Comma:          "Comma",
 	Func:           "Func",
-	Export:         "Export",
 	Return:         "Return",
 	Module:         "Module",
 	EOF:            "EOF",

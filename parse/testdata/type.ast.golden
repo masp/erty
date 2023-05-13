@@ -10,38 +10,37 @@
      9  .  Decls: []ast.Decl (len = 1) {
     10  .  .  0: *ast.TypeDecl {
     11  .  .  .  Type: <test>:1:14
-    12  .  .  .  Export: <test>
-    13  .  .  .  Name: *ast.Identifier {
-    14  .  .  .  .  NamePos: <test>:1:19
-    15  .  .  .  .  Name: "Foo"
-    16  .  .  .  }
-    17  .  .  .  Definition: *ast.TupleType {
-    18  .  .  .  .  Tuple: <test>:1:23
-    19  .  .  .  .  Elts: *ast.FieldList {
-    20  .  .  .  .  .  Opening: <test>:1:28
-    21  .  .  .  .  .  List: []*ast.Field (len = 3) {
-    22  .  .  .  .  .  .  0: *ast.Field {
-    23  .  .  .  .  .  .  .  Type: *ast.Identifier {
-    24  .  .  .  .  .  .  .  .  NamePos: <test>:1:29
-    25  .  .  .  .  .  .  .  .  Name: "int"
-    26  .  .  .  .  .  .  .  }
-    27  .  .  .  .  .  .  }
-    28  .  .  .  .  .  .  1: *ast.Field {
-    29  .  .  .  .  .  .  .  Type: *ast.Identifier {
-    30  .  .  .  .  .  .  .  .  NamePos: <test>:1:34
-    31  .  .  .  .  .  .  .  .  Name: "int"
-    32  .  .  .  .  .  .  .  }
-    33  .  .  .  .  .  .  }
-    34  .  .  .  .  .  .  2: *ast.Field {
-    35  .  .  .  .  .  .  .  Type: *ast.Identifier {
-    36  .  .  .  .  .  .  .  .  NamePos: <test>:1:39
-    37  .  .  .  .  .  .  .  .  Name: "int"
-    38  .  .  .  .  .  .  .  }
-    39  .  .  .  .  .  .  }
-    40  .  .  .  .  .  }
-    41  .  .  .  .  .  Closing: <test>:1:42
-    42  .  .  .  .  }
-    43  .  .  .  }
-    44  .  .  }
-    45  .  }
-    46  }
+    12  .  .  .  Name: *ast.Identifier {
+    13  .  .  .  .  NamePos: <test>:1:19
+    14  .  .  .  .  Name: "Foo"
+    15  .  .  .  }
+    16  .  .  .  Definition: *ast.TupleType {
+    17  .  .  .  .  Tuple: <test>:1:23
+    18  .  .  .  .  Elts: *ast.FieldList {
+    19  .  .  .  .  .  Opening: <test>:1:28
+    20  .  .  .  .  .  List: []*ast.Field (len = 3) {
+    21  .  .  .  .  .  .  0: *ast.Field {
+    22  .  .  .  .  .  .  .  Type: *ast.Identifier {
+    23  .  .  .  .  .  .  .  .  NamePos: <test>:1:29
+    24  .  .  .  .  .  .  .  .  Name: "int"
+    25  .  .  .  .  .  .  .  }
+    26  .  .  .  .  .  .  }
+    27  .  .  .  .  .  .  1: *ast.Field {
+    28  .  .  .  .  .  .  .  Type: *ast.Identifier {
+    29  .  .  .  .  .  .  .  .  NamePos: <test>:1:34
+    30  .  .  .  .  .  .  .  .  Name: "int"
+    31  .  .  .  .  .  .  .  }
+    32  .  .  .  .  .  .  }
+    33  .  .  .  .  .  .  2: *ast.Field {
+    34  .  .  .  .  .  .  .  Type: *ast.Identifier {
+    35  .  .  .  .  .  .  .  .  NamePos: <test>:1:39
+    36  .  .  .  .  .  .  .  .  Name: "int"
+    37  .  .  .  .  .  .  .  }
+    38  .  .  .  .  .  .  }
+    39  .  .  .  .  .  }
+    40  .  .  .  .  .  Closing: <test>:1:42
+    41  .  .  .  .  }
+    42  .  .  .  }
+    43  .  .  }
+    44  .  }
+    45  }

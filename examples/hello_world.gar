@@ -1,5 +1,5 @@
 module hello_world
 
-export func main() {
+func main() {
     return "hello world!"
 }

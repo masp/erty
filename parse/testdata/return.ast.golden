@@ -1,23 +1,22 @@
      0  *ast.FuncDecl {
      1  .  Func: 1
-     2  .  Export: 0
-     3  .  LeftBrace: 12
-     4  .  RightBrace: 24
-     5  .  Name: *ast.Identifier {
-     6  .  .  NamePos: 6
-     7  .  .  Name: "ret"
-     8  .  }
-     9  .  Statements: []ast.Statement (len = 1) {
-    10  .  .  0: *ast.ReturnStatement {
-    11  .  .  .  Return: 0
-    12  .  .  .  Expression: *ast.UnaryExpr {
-    13  .  .  .  .  Op: Minus
-    14  .  .  .  .  OpPos: 21
-    15  .  .  .  .  Right: *ast.Identifier {
-    16  .  .  .  .  .  NamePos: 22
-    17  .  .  .  .  .  Name: "b"
-    18  .  .  .  .  }
-    19  .  .  .  }
-    20  .  .  }
-    21  .  }
-    22  }
+     2  .  LeftBrace: 12
+     3  .  RightBrace: 24
+     4  .  Name: *ast.Identifier {
+     5  .  .  NamePos: 6
+     6  .  .  Name: "ret"
+     7  .  }
+     8  .  Statements: []ast.Statement (len = 1) {
+     9  .  .  0: *ast.ReturnStatement {
+    10  .  .  .  Return: 0
+    11  .  .  .  Expression: *ast.UnaryExpr {
+    12  .  .  .  .  Op: Minus
+    13  .  .  .  .  OpPos: 21
+    14  .  .  .  .  Right: *ast.Identifier {
+    15  .  .  .  .  .  NamePos: 22
+    16  .  .  .  .  .  Name: "b"
+    17  .  .  .  .  }
+    18  .  .  .  }
+    19  .  .  }
+    20  .  }
+    21  }

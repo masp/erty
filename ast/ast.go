@@ -5,27 +5,6 @@ import (
 	"github.com/masp/garlang/token"
 )
 
-// These are the list of all possible AST nodes. The AST nodes follow these rules:
-// - A program is a sequence of declarations.
-// - A block is either a function block or a constant block.
-// - A constant block is the const keyword followed by an identifier and a value.
-// - A function declaration is a function name followed by a sequence of parameters enclosed in parentheses, followed by a sequence of statements enclosed in braces.
-// - A statement is either an assignment statement or an expression statement.
-// - An assignment statement assigns a value or expression to an identifier.
-// - A value can be either a string enclosed in double quotes or a decimal number.
-// - An expression statement is an expression that evaluates to a value.
-//
-// The following are examples of expressions:
-// - Addition: 1 + 2 (<number> + <number>)
-// - Subtraction: 1 - 2 (<number> - <number>)
-// - Multiplication: 1 * 2 (<number> * <number>)
-// - Division: 1 / 2 (<number> / <number>)
-// - Modulus: 1 % 2 (<number> % <number>)
-// - Function call: add(1, 2) (<identifier> (<expression>, <expression>))
-// - Variable: x (<identifier>)
-// - String: "hello" (<string>)
-// - Number: 123 (<number>)
-
 type Node interface {
 	isNode()
 	Pos() token.Pos
@@ -53,8 +32,7 @@ type Decl interface {
 
 // TypeDecl defines a new type, and looks like `[export] type <name> <definition>`
 type TypeDecl struct {
-	Type   token.Pos // `type` keyword
-	Export token.Pos // IsValid() if `export` keyword exists
+	Type token.Pos // `type` keyword
 
 	Name       *Identifier // the new type name
 	Definition Expression  // the type value
@@ -63,9 +41,6 @@ type TypeDecl struct {
 func (t *TypeDecl) isDeclaration() {}
 func (t *TypeDecl) isNode()        {}
 func (t *TypeDecl) Pos() token.Pos {
-	if t.Export.IsValid() {
-		return t.Export
-	}
 	return t.Type
 }
 func (t *TypeDecl) End() token.Pos {
@@ -89,7 +64,6 @@ func (c *ConstDecl) End() token.Pos {
 
 type FuncDecl struct {
 	Func       token.Pos // `func` keyword
-	Export     token.Pos // IsValid() if `export` keyword exists
 	LeftBrace  token.Pos // `{` and `}` token
 	RightBrace token.Pos
 
@@ -99,15 +73,12 @@ type FuncDecl struct {
 }
 
 func (f *FuncDecl) IsPublic() bool {
-	return f.Export.IsValid()
+	return f.Name.Name[0] != '_'
 }
 
 func (f *FuncDecl) isDeclaration() {}
 func (f *FuncDecl) isNode()        {}
 func (f *FuncDecl) Pos() token.Pos {
-	if f.Export.IsValid() {
-		return f.Export
-	}
 	return f.Func
 }
 func (f *FuncDecl) End() token.Pos {
@@ -439,6 +410,9 @@ func (i *Identifier) Pos() token.Pos {
 }
 func (i *Identifier) End() token.Pos {
 	return i.NamePos + token.Pos(len(i.Name))
+}
+func (i *Identifier) IsPublic() bool {
+	return i.Name[0] != '_'
 }
 
 type ParenExpr struct {

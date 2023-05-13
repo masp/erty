@@ -1,10 +1,9 @@
      0  *ast.FuncDecl {
      1  .  Func: 1
-     2  .  Export: 0
-     3  .  LeftBrace: 12
-     4  .  RightBrace: 13
-     5  .  Name: *ast.Identifier {
-     6  .  .  NamePos: 6
-     7  .  .  Name: "foo"
-     8  .  }
-     9  }
+     2  .  LeftBrace: 12
+     3  .  RightBrace: 13
+     4  .  Name: *ast.Identifier {
+     5  .  .  NamePos: 6
+     6  .  .  Name: "foo"
+     7  .  }
+     8  }

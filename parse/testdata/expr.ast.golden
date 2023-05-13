@@ -1,48 +1,47 @@
      0  *ast.FuncDecl {
      1  .  Func: 1
-     2  .  Export: 0
-     3  .  LeftBrace: 13
-     4  .  RightBrace: 51
-     5  .  Name: *ast.Identifier {
-     6  .  .  NamePos: 6
-     7  .  .  Name: "expr"
-     8  .  }
-     9  .  Statements: []ast.Statement (len = 2) {
-    10  .  .  0: *ast.ExprStatement {
-    11  .  .  .  Expression: *ast.AssignExpr {
-    12  .  .  .  .  Left: *ast.Identifier {
-    13  .  .  .  .  .  NamePos: 19
-    14  .  .  .  .  .  Name: "test"
-    15  .  .  .  .  }
-    16  .  .  .  .  Equals: 24
-    17  .  .  .  .  Right: *ast.AtomLiteral {
-    18  .  .  .  .  .  QuotePos: 26
-    19  .  .  .  .  .  Value: "hello"
-    20  .  .  .  .  }
-    21  .  .  .  }
-    22  .  .  }
-    23  .  .  1: *ast.ExprStatement {
-    24  .  .  .  Expression: *ast.AssignExpr {
-    25  .  .  .  .  Left: *ast.Identifier {
-    26  .  .  .  .  .  NamePos: 38
-    27  .  .  .  .  .  Name: "a"
-    28  .  .  .  .  }
-    29  .  .  .  .  Equals: 40
-    30  .  .  .  .  Right: *ast.BinaryExpr {
-    31  .  .  .  .  .  Left: *ast.IntLiteral {
-    32  .  .  .  .  .  .  IntPos: 42
-    33  .  .  .  .  .  .  Lit: "3"
-    34  .  .  .  .  .  .  Value: 3
-    35  .  .  .  .  .  }
-    36  .  .  .  .  .  OpPos: 44
-    37  .  .  .  .  .  Op: Plus
-    38  .  .  .  .  .  Right: *ast.IntLiteral {
-    39  .  .  .  .  .  .  IntPos: 46
-    40  .  .  .  .  .  .  Lit: "5"
-    41  .  .  .  .  .  .  Value: 5
-    42  .  .  .  .  .  }
-    43  .  .  .  .  }
-    44  .  .  .  }
-    45  .  .  }
-    46  .  }
-    47  }
+     2  .  LeftBrace: 13
+     3  .  RightBrace: 51
+     4  .  Name: *ast.Identifier {
+     5  .  .  NamePos: 6
+     6  .  .  Name: "expr"
+     7  .  }
+     8  .  Statements: []ast.Statement (len = 2) {
+     9  .  .  0: *ast.ExprStatement {
+    10  .  .  .  Expression: *ast.AssignExpr {
+    11  .  .  .  .  Left: *ast.Identifier {
+    12  .  .  .  .  .  NamePos: 19
+    13  .  .  .  .  .  Name: "test"
+    14  .  .  .  .  }
+    15  .  .  .  .  Equals: 24
+    16  .  .  .  .  Right: *ast.AtomLiteral {
+    17  .  .  .  .  .  QuotePos: 26
+    18  .  .  .  .  .  Value: "hello"
+    19  .  .  .  .  }
+    20  .  .  .  }
+    21  .  .  }
+    22  .  .  1: *ast.ExprStatement {
+    23  .  .  .  Expression: *ast.AssignExpr {
+    24  .  .  .  .  Left: *ast.Identifier {
+    25  .  .  .  .  .  NamePos: 38
+    26  .  .  .  .  .  Name: "a"
+    27  .  .  .  .  }
+    28  .  .  .  .  Equals: 40
+    29  .  .  .  .  Right: *ast.BinaryExpr {
+    30  .  .  .  .  .  Left: *ast.IntLiteral {
+    31  .  .  .  .  .  .  IntPos: 42
+    32  .  .  .  .  .  .  Lit: "3"
+    33  .  .  .  .  .  .  Value: 3
+    34  .  .  .  .  .  }
+    35  .  .  .  .  .  OpPos: 44
+    36  .  .  .  .  .  Op: Plus
+    37  .  .  .  .  .  Right: *ast.IntLiteral {
+    38  .  .  .  .  .  .  IntPos: 46
+    39  .  .  .  .  .  .  Lit: "5"
+    40  .  .  .  .  .  .  Value: 5
+    41  .  .  .  .  .  }
+    42  .  .  .  .  }
+    43  .  .  .  }
+    44  .  .  }
+    45  .  }
+    46  }
