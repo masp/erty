@@ -153,10 +153,14 @@ type result interface {
 }
 
 func match(in result) int {
+    let a tup{int, int} = {1, 2}
+    let b []string = [1, 2]
+    a := {1, 2}
+    a = {1, 2}
     match in {
-    case {'ok', []int{A, ...}}: // A is type int (how do we know? when is_integer(A) is true)
+    case {'ok', []int{H, T...}}: // A is type int (how do we know? when is_integer(A) is true)
         sumInts(in)
-    case {'ok', []string{A, ...}}:
+    case {'ok', []string[H, T...]}:
         sumFloats(in)
     }
 }

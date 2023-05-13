@@ -142,7 +142,54 @@ func (p *Parser) parseModuleHeader(mod *ast.Module, file *token.File) error {
 	if !p.matches(token.Semicolon, token.EOF) {
 		p.eatOnly(token.Semicolon, "expected ';' after module name")
 	}
+	p.eatAll(token.Semicolon)
+
+	mod.Imports = p.parseImports(mod)
 	return nil
+}
+
+func (p *Parser) parseImports(mod *ast.Module) []*ast.ImportDecl {
+	var imports []*ast.ImportDecl
+	for p.matches(token.Import) {
+		imp := p.parseImport(mod)
+		if imp != nil {
+			mod.Decls = append(mod.Decls, imp)
+		}
+
+		if imp, ok := imp.(*ast.ImportDecl); ok {
+			imports = append(imports, imp)
+			if !p.matches(token.Semicolon, token.EOF) {
+				p.eatOnly(token.Semicolon, "expected ';' after import declaration")
+			}
+			p.eatAll(token.Semicolon)
+		}
+	}
+	return imports
+}
+
+func (p *Parser) parseImport(mod *ast.Module) ast.Decl {
+	importTok := p.eatOnly(token.Import, "expected 'import' keyword at start of import declaration")
+	if importTok.Type != token.Import {
+		to := p.advance(declStart)
+		return &ast.BadDecl{From: importTok.Pos, To: to.Pos}
+	}
+
+	var alias *ast.Identifier
+	if p.matches(token.Identifier) {
+		alias = ast.NewIdent(p.eat())
+	}
+
+	path := p.eatOnly(token.String, "expected module path after 'import' keyword")
+	if path.Type != token.String {
+		to := p.advance(declStart)
+		return &ast.BadDecl{From: importTok.Pos, To: to.Pos}
+	}
+
+	return &ast.ImportDecl{
+		Import: importTok.Pos,
+		Alias:  alias,
+		Path:   &ast.StringLiteral{QuotePos: path.Pos, Value: path.Lit},
+	}
 }
 
 func (p *Parser) parseTypeDecl() ast.Decl {

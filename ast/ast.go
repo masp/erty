@@ -15,6 +15,8 @@ type Module struct {
 	File  *token.File
 	Id    *Identifier
 	Decls []Decl
+
+	Imports []*ImportDecl
 }
 
 func (p *Module) isNode() {}
@@ -28,6 +30,21 @@ func (p *Module) End() token.Pos {
 type Decl interface {
 	Node
 	isDeclaration()
+}
+
+type ImportDecl struct {
+	Import token.Pos      // `import` keyword
+	Alias  *Identifier    // name to import (default to last element of path). Can be nil.
+	Path   *StringLiteral // value of import
+}
+
+func (i *ImportDecl) isDeclaration() {}
+func (i *ImportDecl) isNode()        {}
+func (i *ImportDecl) Pos() token.Pos {
+	return i.Import
+}
+func (i *ImportDecl) End() token.Pos {
+	return i.Path.End()
 }
 
 // TypeDecl defines a new type, and looks like `[export] type <name> <definition>`

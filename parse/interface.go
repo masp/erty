@@ -36,10 +36,6 @@ func Module(filename string, src []byte) (mod *ast.Module, err error) {
 		return mod, err
 	}
 
-	if !parser.matches(token.EOF) {
-		parser.eatOnly(token.Semicolon, "expected ';' after module declaration")
-	}
-
 	for {
 		tok := parser.peek()
 		if tok.Type == token.EOF {

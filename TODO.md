@@ -4,7 +4,7 @@
 [X] - Remove export keyword to be just prefixed with _ and everything else exported like Python
 [ ] - Add function calls for io.format to do hello world
     - Add idea of import of modules
-      - Add keyword
+      - X Add keyword
       - Add import parsing
       - Add lookup logic for modules
     - Add scopes and referencing objects within a scope

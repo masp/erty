@@ -20,12 +20,16 @@ func add(s State) (res Result) {
     // equivalent to assigning a new variable
     // S = S#{Count => S#Count+1}
     s.Count = s.Count + 1
+    s = {Count: s.Count + 1, s...}
 
     defer func() {
         match err = recover() {
-            'ok' => return
-            ('badmatch', cause) => 'error'
-            _ => raise(err)
+        case 'ok':
+            return
+        case {'badmatch', cause}:
+            return {'error', cause}
+        default: 
+            raise(err)
         }
     }()
 
@@ -38,18 +42,19 @@ func add(s State) (res Result) {
         s.Count += 1
     }
 
-    v := b()
-    if b == 'wrong' {
-        return 'error'
+    let B int = match b() {
+    case {'error', cause any}:
+        return {'error', cause}
+    case {'ok', B int}:
+        B
     }
-    {ok, B} := v
+    
     return A+B
 }
 
 func catch() {
-    defer func() {
-        err = catch()
-        if 
-    }
+    catch(func() {
+
+    })
     dangerous()
 }
