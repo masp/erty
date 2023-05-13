@@ -54,6 +54,7 @@ const (
 	Tuple
 	Map
 	TypeKeyword
+	Import
 
 	EOF Type = 999 // must be at end
 )
