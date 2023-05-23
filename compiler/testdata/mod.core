@@ -1,0 +1,18 @@
+module 'mod' ['module_info'/0,'module_info'/1,'a'/0]
+    attributes [
+        ]
+'module_info'/0 =
+    (fun () ->
+        call 'erlang':'module_info'
+            ('mod')
+        -| [{'function',{'module_info',0}}])
+'module_info'/1 =
+    (fun (Value) ->
+        call 'erlang':'module_info'
+            ('mod',Value)
+        -| [{'function',{'module_info',1}}])
+'a'/0 =
+    (fun () ->
+        1
+        -| [{'function',{'a',0}}])
+end

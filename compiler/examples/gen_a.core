@@ -1,0 +1,7 @@
+module 'a' [] attributes []
+
+'a'/0 =
+    (fun () ->
+        'a'
+        -| [{'function',{'a',0}}] )
+end
