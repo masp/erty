@@ -147,6 +147,28 @@ func TestLex(t *testing.T) {
 				{Type: token.EOF},
 			},
 		},
+		// Comments
+		{
+			input: `// This is a comment
+			foo = "bar" // This is another comment`,
+			expected: []Token{
+				{Type: token.Comment, Lit: "// This is a comment"},
+				{Type: token.Identifier, Lit: "foo"},
+				{Type: token.Equal, Lit: "="},
+				{Type: token.String, Lit: "bar"},
+				{Type: token.Comment, Lit: "// This is another comment"},
+				{Type: token.EOF},
+			},
+		},
+		// Multiline comment
+		{
+			input: `/* This is a multiline comment
+			foo = "bar" // This is another comment */`,
+			expected: []Token{
+				{Type: token.Comment, Lit: "/* This is a multiline comment\n\t\t\tfoo = \"bar\" // This is another comment */"},
+				{Type: token.EOF},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -175,6 +197,11 @@ func TestLexErrors(t *testing.T) {
 		{
 			input:    "'0",
 			expected: "<test>:1:1: unterminated string",
+		},
+		// Unterminated multiline comment
+		{
+			input:    "/* This is a multiline comment",
+			expected: "<test>:1:1: unterminated multiline comment",
 		},
 	}
 

@@ -45,6 +45,8 @@ func (l *Lexer) lex() (pos token.Pos, tok token.Type, lit string, err error) {
 
 		// Comments
 		"//" [^\r\n\x00]* { tok = token.Comment; lit = l.literal(); return }
+		"/*" ([^*\x00] | ("*" [^/]))* "*""/" { tok = token.Comment; lit = l.literal(); return }
+		"/*" { return l.lexMultiComment() }
 
 		// Keywords
 		"return" { tok = token.Return; lit = "return"; return }
@@ -177,6 +179,32 @@ func (l *Lexer) lexRawString(quote byte) (pos token.Pos, tok token.Type, lit str
 			}
 			continue
 		}
+*/		
+	}
+}
+
+func (l *Lexer) lexMultiComment() (pos token.Pos, tok token.Type, lit string, err error) {
+	for {
+/*!re2c
+		re2c:yyfill:enable = 0;
+		re2c:flags:nested-ifs = 1;
+		re2c:define:YYCTYPE = byte;
+		re2c:define:YYPEEK = "l.input[l.cursor]";
+		re2c:define:YYSKIP = "l.cursor += 1";
+
+		[\x00] {
+			err = ErrUnterminatedComment
+			tok = token.EOF
+            pos = l.file.Pos(l.token)
+			return
+		}
+		"*/" {
+			tok = token.Comment
+			pos = l.file.Pos(l.token)
+			lit = string(l.input[l.token+2:l.cursor])
+			return
+		}
+		[^\x00] { continue }
 */		
 	}
 }

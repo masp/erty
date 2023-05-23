@@ -9,9 +9,10 @@ import (
 )
 
 var (
-	ErrUnrecognizedToken  = errors.New("unrecognized token")
-	ErrInvalidString      = errors.New("invalid string")
-	ErrUnterminatedString = errors.New("unterminated string")
+	ErrUnrecognizedToken   = errors.New("unrecognized token")
+	ErrInvalidString       = errors.New("invalid string")
+	ErrUnterminatedString  = errors.New("unterminated string")
+	ErrUnterminatedComment = errors.New("unterminated multiline comment")
 )
 
 type TokenType int

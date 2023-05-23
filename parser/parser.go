@@ -57,13 +57,16 @@ func (p *Parser) advance(to map[token.Type]bool) (tok lexer.Token) {
 	return
 }
 
-func (p *Parser) eat() lexer.Token {
-	if p.pos >= len(p.tokens) {
-		return lexer.Token{Type: token.EOF}
+func (p *Parser) eat() (tok lexer.Token) {
+	for ; p.pos < len(p.tokens); p.pos++ {
+		tok = p.tokens[p.pos]
+		if tok.Type == token.Comment {
+			continue
+		}
+		p.pos++
+		return tok
 	}
-	token := p.tokens[p.pos]
-	p.pos++
-	return token
+	return lexer.Token{Type: token.EOF}
 }
 
 func (p *Parser) eatAll(tokenType token.Type) token.Type {
@@ -88,11 +91,15 @@ func (p *Parser) eatOnly(tokenType token.Type, errfmt string, args ...any) lexer
 	return tok
 }
 
-func (p *Parser) peek() lexer.Token {
-	if p.pos >= len(p.tokens) {
-		return lexer.Token{Type: token.EOF}
+func (p *Parser) peek() (tok lexer.Token) {
+	for i := p.pos; i < len(p.tokens); i++ {
+		tok = p.tokens[i]
+		if tok.Type == token.Comment {
+			continue
+		}
+		return tok
 	}
-	return p.tokens[p.pos]
+	return lexer.Token{Type: token.EOF}
 }
 
 func (p *Parser) matches(types ...token.Type) bool {
