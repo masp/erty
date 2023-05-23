@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/masp/garlang/compile"
+	"github.com/masp/garlang/compiler"
 	"github.com/masp/garlang/core"
-	"github.com/masp/garlang/parse"
+	"github.com/masp/garlang/parser"
 	"github.com/masp/garlang/token"
 )
 
@@ -56,7 +56,7 @@ func Main(args []string) error {
 		return fmt.Errorf("reading input '%s': %w", input, err)
 	}
 
-	garMod, err := parse.Module(inputName, inputSrc)
+	garMod, err := parser.Module(inputName, inputSrc)
 	if lexErrs, ok := err.(token.ErrorList); ok {
 		for _, err := range lexErrs {
 			fmt.Fprintf(os.Stderr, "%s:%d:%d: %v", inputName, err.Pos.Line, err.Pos.Column, err.Msg)
@@ -65,7 +65,7 @@ func Main(args []string) error {
 		return fmt.Errorf("parse: %w", err)
 	}
 
-	coreMod, err := compile.New().CompileModule(garMod)
+	coreMod, err := compiler.New().CompileModule(garMod)
 	if err != nil {
 		return fmt.Errorf("compile: %w", err)
 	}

@@ -1,5 +1,0 @@
-'call'/0 =
-    (fun () ->
-        call 'erlang':'module_info'
-            ('b')
-        -| [{'function',{'call',0}}])
