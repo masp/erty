@@ -17,6 +17,7 @@ type Module struct {
 	Decls []Decl
 
 	Imports []*ImportDecl
+	Scope   *Scope // this module only
 }
 
 func (p *Module) isNode() {}

@@ -5,9 +5,10 @@
 [ ] - Add function calls for io.format to do hello world
     - Add idea of import of modules
       - X Add keyword
-      - Add import parsing
+      - X Add import parsing
       - Add lookup logic for modules
     - Add scopes and referencing objects within a scope
     - Add support to core pkg for generating module calls
 [ ] - Add match keyword with just values (fun!)
 [ ] - Rename to erty
+[ ] - Add comments
