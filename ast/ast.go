@@ -120,7 +120,6 @@ type Module struct {
 	Decls []Decl
 
 	Imports []*ImportDecl
-	Scope   *Scope // this module only
 }
 
 func (p *Module) isNode() {}
@@ -304,6 +303,7 @@ func (f *Field) End() token.Pos {
 	}
 	return token.NoPos
 }
+func (f *Field) isNode() {}
 
 // A FieldList represents a list of Fields, enclosed by parentheses,
 // curly braces, or square brackets.
@@ -367,30 +367,30 @@ func (t *TupleType) End() token.Pos {
 }
 
 type CallExpr struct {
-	Callee    Expression
-	Arguments []Expression
+	Fun  Expression
+	Args []Expression
 
 	LeftParen, RightParen token.Pos
 }
 
 func (u *CallExpr) isExpression()  {}
 func (u *CallExpr) isNode()        {}
-func (u *CallExpr) Pos() token.Pos { return u.Callee.Pos() }
+func (u *CallExpr) Pos() token.Pos { return u.Fun.Pos() }
 func (u *CallExpr) End() token.Pos { return u.RightParen + 1 }
 
 type DotExpr struct {
-	Target    Expression
-	Dot       token.Pos
-	Attribute *Identifier
+	X    Expression
+	Dot  token.Pos
+	Attr *Identifier
 }
 
 func (u *DotExpr) isExpression() {}
 func (u *DotExpr) isNode()       {}
 func (u *DotExpr) Pos() token.Pos {
-	return u.Target.Pos()
+	return u.X.Pos()
 }
 func (u *DotExpr) End() token.Pos {
-	return u.Attribute.End()
+	return u.Attr.End()
 }
 
 type UnaryExpr struct {
@@ -427,17 +427,28 @@ func (b *BinaryExpr) End() token.Pos {
 type Literal interface {
 	Node
 	Expression
-	isLiteral()
+	Literal() string
 }
 
 type StringLiteral struct {
-	QuotePos token.Pos
-	Value    string
+	QuotePos   token.Pos
+	Value, Lit string
 }
 
-func (s *StringLiteral) isExpression() {}
-func (s *StringLiteral) isLiteral()    {}
-func (s *StringLiteral) isNode()       {}
+func NewString(tok lexer.Token) *StringLiteral {
+	if tok.Lit == "" {
+		return &StringLiteral{}
+	}
+	return &StringLiteral{
+		QuotePos: tok.Pos,
+		Value:    tok.Lit[1 : len(tok.Lit)-1], // remove quotes
+		Lit:      tok.Lit,
+	}
+}
+
+func (s *StringLiteral) isExpression()   {}
+func (s *StringLiteral) isNode()         {}
+func (s *StringLiteral) Literal() string { return s.Lit }
 func (s *StringLiteral) Pos() token.Pos {
 	return s.QuotePos
 }
@@ -450,9 +461,19 @@ type AtomLiteral struct {
 	Value    string
 }
 
-func (s *AtomLiteral) isExpression() {}
-func (s *AtomLiteral) isLiteral()    {}
-func (s *AtomLiteral) isNode()       {}
+func NewAtom(tok lexer.Token) *AtomLiteral {
+	if tok.Lit == "" {
+		return &AtomLiteral{}
+	}
+	return &AtomLiteral{
+		QuotePos: tok.Pos,
+		Value:    tok.Lit[1 : len(tok.Lit)-1], // remove quotes
+	}
+}
+
+func (s *AtomLiteral) isExpression()   {}
+func (s *AtomLiteral) Literal() string { return "'" + s.Value + "'" }
+func (s *AtomLiteral) isNode()         {}
 func (s *AtomLiteral) Pos() token.Pos {
 	return s.QuotePos
 }
@@ -467,8 +488,10 @@ type IntLiteral struct {
 }
 
 func (n *IntLiteral) isExpression() {}
-func (s *IntLiteral) isLiteral()    {}
 func (s *IntLiteral) isNode()       {}
+func (s *IntLiteral) Literal() string {
+	return s.Lit
+}
 func (s *IntLiteral) Pos() token.Pos {
 	return s.IntPos
 }
@@ -483,8 +506,10 @@ type FloatLiteral struct {
 }
 
 func (s *FloatLiteral) isExpression() {}
-func (s *FloatLiteral) isLiteral()    {}
 func (s *FloatLiteral) isNode()       {}
+func (s *FloatLiteral) Literal() string {
+	return s.Lit
+}
 func (s *FloatLiteral) Pos() token.Pos {
 	return s.FloatPos
 }
@@ -522,6 +547,7 @@ func NewIdent(tok lexer.Token) *Identifier {
 type Identifier struct {
 	NamePos token.Pos
 	Name    string
+	Decl    Node // what type, func, const declarations this identifier points to (could be nil)
 }
 
 func (i *Identifier) isExpression() {}

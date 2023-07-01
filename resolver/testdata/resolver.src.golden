@@ -1,0 +1,12 @@
+// The syntax for the below file is:
+// <identifier>@<pos> = <type> <decl>
+// Example:
+// let a = 10
+a@1:2 = int a@2
+// a = 10
+a@2:1(@1:2) = int
+// let b = {1, "hello", 3}
+b@3:2 = tuple{int, string, int} b@2:3
+// let {a, b} = {"hello", 2}
+a@4:2 = string
+b@4:3 = int

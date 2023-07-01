@@ -114,7 +114,7 @@ func (c *Compiler) compileExpr(expr ast.Expression) core.Expr {
 }
 
 func (c *Compiler) compileCallExpr(call *ast.CallExpr) core.Expr {
-	switch expr := call.Callee.(type) {
+	switch expr := call.Fun.(type) {
 	case *ast.DotExpr:
 		return c.compileDotCallExpr(call, expr)
 	default: // local function, we can validate that the function exists
@@ -125,26 +125,26 @@ func (c *Compiler) compileCallExpr(call *ast.CallExpr) core.Expr {
 func (c *Compiler) compileLocalCallExpr(expr *ast.CallExpr) core.Expr {
 	// If an identifier and identifier is not defined in function as variable,
 	// treat as an atom
-	if ident, ok := expr.Callee.(*ast.Identifier); ok {
-		expr.Callee = &ast.AtomLiteral{Value: ident.Name}
+	if ident, ok := expr.Fun.(*ast.Identifier); ok {
+		expr.Fun = &ast.AtomLiteral{Value: ident.Name}
 	}
 
 	return core.Application{
-		Func: c.compileExpr(expr.Callee),
-		Args: c.compileExprs(expr.Arguments),
+		Func: c.compileExpr(expr.Fun),
+		Args: c.compileExprs(expr.Args),
 	}
 }
 
 func (c *Compiler) compileDotCallExpr(call *ast.CallExpr, dot *ast.DotExpr) core.Expr {
 	// If an identifier and identifier is not defined in function as variable,
 	// treat as an atom
-	if ident, ok := dot.Target.(*ast.Identifier); ok {
-		dot.Target = &ast.AtomLiteral{Value: ident.Name}
+	if ident, ok := dot.X.(*ast.Identifier); ok {
+		dot.X = &ast.AtomLiteral{Value: ident.Name}
 	}
 	return core.InterModuleCall{
-		Module: c.compileExpr(dot.Target),
-		Func:   core.Atom{Value: dot.Attribute.Name},
-		Args:   c.compileExprs(call.Arguments),
+		Module: c.compileExpr(dot.X),
+		Func:   core.Atom{Value: dot.Attr.Name},
+		Args:   c.compileExprs(call.Args),
 	}
 }
 
@@ -169,7 +169,7 @@ func module_info(Value) {
 //
 // The functions are very simple: just call 'erlang':module_info/1 with the appropriate atom.
 func addBaseFuncs(mod *ast.Module) *ast.Module {
-	commonMod, err := parser.Module("<builtin>", []byte(commonModFuncs(mod)))
+	commonMod, err := parser.ParseModule("<builtin>", []byte(commonModFuncs(mod)))
 	if err != nil {
 		panic(err)
 	}

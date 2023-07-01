@@ -65,6 +65,7 @@ func (l *Lexer) lex() (pos token.Pos, tok token.Type, lit string, err error) {
 		"[" { tok = token.LSquareBracket; lit = "["; return }
 		"]" { tok = token.RSquareBracket; lit = "]"; return }
 		":" { tok = token.Colon; lit = ":"; return }
+		"!" { tok = token.Bang; lit = "!"; return }
 		":=" { tok = token.ColonEqual; lit = ":="; return }
 		"=" { tok = token.Equal; lit = "="; return }
         "==" { tok = token.EqualEqual; lit = "=="; return }
@@ -83,7 +84,7 @@ func (l *Lexer) lex() (pos token.Pos, tok token.Type, lit string, err error) {
 		";" { tok = token.Semicolon; lit = ";"; return }
 
 		// Integer literals
-		dec = [1-9][0-9]*;
+		dec = [1-9][0-9]* | "0";
 		dec { tok = token.Integer; lit = l.literal(); return }
 
 		// Floating point numbers
@@ -113,6 +114,7 @@ func (l *Lexer) lex() (pos token.Pos, tok token.Type, lit string, err error) {
 
 func (l *Lexer) lexString(quote byte) (pos token.Pos, tok token.Type, lit string, err error) {
 	var buf bytes.Buffer
+	buf.WriteByte(quote)
 	for {
 		var u byte
 /*!re2c
@@ -131,13 +133,13 @@ func (l *Lexer) lexString(quote byte) (pos token.Pos, tok token.Type, lit string
 		}
 		[^\n\\]              {
 			u = yych
+			buf.WriteByte(u)
 			if u == quote {
 				tok = token.String
 				pos = l.file.Pos(l.token)
 				lit = string(buf.Bytes())
 				return
 			}
-			buf.WriteByte(u)
 			continue
 		}
 		"\\a"                { buf.WriteByte('\a'); continue }
@@ -174,7 +176,7 @@ func (l *Lexer) lexRawString(quote byte) (pos token.Pos, tok token.Type, lit str
 			if yych == quote {
 				tok = token.String
 				pos = l.file.Pos(l.token)
-				lit = string(l.input[l.token+1:l.cursor-1])
+				lit = string(l.input[l.token:l.cursor])
 				return
 			}
 			continue

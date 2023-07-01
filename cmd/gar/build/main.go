@@ -56,7 +56,7 @@ func Main(args []string) error {
 		return fmt.Errorf("reading input '%s': %w", input, err)
 	}
 
-	garMod, err := parser.Module(inputName, inputSrc)
+	garMod, err := parser.ParseModule(inputName, inputSrc)
 	if lexErrs, ok := err.(token.ErrorList); ok {
 		for _, err := range lexErrs {
 			fmt.Fprintf(os.Stderr, "%s:%d:%d: %v", inputName, err.Pos.Line, err.Pos.Column, err.Msg)

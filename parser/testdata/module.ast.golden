@@ -27,33 +27,34 @@
     26  .  .  .  .  .  .  Right: *ast.StringLiteral {
     27  .  .  .  .  .  .  .  QuotePos: <test>:3:13
     28  .  .  .  .  .  .  .  Value: "hello world"
-    29  .  .  .  .  .  .  }
-    30  .  .  .  .  .  }
-    31  .  .  .  .  }
-    32  .  .  .  .  1: *ast.ExprStatement {
-    33  .  .  .  .  .  Expression: *ast.AssignExpr {
-    34  .  .  .  .  .  .  Left: *ast.Identifier {
-    35  .  .  .  .  .  .  .  NamePos: <test>:4:6
-    36  .  .  .  .  .  .  .  Name: "a"
-    37  .  .  .  .  .  .  }
-    38  .  .  .  .  .  .  Equals: <test>:4:8
-    39  .  .  .  .  .  .  Right: *ast.BinaryExpr {
-    40  .  .  .  .  .  .  .  Left: *ast.IntLiteral {
-    41  .  .  .  .  .  .  .  .  IntPos: <test>:4:10
-    42  .  .  .  .  .  .  .  .  Lit: "3"
-    43  .  .  .  .  .  .  .  .  Value: 3
-    44  .  .  .  .  .  .  .  }
-    45  .  .  .  .  .  .  .  OpPos: <test>:4:12
-    46  .  .  .  .  .  .  .  Op: Plus
-    47  .  .  .  .  .  .  .  Right: *ast.IntLiteral {
-    48  .  .  .  .  .  .  .  .  IntPos: <test>:4:14
-    49  .  .  .  .  .  .  .  .  Lit: "5"
-    50  .  .  .  .  .  .  .  .  Value: 5
-    51  .  .  .  .  .  .  .  }
-    52  .  .  .  .  .  .  }
-    53  .  .  .  .  .  }
-    54  .  .  .  .  }
-    55  .  .  .  }
-    56  .  .  }
-    57  .  }
-    58  }
+    29  .  .  .  .  .  .  .  Lit: "\"hello world\""
+    30  .  .  .  .  .  .  }
+    31  .  .  .  .  .  }
+    32  .  .  .  .  }
+    33  .  .  .  .  1: *ast.ExprStatement {
+    34  .  .  .  .  .  Expression: *ast.AssignExpr {
+    35  .  .  .  .  .  .  Left: *ast.Identifier {
+    36  .  .  .  .  .  .  .  NamePos: <test>:4:6
+    37  .  .  .  .  .  .  .  Name: "a"
+    38  .  .  .  .  .  .  }
+    39  .  .  .  .  .  .  Equals: <test>:4:8
+    40  .  .  .  .  .  .  Right: *ast.BinaryExpr {
+    41  .  .  .  .  .  .  .  Left: *ast.IntLiteral {
+    42  .  .  .  .  .  .  .  .  IntPos: <test>:4:10
+    43  .  .  .  .  .  .  .  .  Lit: "3"
+    44  .  .  .  .  .  .  .  .  Value: 3
+    45  .  .  .  .  .  .  .  }
+    46  .  .  .  .  .  .  .  OpPos: <test>:4:12
+    47  .  .  .  .  .  .  .  Op: Plus
+    48  .  .  .  .  .  .  .  Right: *ast.IntLiteral {
+    49  .  .  .  .  .  .  .  .  IntPos: <test>:4:14
+    50  .  .  .  .  .  .  .  .  Lit: "5"
+    51  .  .  .  .  .  .  .  .  Value: 5
+    52  .  .  .  .  .  .  .  }
+    53  .  .  .  .  .  .  }
+    54  .  .  .  .  .  }
+    55  .  .  .  .  }
+    56  .  .  .  }
+    57  .  .  }
+    58  .  }
+    59  }

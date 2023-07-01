@@ -1,0 +1,15 @@
+// Comments in this file signify where declarations and identifiers should point to in a file.
+// '=@name' defines the preceding identifier token is named 'name'
+// '@name' references to a previously defined delcaration with `=@`
+//
+// The file here is parsed and the AST's resolved identifiers are compared against the comments
+// for each test case.
+
+package resolution
+
+import io /* =@iomod */ "io"
+
+func _(param /* =@param */ string) {
+    io/* =iomod */.Run(param/*=param*/)
+}
+

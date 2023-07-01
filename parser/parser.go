@@ -195,7 +195,7 @@ func (p *Parser) parseImport(mod *ast.Module) ast.Decl {
 	return &ast.ImportDecl{
 		Import: importTok.Pos,
 		Alias:  alias,
-		Path:   &ast.StringLiteral{QuotePos: path.Pos, Value: path.Lit},
+		Path:   ast.NewString(path),
 	}
 }
 
@@ -426,7 +426,7 @@ func (p *Parser) parseFactor() ast.Expression {
 }
 
 func (p *Parser) parseUnary() ast.Expression {
-	if p.matches(token.Minus, token.Plus) {
+	if p.matches(token.Minus, token.Plus, token.Bang) {
 		op := p.eat()
 		return &ast.UnaryExpr{
 			Op:    op.Type,
@@ -445,8 +445,8 @@ func (p *Parser) parseCall() ast.Expression {
 			args := p.parseArguments()
 			rparen := p.eat()
 			callee = &ast.CallExpr{
-				Callee:     callee,
-				Arguments:  args,
+				Fun:        callee,
+				Args:       args,
 				LeftParen:  lparen.Pos,
 				RightParen: rparen.Pos,
 			}
@@ -458,9 +458,9 @@ func (p *Parser) parseCall() ast.Expression {
 				return &ast.BadExpr{From: name.Pos, To: name.Pos}
 			}
 			callee = &ast.DotExpr{
-				Dot:       dot.Pos,
-				Target:    callee,
-				Attribute: ast.NewIdent(name),
+				Dot:  dot.Pos,
+				X:    callee,
+				Attr: ast.NewIdent(name),
 			}
 		} else {
 			break
@@ -503,15 +503,9 @@ func (p *Parser) parsePrimary() ast.Expression {
 	case token.Identifier:
 		return &ast.Identifier{NamePos: tok.Pos, Name: tok.Lit}
 	case token.String:
-		return &ast.StringLiteral{
-			QuotePos: tok.Pos,
-			Value:    tok.Lit,
-		}
+		return ast.NewString(tok)
 	case token.Atom:
-		return &ast.AtomLiteral{
-			QuotePos: tok.Pos,
-			Value:    tok.Lit,
-		}
+		return ast.NewAtom(tok)
 	case token.LParen:
 		expr := p.parseExpression()
 		rparen := p.eatOnly(token.RParen, "unclosed '(' around expression")
@@ -559,7 +553,7 @@ func (p *Parser) parseType() ast.Expression {
 			if attr.Type != token.Identifier {
 				return &ast.BadExpr{From: dot.Pos, To: attr.Pos}
 			}
-			return &ast.DotExpr{Target: ident, Dot: dot.Pos, Attribute: ast.NewIdent(attr)}
+			return &ast.DotExpr{X: ident, Dot: dot.Pos, Attr: ast.NewIdent(attr)}
 		}
 		return ident
 	case token.Tuple: // tuple[...]

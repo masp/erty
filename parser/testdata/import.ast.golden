@@ -13,22 +13,24 @@
     12  .  .  .  Path: *ast.StringLiteral {
     13  .  .  .  .  QuotePos: <test>:1:21
     14  .  .  .  .  Value: "a/b/c"
-    15  .  .  .  }
-    16  .  .  }
-    17  .  .  1: *ast.ImportDecl {
-    18  .  .  .  Import: <test>:1:30
-    19  .  .  .  Alias: *ast.Identifier {
-    20  .  .  .  .  NamePos: <test>:1:37
-    21  .  .  .  .  Name: "b"
-    22  .  .  .  }
-    23  .  .  .  Path: *ast.StringLiteral {
-    24  .  .  .  .  QuotePos: <test>:1:39
-    25  .  .  .  .  Value: "belong"
-    26  .  .  .  }
-    27  .  .  }
-    28  .  }
-    29  .  Imports: []*ast.ImportDecl (len = 2) {
-    30  .  .  0: *(obj @ 10)
-    31  .  .  1: *(obj @ 17)
-    32  .  }
-    33  }
+    15  .  .  .  .  Lit: "\"a/b/c\""
+    16  .  .  .  }
+    17  .  .  }
+    18  .  .  1: *ast.ImportDecl {
+    19  .  .  .  Import: <test>:1:30
+    20  .  .  .  Alias: *ast.Identifier {
+    21  .  .  .  .  NamePos: <test>:1:37
+    22  .  .  .  .  Name: "b"
+    23  .  .  .  }
+    24  .  .  .  Path: *ast.StringLiteral {
+    25  .  .  .  .  QuotePos: <test>:1:39
+    26  .  .  .  .  Value: "belong"
+    27  .  .  .  .  Lit: "\"belong\""
+    28  .  .  .  }
+    29  .  .  }
+    30  .  }
+    31  .  Imports: []*ast.ImportDecl (len = 2) {
+    32  .  .  0: *(obj @ 10)
+    33  .  .  1: *(obj @ 18)
+    34  .  }
+    35  }

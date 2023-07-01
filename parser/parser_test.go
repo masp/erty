@@ -59,7 +59,7 @@ func TestParseFunc(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			fn, err := Function([]byte(test.input))
+			fn, err := ParseFunc([]byte(test.input))
 			if err != nil {
 				t.Fatalf("parse program: %v", err)
 			}
@@ -109,7 +109,7 @@ func TestParseModule(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			mod, err := Module("<test>", []byte(test.input))
+			mod, err := ParseModule("<test>", []byte(test.input))
 			if err != nil {
 				t.Fatalf("parse program: %v", err)
 			}
@@ -138,7 +138,7 @@ func TestParseFail(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			_, err := Module("<test>", []byte(tt.input))
+			_, err := ParseModule("<test>", []byte(tt.input))
 			if err == nil {
 				t.Fatalf("expected error")
 			}
@@ -177,7 +177,7 @@ func bad() {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			mod, err := Module("<test>", []byte(tt.input))
+			mod, err := ParseModule("<test>", []byte(tt.input))
 			require.Error(t, err, "there should be at least 1 error in the program")
 			require.NotNil(t, mod)
 
@@ -232,7 +232,7 @@ fn bad() { return 1 }
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			mod, err := Module("<test>", []byte(tt.input))
+			mod, err := ParseModule("<test>", []byte(tt.input))
 			require.Error(t, err, "there should be at least 1 error in the program")
 			require.NotNil(t, mod)
 
