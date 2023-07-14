@@ -13,6 +13,27 @@ type Node interface {
 	End() token.Pos
 }
 
+// A Type represents any type in the language. Some nodes in the AST can be associated
+// with a type. Mostly expressions and declarations.
+type Type interface {
+	// Underlying returns the underlying type of a type. An underlying type must be one of the built in types.
+	Underlying() Type
+
+	// String returns a string representation of a type.
+	String() string
+}
+
+// noType marks a node as not supporting any attached types.
+type noType struct{}
+
+func (n *noType) SetType(t Type) { panic("not supported") }
+func (n *noType) Type() Type     { return nil }
+
+type typeNode struct{ typ Type }
+
+func (y *typeNode) SetType(t Type) { y.typ = t }
+func (y *typeNode) Type() Type     { return y.typ }
+
 // ----------------------------------------------------------------------------
 // Comments
 
@@ -23,6 +44,7 @@ type Node interface {
 // computed using len(Text), the position reported by End() does not match the
 // true source end position for comments containing carriage returns.
 type Comment struct {
+	noType
 	Slash token.Pos // position of "/" starting the comment
 	Text  string    // comment text (excluding '\n' for //-style comments)
 }
@@ -33,6 +55,7 @@ func (c *Comment) End() token.Pos { return token.Pos(int(c.Slash) + len(c.Text))
 // A CommentGroup represents a sequence of comments
 // with no other tokens and no empty lines between.
 type CommentGroup struct {
+	noType
 	List []*Comment // len(List) > 0
 }
 
@@ -115,6 +138,7 @@ func (g *CommentGroup) Text() string {
 }
 
 type Module struct {
+	noType
 	File  *token.File
 	Id    *Identifier
 	Decls []Decl
@@ -136,6 +160,7 @@ type Decl interface {
 }
 
 type ImportDecl struct {
+	noType
 	Import token.Pos      // `import` keyword
 	Alias  *Identifier    // name to import (default to last element of path). Can be nil.
 	Path   *StringLiteral // value of import
@@ -152,7 +177,8 @@ func (i *ImportDecl) End() token.Pos {
 
 // TypeDecl defines a new type, and looks like `[export] type <name> <definition>`
 type TypeDecl struct {
-	Type token.Pos // `type` keyword
+	typeNode           // type of the definition
+	TypePos  token.Pos // `type` keyword
 
 	Name       *Identifier // the new type name
 	Definition Expression  // the type value
@@ -161,13 +187,14 @@ type TypeDecl struct {
 func (t *TypeDecl) isDeclaration() {}
 func (t *TypeDecl) isNode()        {}
 func (t *TypeDecl) Pos() token.Pos {
-	return t.Type
+	return t.TypePos
 }
 func (t *TypeDecl) End() token.Pos {
 	return t.Definition.End()
 }
 
 type ConstDecl struct {
+	typeNode               // type of the constant
 	Const      token.Pos   // `const` keyword
 	Identifier *Identifier // left hand of assignment
 	Value      Literal     // right hand of assignment
@@ -183,13 +210,16 @@ func (c *ConstDecl) End() token.Pos {
 }
 
 type FuncDecl struct {
+	typeNode // signature of the function (see subnodes for individual types)
+
 	Func       token.Pos // `func` keyword
 	LeftBrace  token.Pos // `{` and `}` token
 	RightBrace token.Pos
 
-	Name       *Identifier   // function name
-	Parameters []*Identifier // function parameters
+	Name       *Identifier // function name
+	Parameters *FieldList  // function parameters
 	Statements []Statement
+	ReturnType Expression
 }
 
 func (f *FuncDecl) IsPublic() bool {
@@ -206,6 +236,7 @@ func (f *FuncDecl) End() token.Pos {
 }
 
 type BadDecl struct {
+	noType
 	From, To token.Pos
 }
 
@@ -224,6 +255,7 @@ type Statement interface {
 }
 
 type BadStmt struct {
+	noType
 	From, To token.Pos
 }
 
@@ -256,13 +288,17 @@ func (e *ReturnStatement) Pos() token.Pos {
 func (e *ReturnStatement) End() token.Pos {
 	return e.Expression.End()
 }
+func (e *ReturnStatement) Type() Type { return e.Expression.Type() }
 
 type Expression interface {
 	Node
 	isExpression()
+	Type() Type
 }
 
 type BadExpr struct {
+	noType
+
 	From, To token.Pos
 }
 
@@ -281,33 +317,35 @@ func (b *BadExpr) End() token.Pos {
 // Field.Names is nil for unnamed parameters (parameter lists which only contain types)
 type Field struct {
 	Names []*Identifier // field/method/(type) parameter names; or nil
-	Type  Expression    // field/method/parameter type; or nil
+	Typ   Expression    // field/method/parameter type; or nil
 }
 
 func (f *Field) Pos() token.Pos {
 	if len(f.Names) > 0 {
 		return f.Names[0].Pos()
 	}
-	if f.Type != nil {
-		return f.Type.Pos()
+	if f.Typ != nil {
+		return f.Typ.Pos()
 	}
 	return token.NoPos
 }
 
 func (f *Field) End() token.Pos {
-	if f.Type != nil {
-		return f.Type.End()
+	if f.Typ != nil {
+		return f.Typ.End()
 	}
 	if len(f.Names) > 0 {
 		return f.Names[len(f.Names)-1].End()
 	}
 	return token.NoPos
 }
-func (f *Field) isNode() {}
+func (f *Field) isNode()    {}
+func (f *Field) Type() Type { return f.Typ.Type() }
 
 // A FieldList represents a list of Fields, enclosed by parentheses,
 // curly braces, or square brackets.
 type FieldList struct {
+	noType
 	Opening token.Pos // position of opening parenthesis/brace/bracket, if any
 	List    []*Field  // field list; or nil
 	Closing token.Pos // position of closing parenthesis/brace/bracket, if any
@@ -353,6 +391,8 @@ func (f *FieldList) NumFields() int {
 }
 
 type TupleType struct {
+	typeNode // the type expression for this tuple
+
 	Tuple token.Pos  // `tuple` keyword
 	Elts  *FieldList // types for elements
 }
@@ -367,6 +407,8 @@ func (t *TupleType) End() token.Pos {
 }
 
 type CallExpr struct {
+	typeNode // the type of the return value of Fun
+
 	Fun  Expression
 	Args []Expression
 
@@ -379,6 +421,8 @@ func (u *CallExpr) Pos() token.Pos { return u.Fun.Pos() }
 func (u *CallExpr) End() token.Pos { return u.RightParen + 1 }
 
 type DotExpr struct {
+	typeNode // the type of the attribute under X
+
 	X    Expression
 	Dot  token.Pos
 	Attr *Identifier
@@ -394,6 +438,8 @@ func (u *DotExpr) End() token.Pos {
 }
 
 type UnaryExpr struct {
+	typeNode // the type of the result of Op on Right.
+
 	Op    token.Type
 	OpPos token.Pos
 	Right Expression
@@ -409,6 +455,8 @@ func (u *UnaryExpr) End() token.Pos {
 }
 
 type BinaryExpr struct {
+	typeNode // the type of the result of Left Op Right.
+
 	Left  Expression
 	OpPos token.Pos
 	Op    token.Type
@@ -431,6 +479,8 @@ type Literal interface {
 }
 
 type StringLiteral struct {
+	typeNode // type of literal
+
 	QuotePos   token.Pos
 	Value, Lit string
 }
@@ -457,6 +507,8 @@ func (s *StringLiteral) End() token.Pos {
 }
 
 type AtomLiteral struct {
+	typeNode // type of literal
+
 	QuotePos token.Pos
 	Value    string
 }
@@ -482,6 +534,8 @@ func (s *AtomLiteral) End() token.Pos {
 }
 
 type IntLiteral struct {
+	typeNode // type of literal
+
 	IntPos token.Pos // position of the first digit
 	Lit    string    // raw string, e.g. "12"
 	Value  int64     // parsed value
@@ -500,6 +554,8 @@ func (s *IntLiteral) End() token.Pos {
 }
 
 type FloatLiteral struct {
+	typeNode // type of literal
+
 	FloatPos token.Pos // position of the first digit
 	Lit      string    // raw string, e.g. "12.3"
 	Value    float64   // parsed value
@@ -518,6 +574,8 @@ func (s *FloatLiteral) End() token.Pos {
 }
 
 type KVExpr struct {
+	noType
+
 	Key, Value Expression
 	Colon      token.Pos
 	Comma      token.Pos // Invalid if no comma after element
@@ -545,9 +603,9 @@ func NewIdent(tok lexer.Token) *Identifier {
 }
 
 type Identifier struct {
-	NamePos token.Pos
-	Name    string
-	Decl    Node // what type, func, const declarations this identifier points to (could be nil)
+	typeNode // what type the identifier resolves to
+	NamePos  token.Pos
+	Name     string
 }
 
 func (i *Identifier) isExpression() {}
@@ -575,6 +633,7 @@ func (p *ParenExpr) Pos() token.Pos {
 func (p *ParenExpr) End() token.Pos {
 	return p.RParen + 1
 }
+func (p *ParenExpr) Type() Type { return p.Expression.Type() }
 
 type AssignExpr struct { // '='
 	Left   *Identifier
@@ -590,6 +649,9 @@ func (a *AssignExpr) Pos() token.Pos {
 func (a *AssignExpr) End() token.Pos {
 	return a.Right.End()
 }
+func (a *AssignExpr) Type() Type {
+	return a.Right.Type()
+}
 
 type MatchAssignExpr struct { // ':='
 	Left   Expression
@@ -604,4 +666,7 @@ func (a *MatchAssignExpr) Pos() token.Pos {
 }
 func (a *MatchAssignExpr) End() token.Pos {
 	return a.Right.End()
+}
+func (a *MatchAssignExpr) Type() Type {
+	return a.Right.Type()
 }

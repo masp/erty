@@ -1,7 +1,11 @@
 // Package core provides Go structs representing Erlang Core AST.
 package core
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/masp/garlang/ast"
+)
 
 // The definition of the Erlang core is defined at https://www.it.uu.se/research/group/hipe/cerl/doc/core_erlang-1.0.3.pdf
 //
@@ -40,9 +44,9 @@ import "fmt"
 // | var = pat
 type Module struct {
 	Name       string
-	Exports    []FuncName
-	Attributes []Attribute
-	Functions  []Func
+	Exports    []*FuncName
+	Attributes []*Attribute
+	Functions  []*Func
 }
 
 type FuncName struct {
@@ -50,9 +54,9 @@ type FuncName struct {
 	Arity int
 }
 
-func (FuncName) isConst() {}
-func (FuncName) isExpr()  {}
-func (f FuncName) String() string {
+func (*FuncName) isConst() {}
+func (*FuncName) isExpr()  {}
+func (f *FuncName) String() string {
 	return fmt.Sprintf("'%s'/%d", f.Name, f.Arity)
 }
 
@@ -65,13 +69,29 @@ type Expr interface {
 	isExpr()
 }
 
+// let <v0, v1, ..., vn> = e_assign in e_in
+type LetExpr struct {
+	Vars   []*Var
+	Assign Expr
+	In     Expr
+}
+
+func (*LetExpr) isExpr() {}
+
+// do e1, e2 sequences e1 then e2, evaluating to e2
+type DoExpr struct {
+	Before, After Expr
+}
+
+func (*DoExpr) isExpr() {}
+
 // apply exprs0(exprs1, . . ., exprsn)
-type Application struct {
+type ApplyExpr struct {
 	Func Expr
 	Args []Expr
 }
 
-func (Application) isExpr() {}
+func (*ApplyExpr) isExpr() {}
 
 type InterModuleCall struct {
 	Module Expr
@@ -79,26 +99,46 @@ type InterModuleCall struct {
 	Args   []Expr
 }
 
-func (InterModuleCall) isExpr() {}
+func (*InterModuleCall) isExpr() {}
 
 type Func struct {
-	Name       FuncName
-	Parameters []Var
+	annotated
+	Name       *FuncName
+	Parameters []*Var
 	Body       Expr
-	Annotation Annotation
 }
+
+type Annotated interface {
+	Annotate(attr Const)
+	Annotations() *Annotation
+}
+
+type annotated struct {
+	Annotation
+}
+
+func (h *annotated) Annotate(attr Const)      { h.Annotation.Attrs = append(h.Annotation.Attrs, attr) }
+func (h *annotated) Annotations() *Annotation { return &h.Annotation }
 
 type Annotation struct {
 	Attrs []Const
 }
 
-func (Func) isExpr() {}
+func (*Func) isExpr() {}
 
 type Var struct {
-	Name string
+	annotated
+	OriginalName string // can be any string
+
+	Type ast.Type
+	Name string // must be valid Erlang name (start with uppercase or _)
 }
 
-func (Var) isExpr() {}
+func (*Var) isExpr() {}
+
+type BadExpr struct{}
+
+func (*BadExpr) isExpr() {}
 
 type Literal interface {
 	Const
@@ -154,10 +194,10 @@ type ConstList struct {
 	Elements []Const
 }
 
-func (ConstList) isConst() {}
+func (*ConstList) isConst() {}
 
 type ConstTuple struct {
 	Elements []Const
 }
 
-func (ConstTuple) isConst() {}
+func (*ConstTuple) isConst() {}

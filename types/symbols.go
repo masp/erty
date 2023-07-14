@@ -7,8 +7,9 @@ package types
 
 import "github.com/masp/garlang/ast"
 
+// Decl represents a type that comes from a reference to a declaration. It includes info
+// on what the type is, as well as a reference to the declaration that it came from.
 type Decl struct {
-	Id *ast.Identifier
 	// If Node is *ast.Identifier, then RefersTo points to the declaration that this identifier refers to
 	// Examples:
 	// - Function -> *ast.FuncDecl
@@ -16,21 +17,58 @@ type Decl struct {
 	// - Type -> *ast.TypeDecl
 	// - Variable -> *ast.AssignMatchExpr
 	RefersTo ast.Node
-	Type     Type // Never nil
+	ast.Type // Never nil
 }
 
-func NewDecl(id *ast.Identifier, typ Type) Decl {
-	return Decl{Id: id, RefersTo: id, Type: typ} // decls refer to themselves
+// Value returns the type if it were applied to a value. If t is an expression or decl, it returns the
+// type that it represents to or declares.
+func Value(t ast.Type) ast.Type {
+	if t, ok := t.(*Expr); ok {
+		return Value(t.Definition)
+	}
+	if t, ok := t.(*Decl); ok {
+		return Value(t.Type)
+	}
+	return t
+}
+
+func NewDecl(id *ast.Identifier, typ ast.Type) *Decl {
+	return &Decl{RefersTo: id, Type: typ} // decls refer to themselves
 }
 
 type SymbolTable struct {
-	Resolved   map[*ast.Identifier]Decl
-	Unresolved map[*ast.Identifier]struct{} // present if it is unresolved
+	resolved   map[*ast.Identifier]*Decl
+	unresolved map[*ast.Identifier]struct{} // present if it is unresolved
 }
 
 func NewSymbolTable() *SymbolTable {
 	return &SymbolTable{
-		Resolved:   make(map[*ast.Identifier]Decl),
-		Unresolved: make(map[*ast.Identifier]struct{}),
+		resolved:   make(map[*ast.Identifier]*Decl),
+		unresolved: make(map[*ast.Identifier]struct{}),
 	}
+}
+
+func (s *SymbolTable) Resolved() map[*ast.Identifier]*Decl {
+	return s.resolved
+}
+
+func (s *SymbolTable) Unresolved() map[*ast.Identifier]struct{} {
+	return s.unresolved
+}
+
+func (s *SymbolTable) Lookup(id *ast.Identifier) (decl *Decl, ok bool) {
+	decl, ok = s.resolved[id]
+	return
+}
+
+func (s *SymbolTable) AddResolved(id *ast.Identifier, decl *Decl) {
+	s.resolved[id] = decl
+	delete(s.unresolved, id)
+}
+
+func (s *SymbolTable) MarkUnresolved(id *ast.Identifier) {
+	if _, ok := s.resolved[id]; ok {
+		panic("identifier is already resolved")
+	}
+	s.unresolved[id] = struct{}{}
 }

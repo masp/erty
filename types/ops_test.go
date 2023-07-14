@@ -3,17 +3,19 @@ package types
 import (
 	"testing"
 
+	"github.com/masp/garlang/ast"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestApplyOp(t *testing.T) {
 	tests := map[string]struct {
-		t1, t2  Type
-		want    Type
+		t1, t2  ast.Type
+		want    ast.Type
 		wantErr error
 	}{
 		"matching integer types":              {Int, Int, Int, nil},
 		"untyped int with integer":            {UntypedInt, Int, Int, nil},
+		"untyped int with integer reverse":    {Int, UntypedInt, Int, nil},
 		"integer with float":                  {Int, Float, nil, ErrMismatch},
 		"untyped float with float":            {UntypedFloat, Float, Float, nil},
 		"untyped string with mismatched type": {UntypedString, Float, nil, ErrMismatch},

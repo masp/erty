@@ -40,7 +40,7 @@ func TestParseFunc(t *testing.T) {
 			expectedAst: "return.ast",
 		},
 		{
-			input:       "func params(a, b, c) {}",
+			input:       "func params(a, b int, c string) int {}",
 			expectedAst: "params.ast",
 		},
 		{
@@ -59,13 +59,13 @@ func TestParseFunc(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			fn, err := ParseFunc([]byte(test.input))
+			file, fn, err := ParseFunc([]byte(test.input))
 			if err != nil {
 				t.Fatalf("parse program: %v", err)
 			}
 
 			var out bytes.Buffer
-			ast.Fprint(&out, nil, fn, ast.NotNilFilter)
+			ast.Fprint(&out, file, fn, ast.NotNilFilter)
 			g := goldie.New(t)
 			g.Assert(t, test.expectedAst, out.Bytes())
 		})
@@ -196,13 +196,13 @@ func TestAllErrors(t *testing.T) {
 		expectedErrs string
 	}{
 		{
+			input:        "module test; func bad(a b c) {}",
+			expectedErrs: "nocommaparam.errors",
+		},
+		{
 			// bad match expressoin
 			input:        "module test; func bad() { () := 10 }",
 			expectedErrs: "badmatch.errors",
-		},
-		{
-			input:        "module test; func bad(a b c) {}",
-			expectedErrs: "nocommaparam.errors",
 		},
 		{
 			input: `module test

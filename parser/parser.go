@@ -39,6 +39,7 @@ var (
 
 	paramStart = map[token.Type]bool{
 		token.Identifier: true,
+		token.RParen:     true,
 	}
 )
 
@@ -214,7 +215,7 @@ func (p *Parser) parseTypeDecl() ast.Decl {
 
 	def := p.parseType()
 	return &ast.TypeDecl{
-		Type:       typeTok.Pos,
+		TypePos:    typeTok.Pos,
 		Name:       ast.NewIdent(name),
 		Definition: def,
 	}
@@ -232,8 +233,12 @@ func (p *Parser) parseFunction() ast.Decl {
 		to := p.advance(declStart)
 		return &ast.BadDecl{From: funcTok.Pos, To: to.Pos}
 	}
-	p.eatOnly(token.LParen, "expected '(' after function name")
 	params := p.parseParams()
+
+	var retType ast.Expression
+	if !p.matches(token.EOF, token.LCurlyBracket) {
+		retType = p.parseExpression()
+	}
 
 	lbrace := p.eatOnly(token.LCurlyBracket, "expected '{' after function parameters")
 	body := p.parseBody()
@@ -243,17 +248,20 @@ func (p *Parser) parseFunction() ast.Decl {
 		Func:       funcTok.Pos,
 		Statements: body,
 		Parameters: params,
+		ReturnType: retType,
 		LeftBrace:  lbrace.Pos,
 		RightBrace: rbrace.Pos,
 	}
 }
 
-func (p *Parser) parseParams() []*ast.Identifier {
-	var params []*ast.Identifier
+func (p *Parser) parseParams() *ast.FieldList {
+	lparen := p.eatOnly(token.LParen, "expected '(' after function name")
+	params := &ast.FieldList{Opening: lparen.Pos}
 	i := 0
 	for !p.matches(token.EOF) {
 		if p.matches(token.RParen) {
-			p.eat()
+			rparen := p.eat()
+			params.Closing = rparen.Pos
 			break
 		}
 		if i > 0 {
@@ -261,10 +269,23 @@ func (p *Parser) parseParams() []*ast.Identifier {
 				p.advance(paramStart)
 			}
 		}
+		var names []*ast.Identifier
+	parse_name:
 		name := p.eatOnly(token.Identifier, "expected parameter name")
-		if name.Type == token.Identifier {
-			params = append(params, ast.NewIdent(name))
+		if name.Type != token.Identifier {
+			break
 		}
+		names = append(names, ast.NewIdent(name))
+		if p.matches(token.Comma) {
+			// More than 1 name with same type (e.g. a, b, c int)
+			p.eat()
+			goto parse_name
+		}
+		typ := p.parseType()
+		params.List = append(params.List, &ast.Field{
+			Names: names,
+			Typ:   typ,
+		})
 		i++
 	}
 	return params
@@ -573,7 +594,7 @@ func (p *Parser) parseTupleType(tupleTok lexer.Token) *ast.TupleType {
 	fields := &ast.FieldList{}
 	for !p.matches(token.RSquareBracket) {
 		typExpr := p.parseType()
-		fields.List = append(fields.List, &ast.Field{Type: typExpr})
+		fields.List = append(fields.List, &ast.Field{Typ: typExpr})
 		if p.matches(token.RSquareBracket) {
 			break
 		}

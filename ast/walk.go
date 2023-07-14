@@ -32,6 +32,7 @@ func walk(n Node, v Visitor) {
 
 	switch n := n.(type) {
 	case *Module:
+		walk(n.Id, v)
 		for _, decl := range n.Decls {
 			walk(decl, v)
 		}
@@ -42,7 +43,7 @@ func walk(n Node, v Visitor) {
 		walk(n.Path, v)
 	case *FuncDecl:
 		walk(n.Name, v)
-		for _, param := range n.Parameters {
+		for _, param := range n.Parameters.List {
 			walk(param, v)
 		}
 		for _, stmt := range n.Statements {
@@ -63,7 +64,7 @@ func walk(n Node, v Visitor) {
 		for _, name := range n.Names {
 			walk(name, v)
 		}
-		walk(n.Type, v)
+		walk(n.Typ, v)
 	case *CallExpr:
 		walk(n.Fun, v)
 		for _, arg := range n.Args {

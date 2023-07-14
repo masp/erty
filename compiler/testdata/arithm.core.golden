@@ -1,0 +1,15 @@
+'test'/2 =
+    (fun (_0,_1) ->
+        let <_2> =
+            call 'erlang':'a'
+                ((_0
+                -| [{'function',{'test',2}}]))
+        in do 
+            call 'erlang':'d'
+                ()
+            call 'erlang':'+'
+                (apply 'int'
+                    (call 'erlang':'b'
+                        ((_1
+                        -| [{'function',{'test',2}}]))),100)
+        -| [{'function',{'test',2}}])

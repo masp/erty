@@ -66,11 +66,11 @@ func ParseModule(filename string, src []byte) (mod *ast.Module, err error) {
 	return
 }
 
-func ParseFunc(src []byte) (function *ast.FuncDecl, err error) {
+func ParseFunc(src []byte) (file *token.File, function *ast.FuncDecl, err error) {
 	lex := lexer.NewLexer("<string>", src)
 	tokens := lex.All()
 	if lex.HasErrors() {
-		return nil, lex.Errors()
+		return nil, nil, lex.Errors()
 	}
 
 	parser := &Parser{
@@ -86,9 +86,9 @@ func ParseFunc(src []byte) (function *ast.FuncDecl, err error) {
 	}()
 	fn := parser.parseFunction()
 	if fn, ok := fn.(*ast.FuncDecl); ok {
-		return fn, err
+		return parser.file, fn, err
 	}
-	return nil, err
+	return nil, nil, err
 }
 
 func ParseExpr(program string) (file *token.File, result ast.Expression, err error) {

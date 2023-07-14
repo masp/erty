@@ -16,32 +16,36 @@
     15  .  .  .  .  NamePos: <test>:2:6
     16  .  .  .  .  Name: "bad"
     17  .  .  .  }
-    18  .  .  .  Statements: []ast.Statement (len = 3) {
-    19  .  .  .  .  0: *ast.ExprStatement {
-    20  .  .  .  .  .  Expression: *ast.Identifier {
-    21  .  .  .  .  .  .  NamePos: <test>:3:2
-    22  .  .  .  .  .  .  Name: "go"
-    23  .  .  .  .  .  }
-    24  .  .  .  .  }
-    25  .  .  .  .  1: *ast.BadStmt {
-    26  .  .  .  .  .  From: <test>:3:5
-    27  .  .  .  .  .  To: <test>:5:3
+    18  .  .  .  Parameters: *ast.FieldList {
+    19  .  .  .  .  Opening: <test>:2:9
+    20  .  .  .  .  Closing: <test>:2:10
+    21  .  .  .  }
+    22  .  .  .  Statements: []ast.Statement (len = 3) {
+    23  .  .  .  .  0: *ast.ExprStatement {
+    24  .  .  .  .  .  Expression: *ast.Identifier {
+    25  .  .  .  .  .  .  NamePos: <test>:3:2
+    26  .  .  .  .  .  .  Name: "go"
+    27  .  .  .  .  .  }
     28  .  .  .  .  }
-    29  .  .  .  .  2: *ast.ExprStatement {
-    30  .  .  .  .  .  Expression: *ast.AssignExpr {
-    31  .  .  .  .  .  .  Left: *ast.Identifier {
-    32  .  .  .  .  .  .  .  NamePos: <test>:6:2
-    33  .  .  .  .  .  .  .  Name: "a"
-    34  .  .  .  .  .  .  }
-    35  .  .  .  .  .  .  Equals: <test>:6:4
-    36  .  .  .  .  .  .  Right: *ast.IntLiteral {
-    37  .  .  .  .  .  .  .  IntPos: <test>:6:6
-    38  .  .  .  .  .  .  .  Lit: "12"
-    39  .  .  .  .  .  .  .  Value: 12
-    40  .  .  .  .  .  .  }
-    41  .  .  .  .  .  }
-    42  .  .  .  .  }
-    43  .  .  .  }
-    44  .  .  }
-    45  .  }
-    46  }
+    29  .  .  .  .  1: *ast.BadStmt {
+    30  .  .  .  .  .  From: <test>:3:5
+    31  .  .  .  .  .  To: <test>:5:3
+    32  .  .  .  .  }
+    33  .  .  .  .  2: *ast.ExprStatement {
+    34  .  .  .  .  .  Expression: *ast.AssignExpr {
+    35  .  .  .  .  .  .  Left: *ast.Identifier {
+    36  .  .  .  .  .  .  .  NamePos: <test>:6:2
+    37  .  .  .  .  .  .  .  Name: "a"
+    38  .  .  .  .  .  .  }
+    39  .  .  .  .  .  .  Equals: <test>:6:4
+    40  .  .  .  .  .  .  Right: *ast.IntLiteral {
+    41  .  .  .  .  .  .  .  IntPos: <test>:6:6
+    42  .  .  .  .  .  .  .  Lit: "12"
+    43  .  .  .  .  .  .  .  Value: 12
+    44  .  .  .  .  .  .  }
+    45  .  .  .  .  .  }
+    46  .  .  .  .  }
+    47  .  .  .  }
+    48  .  .  }
+    49  .  }
+    50  }

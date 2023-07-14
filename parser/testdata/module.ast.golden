@@ -16,45 +16,49 @@
     15  .  .  .  .  NamePos: <test>:2:10
     16  .  .  .  .  Name: "expr"
     17  .  .  .  }
-    18  .  .  .  Statements: []ast.Statement (len = 2) {
-    19  .  .  .  .  0: *ast.ExprStatement {
-    20  .  .  .  .  .  Expression: *ast.AssignExpr {
-    21  .  .  .  .  .  .  Left: *ast.Identifier {
-    22  .  .  .  .  .  .  .  NamePos: <test>:3:6
-    23  .  .  .  .  .  .  .  Name: "test"
-    24  .  .  .  .  .  .  }
-    25  .  .  .  .  .  .  Equals: <test>:3:11
-    26  .  .  .  .  .  .  Right: *ast.StringLiteral {
-    27  .  .  .  .  .  .  .  QuotePos: <test>:3:13
-    28  .  .  .  .  .  .  .  Value: "hello world"
-    29  .  .  .  .  .  .  .  Lit: "\"hello world\""
-    30  .  .  .  .  .  .  }
-    31  .  .  .  .  .  }
-    32  .  .  .  .  }
-    33  .  .  .  .  1: *ast.ExprStatement {
-    34  .  .  .  .  .  Expression: *ast.AssignExpr {
-    35  .  .  .  .  .  .  Left: *ast.Identifier {
-    36  .  .  .  .  .  .  .  NamePos: <test>:4:6
-    37  .  .  .  .  .  .  .  Name: "a"
-    38  .  .  .  .  .  .  }
-    39  .  .  .  .  .  .  Equals: <test>:4:8
-    40  .  .  .  .  .  .  Right: *ast.BinaryExpr {
-    41  .  .  .  .  .  .  .  Left: *ast.IntLiteral {
-    42  .  .  .  .  .  .  .  .  IntPos: <test>:4:10
-    43  .  .  .  .  .  .  .  .  Lit: "3"
-    44  .  .  .  .  .  .  .  .  Value: 3
-    45  .  .  .  .  .  .  .  }
-    46  .  .  .  .  .  .  .  OpPos: <test>:4:12
-    47  .  .  .  .  .  .  .  Op: Plus
-    48  .  .  .  .  .  .  .  Right: *ast.IntLiteral {
-    49  .  .  .  .  .  .  .  .  IntPos: <test>:4:14
-    50  .  .  .  .  .  .  .  .  Lit: "5"
-    51  .  .  .  .  .  .  .  .  Value: 5
-    52  .  .  .  .  .  .  .  }
-    53  .  .  .  .  .  .  }
-    54  .  .  .  .  .  }
-    55  .  .  .  .  }
-    56  .  .  .  }
-    57  .  .  }
-    58  .  }
-    59  }
+    18  .  .  .  Parameters: *ast.FieldList {
+    19  .  .  .  .  Opening: <test>:2:14
+    20  .  .  .  .  Closing: <test>:2:15
+    21  .  .  .  }
+    22  .  .  .  Statements: []ast.Statement (len = 2) {
+    23  .  .  .  .  0: *ast.ExprStatement {
+    24  .  .  .  .  .  Expression: *ast.AssignExpr {
+    25  .  .  .  .  .  .  Left: *ast.Identifier {
+    26  .  .  .  .  .  .  .  NamePos: <test>:3:6
+    27  .  .  .  .  .  .  .  Name: "test"
+    28  .  .  .  .  .  .  }
+    29  .  .  .  .  .  .  Equals: <test>:3:11
+    30  .  .  .  .  .  .  Right: *ast.StringLiteral {
+    31  .  .  .  .  .  .  .  QuotePos: <test>:3:13
+    32  .  .  .  .  .  .  .  Value: "hello world"
+    33  .  .  .  .  .  .  .  Lit: "\"hello world\""
+    34  .  .  .  .  .  .  }
+    35  .  .  .  .  .  }
+    36  .  .  .  .  }
+    37  .  .  .  .  1: *ast.ExprStatement {
+    38  .  .  .  .  .  Expression: *ast.AssignExpr {
+    39  .  .  .  .  .  .  Left: *ast.Identifier {
+    40  .  .  .  .  .  .  .  NamePos: <test>:4:6
+    41  .  .  .  .  .  .  .  Name: "a"
+    42  .  .  .  .  .  .  }
+    43  .  .  .  .  .  .  Equals: <test>:4:8
+    44  .  .  .  .  .  .  Right: *ast.BinaryExpr {
+    45  .  .  .  .  .  .  .  Left: *ast.IntLiteral {
+    46  .  .  .  .  .  .  .  .  IntPos: <test>:4:10
+    47  .  .  .  .  .  .  .  .  Lit: "3"
+    48  .  .  .  .  .  .  .  .  Value: 3
+    49  .  .  .  .  .  .  .  }
+    50  .  .  .  .  .  .  .  OpPos: <test>:4:12
+    51  .  .  .  .  .  .  .  Op: Plus
+    52  .  .  .  .  .  .  .  Right: *ast.IntLiteral {
+    53  .  .  .  .  .  .  .  .  IntPos: <test>:4:14
+    54  .  .  .  .  .  .  .  .  Lit: "5"
+    55  .  .  .  .  .  .  .  .  Value: 5
+    56  .  .  .  .  .  .  .  }
+    57  .  .  .  .  .  .  }
+    58  .  .  .  .  .  }
+    59  .  .  .  .  }
+    60  .  .  .  }
+    61  .  .  }
+    62  .  }
+    63  }

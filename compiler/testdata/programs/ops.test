@@ -1,0 +1,13 @@
+output=100
+---
+module ops
+
+import "io"
+
+func main(args []string) {
+    io.format("~w~n", [add(1)])
+}
+
+func add(a int) int {
+    return a + 90
+}

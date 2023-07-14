@@ -5,7 +5,6 @@ module 'attributes' []
         'c' =
             [{'d','e'}|['f'|['g'|[]]]]]
 'a'/0 =
-    (fun () ->
+    fun () ->
         'a'
-        -| [])
 end

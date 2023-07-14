@@ -23,12 +23,13 @@ func add(s State) (res Result) {
     s = {Count: s.Count + 1, s...}
 
     defer func() {
-        match err = recover() {
-        case 'ok':
+        let err = recover()
+        match err {
+        case 'ok': 
             return
         case {'badmatch', cause}:
             return {'error', cause}
-        default: 
+        default:
             raise(err)
         }
     }()

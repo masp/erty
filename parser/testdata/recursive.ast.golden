@@ -1,71 +1,75 @@
      0  *ast.FuncDecl {
-     1  .  Func: 1
-     2  .  LeftBrace: 18
-     3  .  RightBrace: 42
+     1  .  Func: <string>:1:1
+     2  .  LeftBrace: <string>:1:18
+     3  .  RightBrace: <string>:1:42
      4  .  Name: *ast.Identifier {
-     5  .  .  NamePos: 6
+     5  .  .  NamePos: <string>:1:6
      6  .  .  Name: "recursive"
      7  .  }
-     8  .  Statements: []ast.Statement (len = 1) {
-     9  .  .  0: *ast.ExprStatement {
-    10  .  .  .  Expression: *ast.CallExpr {
-    11  .  .  .  .  Fun: *ast.DotExpr {
-    12  .  .  .  .  .  X: *ast.CallExpr {
-    13  .  .  .  .  .  .  Fun: *ast.DotExpr {
-    14  .  .  .  .  .  .  .  X: *ast.CallExpr {
-    15  .  .  .  .  .  .  .  .  Fun: *ast.DotExpr {
-    16  .  .  .  .  .  .  .  .  .  X: *ast.Identifier {
-    17  .  .  .  .  .  .  .  .  .  .  NamePos: 20
-    18  .  .  .  .  .  .  .  .  .  .  Name: "mod"
-    19  .  .  .  .  .  .  .  .  .  }
-    20  .  .  .  .  .  .  .  .  .  Dot: 23
-    21  .  .  .  .  .  .  .  .  .  Attr: *ast.Identifier {
-    22  .  .  .  .  .  .  .  .  .  .  NamePos: 24
-    23  .  .  .  .  .  .  .  .  .  .  Name: "fn"
-    24  .  .  .  .  .  .  .  .  .  }
-    25  .  .  .  .  .  .  .  .  }
-    26  .  .  .  .  .  .  .  .  Args: []ast.Expression (len = 1) {
-    27  .  .  .  .  .  .  .  .  .  0: *ast.IntLiteral {
-    28  .  .  .  .  .  .  .  .  .  .  IntPos: 27
-    29  .  .  .  .  .  .  .  .  .  .  Lit: "1"
-    30  .  .  .  .  .  .  .  .  .  .  Value: 1
-    31  .  .  .  .  .  .  .  .  .  }
-    32  .  .  .  .  .  .  .  .  }
-    33  .  .  .  .  .  .  .  .  LeftParen: 26
-    34  .  .  .  .  .  .  .  .  RightParen: 28
-    35  .  .  .  .  .  .  .  }
-    36  .  .  .  .  .  .  .  Dot: 29
-    37  .  .  .  .  .  .  .  Attr: *ast.Identifier {
-    38  .  .  .  .  .  .  .  .  NamePos: 30
-    39  .  .  .  .  .  .  .  .  Name: "fn"
-    40  .  .  .  .  .  .  .  }
-    41  .  .  .  .  .  .  }
-    42  .  .  .  .  .  .  Args: []ast.Expression (len = 1) {
-    43  .  .  .  .  .  .  .  0: *ast.IntLiteral {
-    44  .  .  .  .  .  .  .  .  IntPos: 33
-    45  .  .  .  .  .  .  .  .  Lit: "2"
-    46  .  .  .  .  .  .  .  .  Value: 2
-    47  .  .  .  .  .  .  .  }
-    48  .  .  .  .  .  .  }
-    49  .  .  .  .  .  .  LeftParen: 32
-    50  .  .  .  .  .  .  RightParen: 34
-    51  .  .  .  .  .  }
-    52  .  .  .  .  .  Dot: 35
-    53  .  .  .  .  .  Attr: *ast.Identifier {
-    54  .  .  .  .  .  .  NamePos: 36
-    55  .  .  .  .  .  .  Name: "fn"
-    56  .  .  .  .  .  }
-    57  .  .  .  .  }
-    58  .  .  .  .  Args: []ast.Expression (len = 1) {
-    59  .  .  .  .  .  0: *ast.IntLiteral {
-    60  .  .  .  .  .  .  IntPos: 39
-    61  .  .  .  .  .  .  Lit: "3"
-    62  .  .  .  .  .  .  Value: 3
-    63  .  .  .  .  .  }
-    64  .  .  .  .  }
-    65  .  .  .  .  LeftParen: 38
-    66  .  .  .  .  RightParen: 40
-    67  .  .  .  }
-    68  .  .  }
-    69  .  }
-    70  }
+     8  .  Parameters: *ast.FieldList {
+     9  .  .  Opening: <string>:1:15
+    10  .  .  Closing: <string>:1:16
+    11  .  }
+    12  .  Statements: []ast.Statement (len = 1) {
+    13  .  .  0: *ast.ExprStatement {
+    14  .  .  .  Expression: *ast.CallExpr {
+    15  .  .  .  .  Fun: *ast.DotExpr {
+    16  .  .  .  .  .  X: *ast.CallExpr {
+    17  .  .  .  .  .  .  Fun: *ast.DotExpr {
+    18  .  .  .  .  .  .  .  X: *ast.CallExpr {
+    19  .  .  .  .  .  .  .  .  Fun: *ast.DotExpr {
+    20  .  .  .  .  .  .  .  .  .  X: *ast.Identifier {
+    21  .  .  .  .  .  .  .  .  .  .  NamePos: <string>:1:20
+    22  .  .  .  .  .  .  .  .  .  .  Name: "mod"
+    23  .  .  .  .  .  .  .  .  .  }
+    24  .  .  .  .  .  .  .  .  .  Dot: <string>:1:23
+    25  .  .  .  .  .  .  .  .  .  Attr: *ast.Identifier {
+    26  .  .  .  .  .  .  .  .  .  .  NamePos: <string>:1:24
+    27  .  .  .  .  .  .  .  .  .  .  Name: "fn"
+    28  .  .  .  .  .  .  .  .  .  }
+    29  .  .  .  .  .  .  .  .  }
+    30  .  .  .  .  .  .  .  .  Args: []ast.Expression (len = 1) {
+    31  .  .  .  .  .  .  .  .  .  0: *ast.IntLiteral {
+    32  .  .  .  .  .  .  .  .  .  .  IntPos: <string>:1:27
+    33  .  .  .  .  .  .  .  .  .  .  Lit: "1"
+    34  .  .  .  .  .  .  .  .  .  .  Value: 1
+    35  .  .  .  .  .  .  .  .  .  }
+    36  .  .  .  .  .  .  .  .  }
+    37  .  .  .  .  .  .  .  .  LeftParen: <string>:1:26
+    38  .  .  .  .  .  .  .  .  RightParen: <string>:1:28
+    39  .  .  .  .  .  .  .  }
+    40  .  .  .  .  .  .  .  Dot: <string>:1:29
+    41  .  .  .  .  .  .  .  Attr: *ast.Identifier {
+    42  .  .  .  .  .  .  .  .  NamePos: <string>:1:30
+    43  .  .  .  .  .  .  .  .  Name: "fn"
+    44  .  .  .  .  .  .  .  }
+    45  .  .  .  .  .  .  }
+    46  .  .  .  .  .  .  Args: []ast.Expression (len = 1) {
+    47  .  .  .  .  .  .  .  0: *ast.IntLiteral {
+    48  .  .  .  .  .  .  .  .  IntPos: <string>:1:33
+    49  .  .  .  .  .  .  .  .  Lit: "2"
+    50  .  .  .  .  .  .  .  .  Value: 2
+    51  .  .  .  .  .  .  .  }
+    52  .  .  .  .  .  .  }
+    53  .  .  .  .  .  .  LeftParen: <string>:1:32
+    54  .  .  .  .  .  .  RightParen: <string>:1:34
+    55  .  .  .  .  .  }
+    56  .  .  .  .  .  Dot: <string>:1:35
+    57  .  .  .  .  .  Attr: *ast.Identifier {
+    58  .  .  .  .  .  .  NamePos: <string>:1:36
+    59  .  .  .  .  .  .  Name: "fn"
+    60  .  .  .  .  .  }
+    61  .  .  .  .  }
+    62  .  .  .  .  Args: []ast.Expression (len = 1) {
+    63  .  .  .  .  .  0: *ast.IntLiteral {
+    64  .  .  .  .  .  .  IntPos: <string>:1:39
+    65  .  .  .  .  .  .  Lit: "3"
+    66  .  .  .  .  .  .  Value: 3
+    67  .  .  .  .  .  }
+    68  .  .  .  .  }
+    69  .  .  .  .  LeftParen: <string>:1:38
+    70  .  .  .  .  RightParen: <string>:1:40
+    71  .  .  .  }
+    72  .  .  }
+    73  .  }
+    74  }

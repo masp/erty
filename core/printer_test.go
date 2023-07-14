@@ -21,18 +21,36 @@ func TestPrintModule(t *testing.T) {
 			name: "one_func_annotated",
 			input: &Module{
 				Name: "one_func_annotated",
-				Functions: []Func{
+				Functions: []*Func{
 					{
-						Name: FuncName{Name: "a", Arity: 0},
-						Body: Atom{Value: "a"},
-						Annotation: Annotation{
-							Attrs: []Const{ConstTuple{Elements: []Const{
-								Atom{Value: "function"},
-								ConstTuple{Elements: []Const{
-									Atom{Value: "a"}, Integer{Value: 0},
-								}},
-							}}},
+						Name: &FuncName{Name: "a", Arity: 1},
+						Parameters: []*Var{
+							{Name: "A", OriginalName: "A"},
 						},
+						Body: &Var{
+							Name:         "A",
+							OriginalName: "A",
+							annotated: annotated{Annotation{
+								Attrs: []Const{
+									&ConstTuple{Elements: []Const{
+										Atom{Value: "function"},
+										&ConstTuple{Elements: []Const{
+											Atom{Value: "a"}, Integer{Value: 1},
+										}},
+									}},
+								},
+							}},
+						},
+						annotated: annotated{Annotation{
+							Attrs: []Const{
+								&ConstTuple{Elements: []Const{
+									Atom{Value: "function"},
+									&ConstTuple{Elements: []Const{
+										Atom{Value: "a"}, Integer{Value: 1},
+									}},
+								}},
+							},
+						}},
 					},
 				},
 			},
@@ -42,17 +60,17 @@ func TestPrintModule(t *testing.T) {
 			name: "exports",
 			input: &Module{
 				Name: "exports",
-				Exports: []FuncName{
+				Exports: []*FuncName{
 					{Name: "a", Arity: 0},
 					{Name: "b", Arity: 1},
 				},
-				Functions: []Func{
+				Functions: []*Func{
 					{
-						Name: FuncName{Name: "a", Arity: 0},
+						Name: &FuncName{Name: "a", Arity: 0},
 						Body: Atom{Value: "a"},
 					},
 					{
-						Name: FuncName{Name: "b", Arity: 1},
+						Name: &FuncName{Name: "b", Arity: 1},
 						Body: Atom{Value: "b"},
 					},
 				},
@@ -63,17 +81,17 @@ func TestPrintModule(t *testing.T) {
 			name: "attributes",
 			input: &Module{
 				Name: "attributes",
-				Attributes: []Attribute{
+				Attributes: []*Attribute{
 					{Key: Atom{Value: "a"}, Value: Atom{Value: "b"}},
-					{Key: Atom{Value: "c"}, Value: ConstList{Elements: []Const{
-						ConstTuple{Elements: []Const{Atom{Value: "d"}, Atom{Value: "e"}}},
+					{Key: Atom{Value: "c"}, Value: &ConstList{Elements: []Const{
+						&ConstTuple{Elements: []Const{Atom{Value: "d"}, Atom{Value: "e"}}},
 						Atom{Value: "f"},
 						Atom{Value: "g"},
 					}}},
 				},
-				Functions: []Func{
+				Functions: []*Func{
 					{
-						Name: FuncName{Name: "a", Arity: 0},
+						Name: &FuncName{Name: "a", Arity: 0},
 						Body: Atom{Value: "a"},
 					},
 				},
@@ -84,11 +102,11 @@ func TestPrintModule(t *testing.T) {
 			name: "intermodule",
 			input: &Module{
 				Name: "intermodule",
-				Functions: []Func{
+				Functions: []*Func{
 					{
-						Name: FuncName{Name: "a", Arity: 0},
-						Body: InterModuleCall{
-							Module: Application{
+						Name: &FuncName{Name: "a", Arity: 0},
+						Body: &InterModuleCall{
+							Module: &ApplyExpr{
 								Func: Atom{Value: "app"},
 								Args: []Expr{Atom{Value: "c"}},
 							},
@@ -99,6 +117,40 @@ func TestPrintModule(t *testing.T) {
 				},
 			},
 			expected: "intermodule.core",
+		},
+		{
+			name: "let",
+			input: &Module{
+				Name: "let",
+				Functions: []*Func{
+					{
+						Name: &FuncName{Name: "a", Arity: 0},
+						Body: &LetExpr{
+							Vars:   []*Var{{Name: "V"}},
+							Assign: Atom{"assign"},
+							In:     Atom{"in"},
+						},
+					},
+				},
+			},
+			expected: "let.core",
+		},
+		{
+
+			name: "do",
+			input: &Module{
+				Name: "do",
+				Functions: []*Func{
+					{
+						Name: &FuncName{Name: "a", Arity: 0},
+						Body: &DoExpr{
+							Before: Atom{"before"},
+							After:  Atom{"after"},
+						},
+					},
+				},
+			},
+			expected: "do.core",
 		},
 	}
 

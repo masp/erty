@@ -11,6 +11,7 @@ import (
 	"github.com/masp/garlang/compiler"
 	"github.com/masp/garlang/core"
 	"github.com/masp/garlang/parser"
+	"github.com/masp/garlang/resolver"
 	"github.com/masp/garlang/token"
 )
 
@@ -57,17 +58,19 @@ func Main(args []string) error {
 	}
 
 	garMod, err := parser.ParseModule(inputName, inputSrc)
-	if lexErrs, ok := err.(token.ErrorList); ok {
-		for _, err := range lexErrs {
-			fmt.Fprintf(os.Stderr, "%s:%d:%d: %v", inputName, err.Pos.Line, err.Pos.Column, err.Msg)
-		}
-	} else if err != nil {
-		return fmt.Errorf("parse: %w", err)
+	if err != nil {
+		return printErr(inputName, "parse", err)
 	}
 
-	coreMod, err := compiler.New().CompileModule(garMod)
+	err = resolver.ResolveModule(garMod, nil)
 	if err != nil {
-		return fmt.Errorf("compile: %w", err)
+		return printErr(inputName, "compile", err)
+	}
+
+	cmplr := compiler.New()
+	coreMod, err := cmplr.CompileModule(garMod)
+	if err != nil {
+		return printErr(inputName, "compile", err)
 	}
 
 	output, err := findOutput(input)
@@ -88,6 +91,18 @@ func Main(args []string) error {
 		if err = erlc.Run(); err != nil {
 			return fmt.Errorf("run erlc: %w", err)
 		}
+	}
+	return nil
+}
+
+func printErr(filename string, stage string, err error) error {
+	if lexErrs, ok := err.(token.ErrorList); ok {
+		for _, err := range lexErrs {
+			fmt.Fprintf(os.Stderr, "%s:%d:%d: %v", filename, err.Pos.Line, err.Pos.Column, err.Msg)
+		}
+		return err
+	} else if err != nil {
+		return fmt.Errorf("%s: %w", stage, err)
 	}
 	return nil
 }

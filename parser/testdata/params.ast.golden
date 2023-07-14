@@ -1,23 +1,47 @@
      0  *ast.FuncDecl {
-     1  .  Func: 1
-     2  .  LeftBrace: 22
-     3  .  RightBrace: 23
+     1  .  Func: <string>:1:1
+     2  .  LeftBrace: <string>:1:37
+     3  .  RightBrace: <string>:1:38
      4  .  Name: *ast.Identifier {
-     5  .  .  NamePos: 6
+     5  .  .  NamePos: <string>:1:6
      6  .  .  Name: "params"
      7  .  }
-     8  .  Parameters: []*ast.Identifier (len = 3) {
-     9  .  .  0: *ast.Identifier {
-    10  .  .  .  NamePos: 13
-    11  .  .  .  Name: "a"
-    12  .  .  }
-    13  .  .  1: *ast.Identifier {
-    14  .  .  .  NamePos: 16
-    15  .  .  .  Name: "b"
-    16  .  .  }
-    17  .  .  2: *ast.Identifier {
-    18  .  .  .  NamePos: 19
-    19  .  .  .  Name: "c"
-    20  .  .  }
-    21  .  }
-    22  }
+     8  .  Parameters: *ast.FieldList {
+     9  .  .  Opening: <string>:1:12
+    10  .  .  List: []*ast.Field (len = 2) {
+    11  .  .  .  0: *ast.Field {
+    12  .  .  .  .  Names: []*ast.Identifier (len = 2) {
+    13  .  .  .  .  .  0: *ast.Identifier {
+    14  .  .  .  .  .  .  NamePos: <string>:1:13
+    15  .  .  .  .  .  .  Name: "a"
+    16  .  .  .  .  .  }
+    17  .  .  .  .  .  1: *ast.Identifier {
+    18  .  .  .  .  .  .  NamePos: <string>:1:16
+    19  .  .  .  .  .  .  Name: "b"
+    20  .  .  .  .  .  }
+    21  .  .  .  .  }
+    22  .  .  .  .  Type: *ast.Identifier {
+    23  .  .  .  .  .  NamePos: <string>:1:18
+    24  .  .  .  .  .  Name: "int"
+    25  .  .  .  .  }
+    26  .  .  .  }
+    27  .  .  .  1: *ast.Field {
+    28  .  .  .  .  Names: []*ast.Identifier (len = 1) {
+    29  .  .  .  .  .  0: *ast.Identifier {
+    30  .  .  .  .  .  .  NamePos: <string>:1:23
+    31  .  .  .  .  .  .  Name: "c"
+    32  .  .  .  .  .  }
+    33  .  .  .  .  }
+    34  .  .  .  .  Type: *ast.Identifier {
+    35  .  .  .  .  .  NamePos: <string>:1:25
+    36  .  .  .  .  .  Name: "string"
+    37  .  .  .  .  }
+    38  .  .  .  }
+    39  .  .  }
+    40  .  .  Closing: <string>:1:31
+    41  .  }
+    42  .  ReturnType: *ast.Identifier {
+    43  .  .  NamePos: <string>:1:33
+    44  .  .  Name: "int"
+    45  .  }
+    46  }

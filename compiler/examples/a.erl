@@ -1,9 +1,11 @@
 -module(a).
--export([a/0]).
+-export([add/1, main/1]).
 
 % compile:file("sample.core", [from_core]).
 
-a() -> 1.
-
-multi_call() ->
-    (a()):b(1).
+add(A) -> A + 90.
+main(A) ->
+    case A of
+        {ok, 1} -> true;
+        {bad, 2} -> false
+    end.

@@ -2,11 +2,9 @@ module 'exports' ['a'/0,'b'/1]
     attributes [
         ]
 'a'/0 =
-    (fun () ->
+    fun () ->
         'a'
-        -| [])
 'b'/1 =
-    (fun () ->
+    fun () ->
         'b'
-        -| [])
 end

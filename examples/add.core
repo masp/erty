@@ -1,18 +1,24 @@
-module 'hello_world' ['module_info'/0,'module_info'/1,'main'/0]
+module 'add' ['module_info'/0,'module_info'/1,'add'/1,'main'/0]
     attributes [
         ]
 'module_info'/0 =
     (fun () ->
         call 'erlang':'module_info'
-            ('hello_world')
+            ('add')
         -| [{'function',{'module_info',0}}])
 'module_info'/1 =
     (fun (_0) ->
         call 'erlang':'module_info'
-            ('hello_world',_0)
+            ('add',_0)
         -| [{'function',{'module_info',1}}])
+'add'/1 =
+    (fun (_1,_2) ->
+        call 'erlang':'+'
+            (_1,_2)
+        -| [{'function',{'add',1}}])
 'main'/0 =
     (fun () ->
-        "hello world!"
+        apply 'add'
+            (1,2)
         -| [{'function',{'main',0}}])
 end

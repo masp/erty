@@ -1,19 +1,21 @@
-module 'mod' ['a'/0,'module_info'/0,'module_info'/1]
+module 'ops' ['main'/1,'module_info'/0,'module_info'/1]
     attributes [
         ]
-'a'/0 =
-    (fun () ->
-        1
-        -| [{'function',{'a',0}}])
+'main'/1 =
+    (fun (_0) ->
+        call 'erlang':'+'
+            ((_0
+            -| [{'function',{'main',1}}]),90)
+        -| [{'function',{'main',1}}])
 'module_info'/0 =
     (fun () ->
         call 'erlang':'module_info'
-            ('mod')
+            ('ops')
         -| [{'function',{'module_info',0}}])
 'module_info'/1 =
     (fun (_0) ->
         call 'erlang':'module_info'
-            ('mod',(_0
+            ('ops',(_0
             -| [{'function',{'module_info',1}}]))
         -| [{'function',{'module_info',1}}])
 end

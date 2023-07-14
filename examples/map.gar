@@ -3,8 +3,17 @@ map(F, [])    -> [].
 
 func map(F func(any) any, L []any) {
     match L {
-    case [H|T]:
+    case [H int, T int...]:
         return [F(H) | map(F, T)]
+    case []:
+        return []
+    }
+}
+
+func map[T any](f func(T) T, l []T) {
+    match L {
+    case [h T, tail T...]:
+        return [f(h) | map(f, tail)]
     case []:
         return []
     }

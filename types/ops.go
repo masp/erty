@@ -2,6 +2,9 @@ package types
 
 import (
 	"errors"
+	"fmt"
+
+	"github.com/masp/garlang/ast"
 )
 
 var (
@@ -10,7 +13,7 @@ var (
 	ErrMismatch = errors.New("op not defined on mismatched types")
 )
 
-var arithmTable = map[BasicType]map[Type]Type{
+var arithmTable = map[BasicType]map[ast.Type]ast.Type{
 	UntypedInt: {
 		Int:          Int,
 		Float:        Float,
@@ -29,7 +32,7 @@ var arithmTable = map[BasicType]map[Type]Type{
 	},
 }
 
-func ApplyOp(t1, t2 Type) (Type, error) {
+func ApplyOp(t1, t2 ast.Type) (ast.Type, error) {
 	if t1 == t2 {
 		return t1, nil // No types are mismatched
 	}
@@ -40,7 +43,7 @@ func ApplyOp(t1, t2 Type) (Type, error) {
 
 	var (
 		untyped BasicType
-		other   Type
+		other   ast.Type
 	)
 	if IsUntyped(t1) {
 		untyped = t1.(BasicType)
@@ -67,13 +70,13 @@ func ApplyOp(t1, t2 Type) (Type, error) {
 // 7. Assignable(string, untyped string) -> nil
 //
 // The rules above apply the same if the var type is user-define (var.Underlying() != var).
-func IsAssignable(to, value Type) Type {
+func IsAssignable(to, value ast.Type) ast.Type {
 	if IsUntyped(value) && isConvertible(to.Underlying(), value) {
 		return to
 	}
-	if toAtom, ok := to.(*Atom); ok {
-		if valueAtom, ok := value.(*Atom); ok {
-			if toAtom.Value == valueAtom.Value {
+	if toAtom, ok := to.(*AtomValue); ok {
+		if valueAtom, ok := value.(*AtomValue); ok {
+			if toAtom.V == valueAtom.V {
 				return to
 			}
 		}
@@ -84,7 +87,7 @@ func IsAssignable(to, value Type) Type {
 	return Invalid
 }
 
-func isConvertible(to, value Type) bool {
+func isConvertible(to, value ast.Type) bool {
 	switch to {
 	case Int:
 		switch value {
@@ -109,4 +112,23 @@ func isConvertible(to, value Type) bool {
 		}
 	}
 	return false
+}
+
+func Cast(from, to ast.Type) (ast.Type, error) {
+	if from == Any {
+		return to, nil
+	}
+
+	if to == from {
+		return to, nil
+	}
+
+	if to.Underlying() == from.Underlying() {
+		return to, nil // Actual values are equivalent, just different aliases
+	}
+
+	if IsAssignable(to, from) != Invalid {
+		return to, nil
+	}
+	return Invalid, fmt.Errorf("non-castable types")
 }

@@ -25,42 +25,22 @@ type resolver struct {
 }
 
 func (r *resolver) error(node ast.Node, format string, args ...any) {
-	r.errlist.Add(r.file.Position(node.Pos()), fmt.Errorf(format, args...))
-}
-
-// Scope is a symbol table for a given Scope, for example a function
-// body or an if-statement. Every Scope can only have one declaration per
-// name, where duplicate names override previous ones. Scope is only meant to be
-// used during resolution.
-type Scope struct {
-	Outer   *Scope
-	Symbols map[string]types.Decl
-}
-
-func NewScope(outer *Scope) *Scope {
-	return &Scope{Outer: outer, Symbols: make(map[string]types.Decl)}
-}
-
-func (s *Scope) Lookup(name string) types.Decl {
-	if obj, ok := s.Symbols[name]; ok {
-		return obj
+	resolvedArgs := make([]any, len(args))
+	for i, arg := range args {
+		switch arg := arg.(type) {
+		case ast.Node:
+			resolvedArgs[i], _ = printer.Print(r.file, arg)
+		default:
+			resolvedArgs[i] = arg
+		}
 	}
-
-	if s.Outer != nil {
-		return s.Outer.Lookup(name)
-	}
-	return types.Decl{}
-}
-
-func (s *Scope) Insert(name string, decl types.Decl) (found types.Decl) {
-	s.Symbols[name] = decl
-	return decl
+	r.errlist.Add(r.file.Position(node.Pos()), fmt.Errorf(format, resolvedArgs...))
 }
 
 // ResolveModule walks the AST trying to match every identifier to a declaration in scope. If a match is found, it
 // is returned in the symbol table. If a match is not found, the entry is returned in Unresolved. All identifiers
 // must be either resolved or unresolved by the end of the walk.
-func ResolveModule(module *ast.Module, outer *Scope) (*types.SymbolTable, error) {
+func ResolveModule(module *ast.Module, outer *Scope) error {
 	r := &resolver{
 		symbols: types.NewSymbolTable(),
 		file:    module.File,
@@ -69,7 +49,7 @@ func ResolveModule(module *ast.Module, outer *Scope) (*types.SymbolTable, error)
 	r.ctx.scope = outer
 	r.pushScope()
 	r.resolveModule(module)
-	return r.symbols, r.errlist.Err()
+	return r.errlist.Err()
 }
 
 func ResolveExpr(file *token.File, expr ast.Expression, outer *Scope) (*types.SymbolTable, error) {
@@ -87,8 +67,40 @@ func ResolveExpr(file *token.File, expr ast.Expression, outer *Scope) (*types.Sy
 // resolve recursively traverses the expression and declares all identifiers the given scope as well as defining
 // subscopes for each block found.
 func (r *resolver) resolveModule(x *ast.Module) {
-	r.declare(x.Id, x, &types.Atom{Value: x.Id.Name})
-	// TODO: Declare function names and constants
+	r.declare(x.Id, x, &types.Module{AtomValue: types.AtomValue{V: x.Id.Name}})
+
+	for _, decl := range x.Decls {
+		switch decl := decl.(type) {
+		case *ast.FuncDecl:
+			var argTypes []ast.Type
+			for _, arg := range decl.Parameters.List {
+				t := r.resolveType(arg.Typ)
+				for j := 0; j < len(arg.Names); j++ {
+					argTypes = append(argTypes, t)
+				}
+			}
+
+			var retType ast.Type
+			if decl.ReturnType == nil {
+				retType = types.Void
+			} else {
+				retType = r.resolveType(decl.ReturnType)
+			}
+
+			r.declare(decl.Name, decl, &types.Func{
+				Args:   argTypes,
+				Return: retType,
+			})
+		case *ast.ImportDecl:
+			moduleName := decl.Path.Value
+			alias := decl.Alias
+			if alias == nil {
+				alias = &ast.Identifier{Name: moduleName}
+			}
+			r.declare(alias, decl, &types.Module{AtomValue: types.AtomValue{V: moduleName}})
+		}
+	}
+
 	for _, decl := range x.Decls {
 		if fd, ok := decl.(*ast.FuncDecl); ok {
 			r.resolveFunc(fd)
@@ -100,9 +112,14 @@ func (r *resolver) resolveFunc(x *ast.FuncDecl) {
 	r.pushScope() // function scope
 	defer r.popScope()
 
-	// TODO: Declare parameters and manually specified types
+	for _, arg := range x.Parameters.List {
+		t := r.resolveType(arg.Typ)
+		for _, name := range arg.Names {
+			r.declare(name, arg, t.Definition)
+		}
+	}
 
-	// TODO: Resolve body
+	// TODO: Declare parameters and manually specified types
 	for _, stmt := range x.Statements {
 		r.resolveStmt(stmt)
 	}
@@ -112,60 +129,65 @@ func (r *resolver) resolveStmt(stmt ast.Statement) {
 	switch s := stmt.(type) {
 	case *ast.ExprStatement:
 		r.resolveExpr(s.Expression)
+	case *ast.ReturnStatement:
+		r.resolveExpr(s.Expression)
 	default:
 		panic(fmt.Sprintf("unhandled statement type %T", stmt))
 	}
 }
 
-func (r *resolver) resolveExpr(expr ast.Expression) types.Type {
+func (r *resolver) resolveExpr(expr ast.Expression) (result ast.Type) {
 	switch e := expr.(type) {
 	case *ast.MatchAssignExpr:
 		return r.resolveMatchAssign(e)
 	case *ast.Identifier:
 		decl := r.lookup(e.Name)
-		if decl.Id == nil {
+		if decl == nil {
 			r.missing(e)
 			return types.Invalid
 		}
-		r.symbols.Resolved[e] = decl
+		r.symbols.AddResolved(e, decl)
+		e.SetType(decl)
 		return decl.Type
 	case *ast.IntLiteral:
+		e.SetType(types.UntypedInt)
 		return types.UntypedInt
 	case *ast.FloatLiteral:
+		e.SetType(types.UntypedFloat)
 		return types.UntypedFloat
 	case *ast.StringLiteral:
+		e.SetType(types.UntypedString)
 		return types.UntypedString
 	case *ast.AtomLiteral:
-		return &types.Atom{Value: e.Value}
+		t := &types.AtomValue{V: e.Value}
+		e.SetType(t)
+		return t
 	case *ast.BinaryExpr:
 		return r.resolveBinaryExpr(e)
 	case *ast.UnaryExpr:
 		return r.resolveUnaryExpr(e)
+	case *ast.CallExpr:
+		return r.resolveCallExpr(e)
+	case *ast.DotExpr:
+		return r.resolveDotExpr(e)
 	default:
 		panic(fmt.Errorf("unsupported expression %T", expr))
 	}
 }
 
-func (r *resolver) mustPrint(node ast.Node) string {
-	s, err := printer.Print(r.file, node)
-	if err != nil {
-		return "bad"
-	}
-	return s
-}
-
-func (r *resolver) resolveBinaryExpr(expr *ast.BinaryExpr) types.Type {
+func (r *resolver) resolveBinaryExpr(expr *ast.BinaryExpr) (result ast.Type) {
+	defer func() { expr.SetType(result) }()
 	leftT := r.resolveExpr(expr.Left)
 	rightT := r.resolveExpr(expr.Right)
 	switch expr.Op {
 	case token.Plus:
 		// Numeric operators OR string concatenation
 		if !types.IsString(leftT) && !types.IsNumeric(leftT) {
-			r.error(expr.Left, "operator %s not defined on %s (%s)", printer.TokenTable[expr.Op], r.mustPrint(expr.Left), leftT)
+			r.error(expr.Left, "operator %s not defined on %s (%s)", printer.TokenTable[expr.Op], expr.Left, leftT)
 			return types.Invalid
 		}
 		if !types.IsString(rightT) && !types.IsNumeric(rightT) {
-			r.error(expr.Right, "operator %s not defined on %s (%s)", printer.TokenTable[expr.Op], r.mustPrint(expr.Right), rightT)
+			r.error(expr.Right, "operator %s not defined on %s (%s)", printer.TokenTable[expr.Op], expr.Right, rightT)
 			return types.Invalid
 		}
 
@@ -178,11 +200,11 @@ func (r *resolver) resolveBinaryExpr(expr *ast.BinaryExpr) types.Type {
 	case token.Minus, token.Star, token.Slash, token.Less, token.LessEqual, token.Greater, token.GreaterEqual:
 		// Numeric operators
 		if !types.IsNumeric(leftT) {
-			r.error(expr.Left, "operator %s not defined on %s (%s)", printer.TokenTable[expr.Op], r.mustPrint(expr.Left), leftT)
+			r.error(expr.Left, "operator %s not defined on %s (%s)", printer.TokenTable[expr.Op], expr.Left, leftT)
 			return types.Invalid
 		}
 		if !types.IsNumeric(rightT) {
-			r.error(expr.Right, "operator %s not defined on %s (%s)", printer.TokenTable[expr.Op], r.mustPrint(expr.Right), rightT)
+			r.error(expr.Right, "operator %s not defined on %s (%s)", printer.TokenTable[expr.Op], expr.Right, rightT)
 			return types.Invalid
 		}
 
@@ -204,7 +226,8 @@ func (r *resolver) resolveBinaryExpr(expr *ast.BinaryExpr) types.Type {
 	}
 }
 
-func (r *resolver) resolveUnaryExpr(expr *ast.UnaryExpr) types.Type {
+func (r *resolver) resolveUnaryExpr(expr *ast.UnaryExpr) (result ast.Type) {
+	defer func() { expr.SetType(result) }()
 	switch expr.Op {
 	case token.Minus, token.Plus:
 		t := r.resolveExpr(expr.Right)
@@ -227,6 +250,67 @@ func (r *resolver) resolveUnaryExpr(expr *ast.UnaryExpr) types.Type {
 	}
 }
 
+func (r *resolver) resolveCallExpr(e *ast.CallExpr) (result ast.Type) {
+	defer func() { e.SetType(result) }()
+	fnType := r.resolveExpr(e.Fun)
+	if fnType == types.Any {
+		var typs []ast.Type
+		for _, arg := range e.Args {
+			typs = append(typs, r.resolveExpr(arg)) // resolve, but we can't do any checks about the types
+		}
+		deduced := &types.Func{Args: typs, Return: types.Any}
+		if fn, ok := e.Fun.(types.Node); ok {
+			fn.SetType(deduced)
+		}
+		return types.Any
+	}
+	switch cl := fnType.(type) {
+	case *types.Func:
+		for i, arg := range e.Args {
+			argType := r.resolveExpr(arg)
+			if i >= len(cl.Args) {
+				r.error(arg, "too many arguments to func %s (expected %d, got %d)", e.Fun, len(cl.Args), len(e.Args))
+				break
+			}
+			declType := cl.Args[i]
+			if t := types.IsAssignable(declType, argType); t != declType {
+				r.error(arg, "cannot use %s (%s) as %s value in argument to %s", arg, argType, declType, e.Fun)
+				continue
+			}
+		}
+		return cl.Return
+	case *types.Expr:
+		// Type cast expression
+		if len(e.Args) != 1 {
+			r.error(e, "type cast takes exactly one argument")
+			return types.Invalid
+		}
+		argType := r.resolveExpr(e.Args[0])
+		result, err := types.Cast(argType, cl.Definition)
+		if err != nil {
+			r.error(e.Args[0], "cannot cast %s to %s", argType, cl)
+			return types.Invalid
+		}
+		return result
+	default:
+		r.error(e.Fun, "cannot call non-function %s (variable of type %s)", e.Fun, fnType)
+		return types.Any
+	}
+}
+
+func (r *resolver) resolveDotExpr(e *ast.DotExpr) (result ast.Type) {
+	defer func() { e.SetType(result) }()
+	leftT := r.resolveExpr(e.X)
+	if mod, ok := leftT.(*types.Module); ok {
+		modName := mod.AtomValue.V
+		r.ImportModule(modName)
+		e.Attr.SetType(types.Any)
+		// TODO: Handle importing modules recursively and typechecking them with values defined there
+		return types.Any
+	}
+	return types.Any
+}
+
 func (r *resolver) pushScope() *Scope {
 	scope := NewScope(r.ctx.scope)
 	r.ctx.scope = scope
@@ -243,7 +327,7 @@ func (r *resolver) popScope() {
 // - If the left hand side is a tuple, each element is resolved with the corresponding element on the right hand side
 //
 // If all variables are already assigned, an error is returned.
-func (r *resolver) resolveMatchAssign(m *ast.MatchAssignExpr) types.Type {
+func (r *resolver) resolveMatchAssign(m *ast.MatchAssignExpr) ast.Type {
 	switch left := m.Left.(type) {
 	case *ast.Identifier:
 		right := r.resolveExpr(m.Right)
@@ -258,17 +342,34 @@ func (r *resolver) resolveMatchAssign(m *ast.MatchAssignExpr) types.Type {
 	return types.Invalid
 }
 
-func (r *resolver) declare(id *ast.Identifier, decl ast.Node, typ types.Type) types.Decl {
-	d := types.Decl{Id: id, RefersTo: decl, Type: typ}
-	r.symbols.Resolved[id] = d
+// resolveType is similar to resolveExpr, except the identifier must refer a type declaration
+// rather than a value or other declaration (e.g. module).
+func (r *resolver) resolveType(expr ast.Expression) *types.Expr {
+	typ := r.resolveExpr(expr)
+	switch typ := typ.(type) {
+	case *types.Expr:
+		return typ
+	default:
+		r.error(expr, "expected type, found %s", expr)
+		return &types.Expr{Definition: types.Invalid}
+	}
+}
+
+func (r *resolver) declare(id *ast.Identifier, decl ast.Node, typ ast.Type) *types.Decl {
+	d := &types.Decl{RefersTo: decl, Type: typ}
+	r.symbols.AddResolved(id, d)
+	id.SetType(d)
 	return r.ctx.scope.Insert(id.Name, d)
 }
 
-func (r *resolver) lookup(name string) types.Decl {
+func (r *resolver) lookup(name string) *types.Decl {
+	if obj := Universe.Lookup(name); obj != nil {
+		return obj
+	}
 	return r.ctx.scope.Lookup(name)
 }
 
 // missing adds a new identifier to be associated in the symbol table as missing.
 func (r *resolver) missing(ident *ast.Identifier) {
-	r.symbols.Unresolved[ident] = struct{}{}
+	r.symbols.MarkUnresolved(ident)
 }

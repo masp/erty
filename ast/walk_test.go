@@ -19,7 +19,7 @@ func TestWalk(t *testing.T) {
 				Name: &Identifier{
 					Name: "main",
 				},
-				Parameters: []*Identifier{},
+				Parameters: &FieldList{},
 				Statements: []Statement{
 					&ExprStatement{
 						Expression: &Identifier{Name: "a"},
@@ -36,6 +36,7 @@ func TestWalk(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	assert.Equal(t, `*ast.Module
+*ast.Identifier
 *ast.ImportDecl
 *ast.Identifier
 *ast.StringLiteral
@@ -55,7 +56,7 @@ func TestWalkError(t *testing.T) {
 				Name: &Identifier{
 					Name: "main",
 				},
-				Parameters: []*Identifier{},
+				Parameters: &FieldList{},
 				Statements: []Statement{
 					&ExprStatement{
 						Expression: &BinaryExpr{

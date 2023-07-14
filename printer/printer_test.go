@@ -25,6 +25,7 @@ func TestFormatExpr(t *testing.T) {
 	}{
 		{"1+1*2", "1 + 1 * 2"},
 		{"fun(a,1+2)", "fun(a, 1 + 2)"},
+		{"a. fun()", "a.fun()"},
 	}
 
 	for _, test := range tests {

@@ -1,26 +1,36 @@
-module 'a' ['a'/0,
+module 'a' ['add'/1,
+	    'main'/1,
 	    'module_info'/0,
 	    'module_info'/1]
     attributes [%% Line 1
 		'file' =
 		    %% Line 1
 		    [{[97|[46|[101|[114|[108]]]]],1}]]
-'a'/0 =
+'add'/1 =
     %% Line 6
-    ( fun () ->
-	  1
-      -| [{'function',{'a',0}}] )
-'multi_call'/0 =
-    %% Line 8
-    ( fun () ->
-	  let <_0> =
-	      apply %% Line 9
-		    'a'/0
-		  ()
-	  in  %% Line 9
-	      call _0:'b'
-		  (1)
-      -| [{'function',{'multi_call',0}}] )
+    ( fun (_0) ->
+	  call 'erlang':'+'
+	      (( _0
+		 -| [{'function',{'add',1}}] ), 90)
+      -| [{'function',{'add',1}}] )
+'main'/1 =
+    %% Line 7
+    ( fun (_0) ->
+	  %% Line 8
+	  case ( _0
+		 -| [{'function',{'main',1}}] ) of
+	    %% Line 9
+	    <{'ok',1}> when 'true' ->
+		'true'
+	    %% Line 10
+	    <{'bad',2}> when 'true' ->
+		'false'
+	    ( <_1> when 'true' ->
+		  primop 'match_fail'
+		      ({'case_clause',_1})
+	      -| ['compiler_generated'] )
+	  end
+      -| [{'function',{'main',1}}] )
 'module_info'/0 =
     ( fun () ->
 	  call 'erlang':'get_module_info'

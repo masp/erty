@@ -59,7 +59,7 @@ func (c *Printer) PrintModule(mod *Module) {
 	c.emitf("end")
 }
 
-func (c *Printer) emitAttrs(attrs []Attribute) {
+func (c *Printer) emitAttrs(attrs []*Attribute) {
 	c.emitf("attributes [")
 	c.indent()
 	c.emitln()
@@ -74,7 +74,7 @@ func (c *Printer) emitAttrs(attrs []Attribute) {
 	c.emitf("]")
 }
 
-func (c *Printer) emitAttr(attr Attribute) {
+func (c *Printer) emitAttr(attr *Attribute) {
 	c.emitf("'%s' =", attr.Key.Value)
 	c.indent()
 	c.emitln()
@@ -86,7 +86,7 @@ func (c *Printer) emitConst(cnst Const) {
 	switch cnst := cnst.(type) {
 	case Literal:
 		c.emitLiteral(cnst)
-	case ConstTuple:
+	case *ConstTuple:
 		c.emitf("{")
 		for i, elem := range cnst.Elements {
 			if i > 0 {
@@ -95,7 +95,7 @@ func (c *Printer) emitConst(cnst Const) {
 			c.emitConst(elem)
 		}
 		c.emitf("}")
-	case ConstList:
+	case *ConstList:
 		cons := cnst.Elements
 		for {
 			c.emitf("[")
@@ -112,21 +112,22 @@ func (c *Printer) emitConst(cnst Const) {
 	}
 }
 
-func (c *Printer) PrintFunc(fn Func) {
+func (c *Printer) PrintFunc(fn *Func) {
 	c.emitFnHeader(fn)
 	c.emitFn(fn)
 	c.dedent()
 	c.emitln()
 }
 
-func (c *Printer) emitFnHeader(fn Func) {
+func (c *Printer) emitFnHeader(fn *Func) {
 	c.emitf("%s =", fn.Name.String())
 	c.indent()
 	c.emitln()
 }
 
-func (c *Printer) emitFn(fn Func) {
-	c.emitf("(fun (")
+func (c *Printer) emitFn(fn *Func) {
+	c.beginAnnotation(fn)
+	c.emitf("fun (")
 	for i, param := range fn.Parameters {
 		if i > 0 {
 			c.emitf(",")
@@ -138,39 +139,52 @@ func (c *Printer) emitFn(fn Func) {
 	c.emitln()
 	c.emitExpr(fn.Body)
 
-	c.emitln()
-	c.emitAnnotation(fn.Annotation)
-
-	c.emitf(")")
+	c.endAnnotation(fn)
 	c.dedent()
 }
 
-func (c *Printer) emitAnnotation(ann Annotation) {
-	c.emitf("-| [")
-	for i, attr := range ann.Attrs {
-		if i > 0 {
-			c.emitf(",")
-		}
-		c.emitConst(attr)
+func (c *Printer) beginAnnotation(ann Annotated) {
+	if len(ann.Annotations().Attrs) > 0 {
+		c.emitf("(")
 	}
-	c.emitf("]")
+}
 
+func (c *Printer) endAnnotation(ann Annotated) {
+	if len(ann.Annotations().Attrs) > 0 {
+		c.emitln()
+		c.emitf("-| [")
+		if ann != nil {
+			for i, attr := range ann.Annotations().Attrs {
+				if i > 0 {
+					c.emitf(",")
+				}
+				c.emitConst(attr)
+			}
+		}
+		c.emitf("])")
+	}
 }
 
 func (c *Printer) emitExpr(expr Expr) {
 	switch expr := expr.(type) {
 	case Literal:
 		c.emitLiteral(expr)
-	case FuncName:
+	case *FuncName:
 		c.emitf("%s", expr.String())
-	case Var:
+	case *Var:
+		c.beginAnnotation(expr)
 		c.emitf("%s", expr.Name)
-	case Func:
+		c.endAnnotation(expr)
+	case *Func:
 		c.emitFn(expr)
-	case InterModuleCall:
+	case *InterModuleCall:
 		c.emitInterModuleCall(expr)
-	case Application:
-		c.emitApplication(expr)
+	case *ApplyExpr:
+		c.emitApply(expr)
+	case *LetExpr:
+		c.emitLet(expr)
+	case *DoExpr:
+		c.emitDo(expr)
 	default:
 		panic(fmt.Sprintf("unknown expression type %T", expr))
 	}
@@ -191,7 +205,7 @@ func (c *Printer) emitLiteral(lit Literal) {
 	}
 }
 
-func (c *Printer) emitInterModuleCall(call InterModuleCall) {
+func (c *Printer) emitInterModuleCall(call *InterModuleCall) {
 	c.emitf("call ")
 	c.emitExpr(call.Module)
 	c.emitf(":")
@@ -209,7 +223,7 @@ func (c *Printer) emitInterModuleCall(call InterModuleCall) {
 	c.dedent()
 }
 
-func (c *Printer) emitApplication(app Application) {
+func (c *Printer) emitApply(app *ApplyExpr) {
 	c.emitf("apply ")
 	c.emitExpr(app.Func)
 	c.indent()
@@ -223,4 +237,33 @@ func (c *Printer) emitApplication(app Application) {
 	}
 	c.emitf(")")
 	c.dedent()
+}
+
+func (c *Printer) emitLet(let *LetExpr) {
+	c.emitf("let ")
+	c.emitf("<")
+	for i, binding := range let.Vars {
+		if i > 0 {
+			c.emitf(",")
+		}
+		c.emitf(binding.Name)
+	}
+	c.emitf("> =")
+	c.indent()
+	c.emitln()
+	c.emitExpr(let.Assign)
+	c.dedent()
+	c.emitln()
+	c.emitf("in ")
+	c.emitExpr(let.In)
+}
+
+func (c *Printer) emitDo(do *DoExpr) {
+	c.emitf("do ")
+	c.indent()
+	defer c.dedent()
+	c.emitln()
+	c.emitExpr(do.Before)
+	c.emitln()
+	c.emitExpr(do.After)
 }

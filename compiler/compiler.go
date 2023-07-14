@@ -8,27 +8,88 @@ import (
 	"github.com/masp/garlang/ast"
 	"github.com/masp/garlang/core"
 	"github.com/masp/garlang/parser"
+	"github.com/masp/garlang/resolver"
+	"github.com/masp/garlang/token"
+	"github.com/masp/garlang/types"
 )
 
-type Environment struct {
-	Variables map[string]core.Var
+type Compiler struct {
+	file    *token.File
+	errors  token.ErrorList
+	mapping *Environment
 }
 
-type Compiler struct {
-	errors []error
+func (c *Compiler) push() { c.mapping = c.mapping.push() }
+func (c *Compiler) pop()  { c.mapping = c.mapping.Outer }
+func (c *Compiler) declare(id *ast.Identifier) *core.Var {
+	v := &core.Var{Name: c.mapping.uniqueId(), OriginalName: id.Name}
+	v.Type = types.Value(id.Type())
+	c.mapping.bind(id.Name, v)
+	return v
+}
+
+type Environment struct {
+	Outer *Environment
+	Vars  map[string]*core.Var
+}
+
+func emptyMapping() *Environment {
+	return &Environment{Vars: make(map[string]*core.Var)}
+}
+
+func (m *Environment) bind(varname string, to *core.Var) {
+	m.Vars[varname] = to
+}
+
+func (m *Environment) lookup(varname string) *core.Var {
+	if found, ok := m.Vars[varname]; ok {
+		return found
+	}
+	if m.Outer != nil {
+		return m.Outer.lookup(varname)
+	}
+	return nil
+}
+
+func (m *Environment) push() *Environment {
+	return &Environment{Vars: make(map[string]*core.Var), Outer: m}
+}
+
+func (m *Environment) uniqueId() string {
+	var i int
+	curr := m
+	for curr != nil {
+		i += len(curr.Vars)
+		curr = curr.Outer
+	}
+	return fmt.Sprintf("_%d", i)
 }
 
 func New() *Compiler {
-	return &Compiler{}
+	return &Compiler{
+		mapping: emptyMapping(),
+	}
 }
 
 func (c *Compiler) CompileModule(mod *ast.Module) (*core.Module, error) {
-	mod = addBaseFuncs(mod)
-	return c.compileModule(mod)
+	c.file = mod.File
+	cmod := c.compileModule(mod)
+	addBaseFuncs(cmod)
+	return cmod, c.errors.Err()
+}
+
+func (c *Compiler) CompileFunction(file *token.File, fn *ast.FuncDecl) (*core.Func, error) {
+	c.file = file
+	cfun := c.compileFunction(fn)
+	return cfun, c.errors.Err()
+}
+
+func (c *Compiler) error(node ast.Node, format string, args ...any) {
+	c.errors.Add(c.file.Position(node.Pos()), fmt.Errorf(format, args...))
 }
 
 // compileModule compiles a module AST into a Core Erlang module.
-func (c *Compiler) compileModule(mod *ast.Module) (*core.Module, error) {
+func (c *Compiler) compileModule(mod *ast.Module) *core.Module {
 	coreMod := &core.Module{
 		Name: mod.Id.Name,
 	}
@@ -36,56 +97,84 @@ func (c *Compiler) compileModule(mod *ast.Module) (*core.Module, error) {
 	for _, decl := range mod.Decls {
 		switch d := decl.(type) {
 		case *ast.FuncDecl:
-			coreFn, err := c.compileFunction(d)
-			if err != nil {
-				return coreMod, err
-			}
+			coreFn := c.compileFunction(d)
 			if d.IsPublic() {
 				coreMod.Exports = append(coreMod.Exports, coreFn.Name)
 			}
 			coreMod.Functions = append(coreMod.Functions, coreFn)
+		case *ast.ImportDecl:
+			continue // just ignore, not used in Core Erlang
 		default:
-			panic(fmt.Errorf("unrecognized decl: %T", decl))
+			c.error(d, "unrecognized decl: %T", decl)
 		}
 	}
-	return coreMod, nil
+	return coreMod
 }
 
-func (c *Compiler) CompileFunction(fn *ast.FuncDecl) (core.Func, error) {
-	return c.compileFunction(fn)
-}
+func (c *Compiler) compileFunction(fn *ast.FuncDecl) *core.Func {
+	c.push()
+	defer c.pop()
 
-func (c *Compiler) compileFunction(fn *ast.FuncDecl) (core.Func, error) {
-	coreFn := core.Func{
-		Name: core.FuncName{Name: fn.Name.Name, Arity: len(fn.Parameters)},
-		Annotation: core.Annotation{Attrs: []core.Const{
-			core.ConstTuple{Elements: []core.Const{
-				core.Atom{Value: "function"},
-				core.ConstTuple{
-					Elements: []core.Const{core.Atom{Value: fn.Name.Name}, core.Integer{Value: int64(len(fn.Parameters))}},
-				},
-			}},
-		}},
+	fnAnn := &core.ConstTuple{Elements: []core.Const{
+		core.Atom{Value: "function"},
+		&core.ConstTuple{
+			Elements: []core.Const{core.Atom{Value: fn.Name.Name}, core.Integer{Value: int64(fn.Parameters.NumFields())}},
+		},
+	}}
+	coreFn := &core.Func{
+		Name: &core.FuncName{Name: fn.Name.Name, Arity: fn.Parameters.NumFields()},
+	}
+	coreFn.Annotate(fnAnn)
+
+	for _, arg := range fn.Parameters.List {
+		for _, name := range arg.Names {
+			v := c.declare(name)
+			v.Annotate(fnAnn)
+			coreFn.Parameters = append(coreFn.Parameters, v)
+		}
 	}
 
-	for _, arg := range fn.Parameters {
-		coreFn.Parameters = append(coreFn.Parameters, core.Var{Name: arg.Name})
-	}
-
-	var err error
-	coreFn.Body, err = c.compileStatements(fn.Statements)
-	return coreFn, err
+	coreFn.Body = c.compileStatements(fn.Statements)
+	return coreFn
 }
 
-func (c *Compiler) compileStatements(stmts []ast.Statement) (core.Expr, error) {
-	var expr core.Expr
-	for _, stmt := range stmts {
+func (c *Compiler) compileStatements(stmts []ast.Statement) core.Expr {
+	if len(stmts) == 0 {
+		// A totally empty body is just a function that returns 'void' always
+		return &core.Atom{Value: "void"}
+	}
+
+	// ptr to tree position where to store next expression.
+	var root core.Expr
+	var curr *core.Expr = &root
+	for i, stmt := range stmts {
 		switch stmt := stmt.(type) {
 		case *ast.ReturnStatement:
-			expr = c.compileExpr(stmt.Expression)
+			*curr = c.compileExpr(stmt.Expression)
+		case *ast.ExprStatement:
+			switch x := stmt.Expression.(type) {
+			case *ast.MatchAssignExpr:
+				let := c.compileLet(x)
+				*curr = let
+				curr = &let.In
+			default:
+				if i == len(stmts)-1 {
+					*curr = c.compileExpr(x) // terminal node
+					break
+				}
+				// Otherwise, if the statement expression is just a plain value, we
+				// just wrap it in a do statement to support sequencing.
+				do := &core.DoExpr{}
+				do.Before = c.compileExpr(x)
+				*curr = do
+				curr = &do.After
+			}
+		default:
+			c.error(stmt, "unsupported statement: %T", stmt)
+			return &core.BadExpr{}
 		}
 	}
-	return expr, nil
+	return root
 }
 
 func (c *Compiler) compileExprs(exprs []ast.Expression) []core.Expr {
@@ -103,14 +192,55 @@ func (c *Compiler) compileExpr(expr ast.Expression) core.Expr {
 	case *ast.StringLiteral:
 		return core.String{Value: expr.Value}
 	case *ast.Identifier:
-		return core.Var{Name: expr.Name}
+		found := c.mapping.lookup(expr.Name)
+		if found == nil {
+			c.error(expr, "unbound variable %s", expr.Name)
+		}
+		return found
 	case *ast.AtomLiteral:
 		return core.Atom{Value: expr.Value}
 	case *ast.CallExpr:
 		return c.compileCallExpr(expr)
+	case *ast.BinaryExpr:
+		return c.compileBinary(expr)
 	default:
 		panic(fmt.Errorf("unrecognized expression type: %T", expr))
 	}
+}
+
+// Token operation to BIF
+var tokenToBIF = map[token.Type]core.Atom{
+	token.Plus:  {Value: "+"},
+	token.Minus: {Value: "-"},
+	token.Star:  {Value: "*"},
+	token.Slash: {Value: "/"},
+}
+
+func (c *Compiler) compileBinary(expr *ast.BinaryExpr) core.Expr {
+	left := c.compileExpr(expr.Left)
+	right := c.compileExpr(expr.Right)
+	bif := tokenToBIF[expr.Op]
+	if bif.Value == "" {
+		c.error(expr, "unsupported binary operator: %s", expr.Op)
+		return core.Atom{Value: "bad_binary"}
+	}
+	return &core.InterModuleCall{
+		Module: core.Atom{Value: "erlang"},
+		Func:   tokenToBIF[expr.Op],
+		Args:   []core.Expr{left, right},
+	}
+}
+
+func (c *Compiler) compileLet(assign *ast.MatchAssignExpr) (result *core.LetExpr) {
+	result = &core.LetExpr{}
+	result.Assign = c.compileExpr(assign.Right) // evaluate assignment with existing mapping
+	id, ok := assign.Left.(*ast.Identifier)
+	if !ok {
+		panic("TODO: Add support for matching expressions/patterns")
+	}
+	c.push()
+	result.Vars = append(result.Vars, c.declare(id))
+	return result
 }
 
 func (c *Compiler) compileCallExpr(call *ast.CallExpr) core.Expr {
@@ -129,7 +259,7 @@ func (c *Compiler) compileLocalCallExpr(expr *ast.CallExpr) core.Expr {
 		expr.Fun = &ast.AtomLiteral{Value: ident.Name}
 	}
 
-	return core.Application{
+	return &core.ApplyExpr{
 		Func: c.compileExpr(expr.Fun),
 		Args: c.compileExprs(expr.Args),
 	}
@@ -141,7 +271,7 @@ func (c *Compiler) compileDotCallExpr(call *ast.CallExpr, dot *ast.DotExpr) core
 	if ident, ok := dot.X.(*ast.Identifier); ok {
 		dot.X = &ast.AtomLiteral{Value: ident.Name}
 	}
-	return core.InterModuleCall{
+	return &core.InterModuleCall{
 		Module: c.compileExpr(dot.X),
 		Func:   core.Atom{Value: dot.Attr.Name},
 		Args:   c.compileExprs(call.Args),
@@ -150,16 +280,18 @@ func (c *Compiler) compileDotCallExpr(call *ast.CallExpr, dot *ast.DotExpr) core
 
 // commonModFuncs are default funcs that are included in every Erlang module
 // If these are not included, the Erlang VM will not be able to load the module.
-func commonModFuncs(mod *ast.Module) string {
-	return strings.NewReplacer("{{mod}}", mod.Id.Name).Replace(`
+func commonModFuncs(modname string) string {
+	return strings.NewReplacer("{{mod}}", modname).Replace(`
 module common
+
+import "erlang"
 
 func module_info() {
 	return erlang.module_info('{{mod}}')
 }
 
-func module_info(Value) {
-	return erlang.module_info('{{mod}}', Value)
+func module_info(key atom) {
+	return erlang.module_info('{{mod}}', key)
 }
 `)
 }
@@ -168,11 +300,22 @@ func module_info(Value) {
 // module.
 //
 // The functions are very simple: just call 'erlang':module_info/1 with the appropriate atom.
-func addBaseFuncs(mod *ast.Module) *ast.Module {
-	commonMod, err := parser.ParseModule("<builtin>", []byte(commonModFuncs(mod)))
+func addBaseFuncs(cmod *core.Module) {
+	commonMod, err := parser.ParseModule("<builtin>", []byte(commonModFuncs(cmod.Name)))
 	if err != nil {
 		panic(err)
 	}
-	mod.Decls = append(commonMod.Decls, mod.Decls...)
-	return mod
+
+	err = resolver.ResolveModule(commonMod, nil)
+	if err != nil {
+		panic(err)
+	}
+	cmpl := New()
+	cmpl.file = commonMod.File
+	common := cmpl.compileModule(commonMod)
+	if len(cmpl.errors) > 0 {
+		panic(cmpl.errors.Err())
+	}
+	cmod.Functions = append(cmod.Functions, common.Functions...)
+	cmod.Exports = append(cmod.Exports, common.Exports...)
 }

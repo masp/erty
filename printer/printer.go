@@ -122,6 +122,9 @@ func (p *printer) printExpr(expr ast.Expression) {
 		p.write(expr.Lit)
 	case *ast.AtomLiteral:
 		p.write("'", expr.Value, "'")
+	case *ast.DotExpr:
+		p.printExpr(expr.X)
+		p.write(token.Period, expr.Attr.Name)
 	default:
 		panic(fmt.Errorf("printer does not support expressions of type %T", expr))
 	}

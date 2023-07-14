@@ -6,6 +6,7 @@ import (
 
 	"github.com/masp/garlang/core"
 	"github.com/masp/garlang/parser"
+	"github.com/masp/garlang/resolver"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/require"
 )
@@ -28,6 +29,9 @@ func TestCompileModule(t *testing.T) {
 				t.Fatalf("parse program: %v", err)
 			}
 
+			err = resolver.ResolveModule(mod, nil)
+			require.NoError(t, err)
+
 			compiled, err := New().CompileModule(mod)
 			require.NoError(t, err)
 
@@ -41,34 +45,61 @@ func TestCompileModule(t *testing.T) {
 }
 
 func TestCompileFunc(t *testing.T) {
+	premodule := `module test
+
+import "erlang"
+
+func add(a, b int) int { return a + b }
+`
 	tests := []struct {
 		input    string
 		expected string
 	}{
 		{
-			input:    `func a() {return 'a'}`,
+			input: `
+func test(v, d int) int {
+	a := erlang.a(v)
+	erlang.d()
+	return int(erlang.b(d)) + 100
+}`,
+			expected: "arithm.core",
+		},
+		{
+			input:    `func test() {return 'a'}`,
 			expected: "a.core",
 		},
 		{
-			input:    `func call() { return erlang.module_info('b') }`,
+			input:    `func test() { return erlang.module_info('b') }`,
 			expected: "call.core",
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			fn, err := parser.ParseFunc([]byte(test.input))
+			mod, err := parser.ParseModule("<test>", []byte(premodule+test.input))
 			if err != nil {
 				t.Fatalf("parse program: %v", err)
 			}
 
-			compiled, err := New().CompileFunction(fn)
+			err = resolver.ResolveModule(mod, nil)
+			require.NoError(t, err)
+
+			compiled, err := New().CompileModule(mod)
 			require.NoError(t, err)
 
 			var out bytes.Buffer
-			core.NewPrinter(&out).PrintFunc(compiled)
+			core.NewPrinter(&out).PrintFunc(findFunc(compiled.Functions, "test"))
 			g := goldie.New(t)
 			g.Assert(t, test.expected, out.Bytes())
 		})
 	}
+}
+
+func findFunc(funcs []*core.Func, name string) *core.Func {
+	for _, f := range funcs {
+		if f.Name.Name == name {
+			return f
+		}
+	}
+	return nil
 }

@@ -1,9 +1,13 @@
      0  *ast.FuncDecl {
-     1  .  Func: 1
-     2  .  LeftBrace: 12
-     3  .  RightBrace: 13
+     1  .  Func: <string>:1:1
+     2  .  LeftBrace: <string>:1:12
+     3  .  RightBrace: <string>:1:13
      4  .  Name: *ast.Identifier {
-     5  .  .  NamePos: 6
+     5  .  .  NamePos: <string>:1:6
      6  .  .  Name: "foo"
      7  .  }
-     8  }
+     8  .  Parameters: *ast.FieldList {
+     9  .  .  Opening: <string>:1:9
+    10  .  .  Closing: <string>:1:10
+    11  .  }
+    12  }

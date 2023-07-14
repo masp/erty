@@ -1,0 +1,9 @@
+module 'do' []
+    attributes [
+        ]
+'a'/0 =
+    fun () ->
+        do 
+            'before'
+            'after'
+end

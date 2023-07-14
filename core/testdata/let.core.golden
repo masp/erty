@@ -1,0 +1,9 @@
+module 'let' []
+    attributes [
+        ]
+'a'/0 =
+    fun () ->
+        let <V> =
+            'assign'
+        in 'in'
+end
