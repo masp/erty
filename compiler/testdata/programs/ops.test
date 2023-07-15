@@ -1,11 +1,11 @@
-output=100
+output=91
 ---
 module ops
 
 import "io"
 
 func main(args []string) {
-    io.format("~w~n", [add(1)])
+    io.format("~w", [add(1)])
 }
 
 func add(a int) int {

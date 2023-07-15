@@ -175,6 +175,9 @@ func (c *Printer) emitExpr(expr Expr) {
 		c.beginAnnotation(expr)
 		c.emitf("%s", expr.Name)
 		c.endAnnotation(expr)
+	case *Arity:
+		c.emitLiteral(expr.Name)
+		c.emitf("/%d", expr.Arity)
 	case *Func:
 		c.emitFn(expr)
 	case *InterModuleCall:
@@ -185,6 +188,20 @@ func (c *Printer) emitExpr(expr Expr) {
 		c.emitLet(expr)
 	case *DoExpr:
 		c.emitDo(expr)
+	case *List:
+		cons := expr.Elements
+		for {
+			c.emitf("[")
+			if len(cons) == 0 {
+				c.emitf(strings.Repeat("]", len(expr.Elements)+1))
+				break
+			}
+			c.emitExpr(cons[0])
+			c.emitf("|")
+			cons = cons[1:]
+		}
+	case *Binary:
+		c.emitBinary(expr)
 	default:
 		panic(fmt.Sprintf("unknown expression type %T", expr))
 	}
@@ -198,8 +215,6 @@ func (c *Printer) emitLiteral(lit Literal) {
 		c.emitf("%f", lit.Value)
 	case Atom:
 		c.emitf("'%s'", lit.Value)
-	case String:
-		c.emitf("\"%s\"", lit.Value)
 	default:
 		panic(fmt.Sprintf("unknown literal type %T", lit))
 	}
@@ -266,4 +281,47 @@ func (c *Printer) emitDo(do *DoExpr) {
 	c.emitExpr(do.Before)
 	c.emitln()
 	c.emitExpr(do.After)
+}
+
+// emitBinary emits an Core Erlang binary which is just a list of bitstrings.
+//
+// A binary has the following pattern:
+//
+//	#{b1, . . ., bn}#
+//
+// where each b is a bitstring.
+func (c *Printer) emitBinary(bin *Binary) {
+	c.emitf("#{")
+	c.indent()
+	for i, b := range bin.Bits {
+		if i > 0 {
+			c.emitf(",")
+			c.emitln()
+		}
+		c.emitBitstring(b)
+	}
+	c.dedent()
+	c.emitf("}#")
+}
+
+// emitBitstring emits a Core Erlang bitstring which describes a sequence of bits.
+//
+// A bitstring has the following pattern:
+//
+//	#<ei0>(ei1, . . ., eik) where standard Erlang there are 4 elements always after ei0.
+func (c *Printer) emitBitstring(bs *Bitstring) {
+	c.emitf("#<")
+	if bs.Var != nil {
+		c.emitExpr(bs.Var)
+	} else if bs.Val != nil {
+		c.emitExpr(bs.Val)
+	}
+	c.emitf(">(")
+	c.emitConst(bs.Length)
+	c.emitf(",")
+	c.emitf("%d,", bs.Unit)
+	c.emitConst(bs.Type)
+	c.emitf(",")
+	c.emitConst(bs.Flags)
+	c.emitf(")")
 }

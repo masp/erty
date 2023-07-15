@@ -1,0 +1,58 @@
+     0  *ast.FuncDecl {
+     1  .  Func: <string>:1:1
+     2  .  LeftBrace: <string>:1:15
+     3  .  RightBrace: <string>:1:41
+     4  .  Name: *ast.Identifier {
+     5  .  .  NamePos: <string>:1:6
+     6  .  .  Name: "arrays"
+     7  .  }
+     8  .  Parameters: *ast.FieldList {
+     9  .  .  Opening: <string>:1:12
+    10  .  .  Closing: <string>:1:13
+    11  .  }
+    12  .  Statements: []ast.Statement (len = 2) {
+    13  .  .  0: *ast.ExprStatement {
+    14  .  .  .  Expression: *ast.AssignExpr {
+    15  .  .  .  .  Left: *ast.Identifier {
+    16  .  .  .  .  .  NamePos: <string>:1:17
+    17  .  .  .  .  .  Name: "a"
+    18  .  .  .  .  }
+    19  .  .  .  .  Equals: <string>:1:19
+    20  .  .  .  .  Right: *ast.ListLiteral {
+    21  .  .  .  .  .  Opener: <string>:1:21
+    22  .  .  .  .  .  Elts: []ast.Expression (len = 3) {
+    23  .  .  .  .  .  .  0: *ast.IntLiteral {
+    24  .  .  .  .  .  .  .  IntPos: <string>:1:22
+    25  .  .  .  .  .  .  .  Lit: "1"
+    26  .  .  .  .  .  .  .  Value: 1
+    27  .  .  .  .  .  .  }
+    28  .  .  .  .  .  .  1: *ast.IntLiteral {
+    29  .  .  .  .  .  .  .  IntPos: <string>:1:25
+    30  .  .  .  .  .  .  .  Lit: "2"
+    31  .  .  .  .  .  .  .  Value: 2
+    32  .  .  .  .  .  .  }
+    33  .  .  .  .  .  .  2: *ast.IntLiteral {
+    34  .  .  .  .  .  .  .  IntPos: <string>:1:28
+    35  .  .  .  .  .  .  .  Lit: "3"
+    36  .  .  .  .  .  .  .  Value: 3
+    37  .  .  .  .  .  .  }
+    38  .  .  .  .  .  }
+    39  .  .  .  .  .  Closer: <string>:1:31
+    40  .  .  .  .  }
+    41  .  .  .  }
+    42  .  .  }
+    43  .  .  1: *ast.ExprStatement {
+    44  .  .  .  Expression: *ast.AssignExpr {
+    45  .  .  .  .  Left: *ast.Identifier {
+    46  .  .  .  .  .  NamePos: <string>:1:34
+    47  .  .  .  .  .  Name: "b"
+    48  .  .  .  .  }
+    49  .  .  .  .  Equals: <string>:1:36
+    50  .  .  .  .  Right: *ast.ListLiteral {
+    51  .  .  .  .  .  Opener: <string>:1:38
+    52  .  .  .  .  .  Closer: <string>:1:39
+    53  .  .  .  .  }
+    54  .  .  .  }
+    55  .  .  }
+    56  .  }
+    57  }

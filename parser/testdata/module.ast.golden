@@ -1,64 +1,129 @@
      0  *ast.Module {
      1  .  File: *token.File {
      2  .  .  Name: "<test>"
-     3  .  .  Size: 77
+     3  .  .  Size: 149
      4  .  }
      5  .  Id: *ast.Identifier {
      6  .  .  NamePos: <test>:1:8
      7  .  .  Name: "test"
      8  .  }
-     9  .  Decls: []ast.Decl (len = 1) {
-    10  .  .  0: *ast.FuncDecl {
-    11  .  .  .  Func: <test>:2:5
-    12  .  .  .  LeftBrace: <test>:2:17
-    13  .  .  .  RightBrace: <test>:5:5
-    14  .  .  .  Name: *ast.Identifier {
-    15  .  .  .  .  NamePos: <test>:2:10
-    16  .  .  .  .  Name: "expr"
-    17  .  .  .  }
-    18  .  .  .  Parameters: *ast.FieldList {
-    19  .  .  .  .  Opening: <test>:2:14
-    20  .  .  .  .  Closing: <test>:2:15
-    21  .  .  .  }
-    22  .  .  .  Statements: []ast.Statement (len = 2) {
-    23  .  .  .  .  0: *ast.ExprStatement {
-    24  .  .  .  .  .  Expression: *ast.AssignExpr {
-    25  .  .  .  .  .  .  Left: *ast.Identifier {
-    26  .  .  .  .  .  .  .  NamePos: <test>:3:6
-    27  .  .  .  .  .  .  .  Name: "test"
-    28  .  .  .  .  .  .  }
-    29  .  .  .  .  .  .  Equals: <test>:3:11
-    30  .  .  .  .  .  .  Right: *ast.StringLiteral {
-    31  .  .  .  .  .  .  .  QuotePos: <test>:3:13
-    32  .  .  .  .  .  .  .  Value: "hello world"
-    33  .  .  .  .  .  .  .  Lit: "\"hello world\""
-    34  .  .  .  .  .  .  }
-    35  .  .  .  .  .  }
-    36  .  .  .  .  }
-    37  .  .  .  .  1: *ast.ExprStatement {
-    38  .  .  .  .  .  Expression: *ast.AssignExpr {
-    39  .  .  .  .  .  .  Left: *ast.Identifier {
-    40  .  .  .  .  .  .  .  NamePos: <test>:4:6
-    41  .  .  .  .  .  .  .  Name: "a"
+     9  .  Decls: []ast.Decl (len = 2) {
+    10  .  .  0: *ast.ImportDecl {
+    11  .  .  .  Import: <test>:2:5
+    12  .  .  .  Path: *ast.StringLiteral {
+    13  .  .  .  .  QuotePos: <test>:2:12
+    14  .  .  .  .  Value: "io"
+    15  .  .  .  .  Lit: "\"io\""
+    16  .  .  .  }
+    17  .  .  }
+    18  .  .  1: *ast.FuncDecl {
+    19  .  .  .  Func: <test>:3:5
+    20  .  .  .  LeftBrace: <test>:3:17
+    21  .  .  .  RightBrace: <test>:7:5
+    22  .  .  .  Name: *ast.Identifier {
+    23  .  .  .  .  NamePos: <test>:3:10
+    24  .  .  .  .  Name: "expr"
+    25  .  .  .  }
+    26  .  .  .  Parameters: *ast.FieldList {
+    27  .  .  .  .  Opening: <test>:3:14
+    28  .  .  .  .  Closing: <test>:3:15
+    29  .  .  .  }
+    30  .  .  .  Statements: []ast.Statement (len = 3) {
+    31  .  .  .  .  0: *ast.ExprStatement {
+    32  .  .  .  .  .  Expression: *ast.AssignExpr {
+    33  .  .  .  .  .  .  Left: *ast.Identifier {
+    34  .  .  .  .  .  .  .  NamePos: <test>:4:6
+    35  .  .  .  .  .  .  .  Name: "test"
+    36  .  .  .  .  .  .  }
+    37  .  .  .  .  .  .  Equals: <test>:4:11
+    38  .  .  .  .  .  .  Right: *ast.StringLiteral {
+    39  .  .  .  .  .  .  .  QuotePos: <test>:4:13
+    40  .  .  .  .  .  .  .  Value: "hello world"
+    41  .  .  .  .  .  .  .  Lit: "\"hello world\""
     42  .  .  .  .  .  .  }
-    43  .  .  .  .  .  .  Equals: <test>:4:8
-    44  .  .  .  .  .  .  Right: *ast.BinaryExpr {
-    45  .  .  .  .  .  .  .  Left: *ast.IntLiteral {
-    46  .  .  .  .  .  .  .  .  IntPos: <test>:4:10
-    47  .  .  .  .  .  .  .  .  Lit: "3"
-    48  .  .  .  .  .  .  .  .  Value: 3
-    49  .  .  .  .  .  .  .  }
-    50  .  .  .  .  .  .  .  OpPos: <test>:4:12
-    51  .  .  .  .  .  .  .  Op: Plus
-    52  .  .  .  .  .  .  .  Right: *ast.IntLiteral {
-    53  .  .  .  .  .  .  .  .  IntPos: <test>:4:14
-    54  .  .  .  .  .  .  .  .  Lit: "5"
-    55  .  .  .  .  .  .  .  .  Value: 5
-    56  .  .  .  .  .  .  .  }
-    57  .  .  .  .  .  .  }
-    58  .  .  .  .  .  }
-    59  .  .  .  .  }
-    60  .  .  .  }
-    61  .  .  }
-    62  .  }
-    63  }
+    43  .  .  .  .  .  }
+    44  .  .  .  .  }
+    45  .  .  .  .  1: *ast.ExprStatement {
+    46  .  .  .  .  .  Expression: *ast.AssignExpr {
+    47  .  .  .  .  .  .  Left: *ast.Identifier {
+    48  .  .  .  .  .  .  .  NamePos: <test>:5:6
+    49  .  .  .  .  .  .  .  Name: "a"
+    50  .  .  .  .  .  .  }
+    51  .  .  .  .  .  .  Equals: <test>:5:8
+    52  .  .  .  .  .  .  Right: *ast.BinaryExpr {
+    53  .  .  .  .  .  .  .  Left: *ast.IntLiteral {
+    54  .  .  .  .  .  .  .  .  IntPos: <test>:5:10
+    55  .  .  .  .  .  .  .  .  Lit: "3"
+    56  .  .  .  .  .  .  .  .  Value: 3
+    57  .  .  .  .  .  .  .  }
+    58  .  .  .  .  .  .  .  OpPos: <test>:5:12
+    59  .  .  .  .  .  .  .  Op: Plus
+    60  .  .  .  .  .  .  .  Right: *ast.IntLiteral {
+    61  .  .  .  .  .  .  .  .  IntPos: <test>:5:14
+    62  .  .  .  .  .  .  .  .  Lit: "5"
+    63  .  .  .  .  .  .  .  .  Value: 5
+    64  .  .  .  .  .  .  .  }
+    65  .  .  .  .  .  .  }
+    66  .  .  .  .  .  }
+    67  .  .  .  .  }
+    68  .  .  .  .  2: *ast.ExprStatement {
+    69  .  .  .  .  .  Expression: *ast.CallExpr {
+    70  .  .  .  .  .  .  Fun: *ast.DotExpr {
+    71  .  .  .  .  .  .  .  X: *ast.Identifier {
+    72  .  .  .  .  .  .  .  .  NamePos: <test>:6:6
+    73  .  .  .  .  .  .  .  .  Name: "io"
+    74  .  .  .  .  .  .  .  }
+    75  .  .  .  .  .  .  .  Dot: <test>:6:8
+    76  .  .  .  .  .  .  .  Attr: *ast.Identifier {
+    77  .  .  .  .  .  .  .  .  NamePos: <test>:6:9
+    78  .  .  .  .  .  .  .  .  Name: "format"
+    79  .  .  .  .  .  .  .  }
+    80  .  .  .  .  .  .  }
+    81  .  .  .  .  .  .  Args: []ast.Expression (len = 2) {
+    82  .  .  .  .  .  .  .  0: *ast.StringLiteral {
+    83  .  .  .  .  .  .  .  .  QuotePos: <test>:6:16
+    84  .  .  .  .  .  .  .  .  Value: "hello ~n"
+    85  .  .  .  .  .  .  .  .  Lit: "\"hello ~n\""
+    86  .  .  .  .  .  .  .  }
+    87  .  .  .  .  .  .  .  1: *ast.CallExpr {
+    88  .  .  .  .  .  .  .  .  Fun: *ast.ListType {
+    89  .  .  .  .  .  .  .  .  .  Lbrack: <test>:6:28
+    90  .  .  .  .  .  .  .  .  .  Elt: *ast.Identifier {
+    91  .  .  .  .  .  .  .  .  .  .  NamePos: <test>:6:30
+    92  .  .  .  .  .  .  .  .  .  .  Name: "string"
+    93  .  .  .  .  .  .  .  .  .  }
+    94  .  .  .  .  .  .  .  .  .  Rbrack: <test>:6:29
+    95  .  .  .  .  .  .  .  .  }
+    96  .  .  .  .  .  .  .  .  Args: []ast.Expression (len = 1) {
+    97  .  .  .  .  .  .  .  .  .  0: *ast.ListLiteral {
+    98  .  .  .  .  .  .  .  .  .  .  Opener: <test>:6:37
+    99  .  .  .  .  .  .  .  .  .  .  Elts: []ast.Expression (len = 2) {
+   100  .  .  .  .  .  .  .  .  .  .  .  0: *ast.StringLiteral {
+   101  .  .  .  .  .  .  .  .  .  .  .  .  QuotePos: <test>:6:38
+   102  .  .  .  .  .  .  .  .  .  .  .  .  Value: "test"
+   103  .  .  .  .  .  .  .  .  .  .  .  .  Lit: "\"test\""
+   104  .  .  .  .  .  .  .  .  .  .  .  }
+   105  .  .  .  .  .  .  .  .  .  .  .  1: *ast.StringLiteral {
+   106  .  .  .  .  .  .  .  .  .  .  .  .  QuotePos: <test>:6:46
+   107  .  .  .  .  .  .  .  .  .  .  .  .  Value: "test2"
+   108  .  .  .  .  .  .  .  .  .  .  .  .  Lit: "\"test2\""
+   109  .  .  .  .  .  .  .  .  .  .  .  }
+   110  .  .  .  .  .  .  .  .  .  .  }
+   111  .  .  .  .  .  .  .  .  .  .  Closer: <test>:6:53
+   112  .  .  .  .  .  .  .  .  .  }
+   113  .  .  .  .  .  .  .  .  }
+   114  .  .  .  .  .  .  .  .  LeftParen: <test>:6:36
+   115  .  .  .  .  .  .  .  .  RightParen: <test>:6:54
+   116  .  .  .  .  .  .  .  }
+   117  .  .  .  .  .  .  }
+   118  .  .  .  .  .  .  LeftParen: <test>:6:15
+   119  .  .  .  .  .  .  RightParen: <test>:6:55
+   120  .  .  .  .  .  }
+   121  .  .  .  .  }
+   122  .  .  .  }
+   123  .  .  }
+   124  .  }
+   125  .  Imports: []*ast.ImportDecl (len = 1) {
+   126  .  .  0: *(obj @ 10)
+   127  .  }
+   128  }

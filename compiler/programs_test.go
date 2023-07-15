@@ -22,7 +22,9 @@ import (
 func TestPrograms(t *testing.T) {
 	// Iterate through all test files under the testdata/programs/ folder
 	// and run them through the compiler.
-
+	if testing.Short() {
+		t.Skip("skipping full program tests in short mode")
+	}
 	err := filepath.Walk("testdata/programs/", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err

@@ -84,6 +84,12 @@ func walk(n Node, v Visitor) {
 	case *AssignExpr:
 		walk(n.Left, v)
 		walk(n.Right, v)
+	case *ListLiteral:
+		for _, elt := range n.Elts {
+			walk(elt, v)
+		}
+	case *ListType:
+		walk(n.Elt, v)
 	default:
 		// leaf node, no need to do anything
 		return

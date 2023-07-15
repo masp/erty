@@ -7,9 +7,10 @@
         in do 
             call 'erlang':'d'
                 ()
-            call 'erlang':'+'
-                (apply 'int'
-                    (call 'erlang':'b'
-                        ((_1
-                        -| [{'function',{'test',2}}]))),100)
+            let <_3> =
+                call 'erlang':'b'
+                    ((_1
+                    -| [{'function',{'test',2}}]))
+            in call 'erlang':'+'
+                (_3,100)
         -| [{'function',{'test',2}}])

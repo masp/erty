@@ -1,0 +1,7 @@
+module 'list' []
+    attributes [
+        ]
+'a'/0 =
+    fun () ->
+        ['a'|['b'|[]]]
+end

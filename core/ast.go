@@ -85,7 +85,15 @@ type DoExpr struct {
 
 func (*DoExpr) isExpr() {}
 
-// apply exprs0(exprs1, . . ., exprsn)
+// Arity has form 'name'/n
+type Arity struct {
+	Name  Atom
+	Arity int
+}
+
+func (*Arity) isExpr() {}
+
+// apply exprs0/arity (exprs1, . . ., exprsn)
 type ApplyExpr struct {
 	Func Expr
 	Args []Expr
@@ -177,13 +185,11 @@ func (Char) isLiteral() {}
 func (Char) isConst()   {}
 func (Char) isExpr()    {}
 
-type String struct {
-	Value string
+type List struct {
+	Elements []Expr
 }
 
-func (String) isLiteral() {}
-func (String) isConst()   {}
-func (String) isExpr()    {}
+func (*List) isExpr() {}
 
 // Const is used only in the attributes, whereas the ExprList/Tuple are used in the body of the function.
 type Const interface {
@@ -201,3 +207,38 @@ type ConstTuple struct {
 }
 
 func (*ConstTuple) isConst() {}
+
+type Binary struct {
+	Bits []*Bitstring
+}
+
+func (*Binary) isExpr()    {}
+func (*Binary) isLiteral() {}
+
+var (
+	// These combination of flags are used very often, so store a single version
+	BitStringFlags = &ConstList{Elements: []Const{BitFlagUnsigned, BitFlagBig}}
+
+	BitFlagBig      = Atom{Value: "big"}
+	BitFlagLittle   = Atom{Value: "little"}
+	BitFlagSigned   = Atom{Value: "signed"}
+	BitFlagUnsigned = Atom{Value: "unsigned"}
+
+	BitTypeInteger = Atom{Value: "integer"}
+	BitTypeBinary  = Atom{Value: "binary"}
+
+	BitLengthAll = Atom{Value: "all"}
+
+	BitUnitBit  = 1
+	BitUnitByte = 8
+)
+
+type Bitstring struct {
+	Var *Var // nil if Bitstring is a constant
+	Val Expr // nil if Bitstring is a variable
+
+	Length Const      // number of bits/number of bytes/'all' if /binary style is used (see BitLength*)
+	Unit   int        // 1 = bit, 8 = byte (see BitSize*)
+	Type   Atom       // e.g. integer, binary
+	Flags  *ConstList // list of flags (usually atoms) like 'unsigned', 'big', 'little', 'signed
+}

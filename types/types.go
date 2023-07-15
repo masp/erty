@@ -77,7 +77,11 @@ func (t *AtomValue) Underlying() ast.Type { return t }
 func (t *AtomValue) String() string       { return "atom '" + t.V + "'" }
 
 func IsNumeric(t ast.Type) bool {
-	return t.Underlying() == Int || t.Underlying() == Float || t.Underlying() == UntypedInt || t.Underlying() == UntypedFloat
+	return t.Underlying() == Int ||
+		t.Underlying() == Float ||
+		t.Underlying() == UntypedInt ||
+		t.Underlying() == UntypedFloat ||
+		t == Any
 }
 
 func IsString(t ast.Type) bool {
@@ -161,3 +165,16 @@ func (t *Expr) Underlying() ast.Type {
 	}
 }
 func (t *Expr) String() string { return t.Definition.String() }
+
+type List struct {
+	Elem ast.Type // the type of the elements or types.Invalid if empty list
+}
+
+func (l *List) IsEmpty() bool        { return l.Elem == Invalid }
+func (l *List) Underlying() ast.Type { return l }
+func (l *List) String() string {
+	if l.Elem == Invalid {
+		return "[]"
+	}
+	return fmt.Sprintf("[]%s", l.Elem)
+}

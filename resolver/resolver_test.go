@@ -82,6 +82,7 @@ a := 1 == 2
 b := !'true'
 c := -3
 d := int(c) + 10
+e := ["a", z, "c"]
 }`,
 			wantResolved: map[string]ast.Type{
 				"abc@1:19": &types.Func{
@@ -107,6 +108,8 @@ d := int(c) + 10
 				"d@8:1":     types.Int,
 				"int@8:6":   types.Int,
 				"c@8:10":    types.Int,
+				"e@9:1":     &types.List{Elem: types.String},
+				"z@9:12":    types.String,
 			},
 		},
 		{
@@ -156,6 +159,7 @@ func TestTypeResolveErrorExpr(t *testing.T) {
 		{`3*'c'`, `<string>:1:3: operator * not defined on 'c' (atom 'c')`},
 		{`-"b"`, `<string>:1:2: operator - not defined on "b" (untyped string)`},
 		{`3+"b"`, `operator + has mismatched types: untyped int and untyped string`},
+		{`[3, "a"]`, `cannot use "a" (untyped string) as value in untyped int list`},
 	}
 
 	for _, tt := range tests {

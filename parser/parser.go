@@ -535,11 +535,48 @@ func (p *Parser) parsePrimary() ast.Expression {
 			LParen:     tok.Pos,
 			RParen:     rparen.Pos,
 		}
+	case token.LSquareBracket:
+		if p.matches(token.RSquareBracket) {
+			// Either it's an empty list (value) or a list type
+			// 1. Empty list will not have a type annotation after the []
+			// 2. List type will have a type annotation after the []
+			rbracket := p.eat()
+
+			if p.matches(token.Identifier, token.Tuple, token.Map, token.LSquareBracket) {
+				eltType := p.parseType()
+				return &ast.ListType{Lbrack: tok.Pos, Elt: eltType, Rbrack: rbracket.Pos}
+			} else {
+				// Empty list
+				return &ast.ListLiteral{Opener: tok.Pos, Closer: rbracket.Pos}
+			}
+		}
+
+		elts := p.parseList(token.RSquareBracket)
+		rbracket := p.eatOnly(token.RSquareBracket, "unclosed '[' around list")
+		return &ast.ListLiteral{Opener: tok.Pos, Elts: elts, Closer: rbracket.Pos}
 	default:
 		p.error(tok.Pos, fmt.Errorf("expected expression, got %s", tok.Type.String()))
 		to := p.advance(exprEnd)
 		return &ast.BadExpr{From: tok.Pos, To: to.Pos}
 	}
+}
+
+func (p *Parser) parseList(end token.Type) []ast.Expression {
+	var elements []ast.Expression
+	for !p.matches(end) {
+		elements = append(elements, p.parseExpression())
+		next := p.peek()
+		switch next.Type {
+		case end:
+			break
+		case token.Comma:
+			p.eat()
+		default:
+			p.error(next.Pos, fmt.Errorf("expected ',' or '%s', got %s", end.String(), next.Type))
+			return elements
+		}
+	}
+	return elements
 }
 
 // parseInt converts a string to an integer.
@@ -579,6 +616,13 @@ func (p *Parser) parseType() ast.Expression {
 		return ident
 	case token.Tuple: // tuple[...]
 		return p.parseTupleType(tok)
+	case token.LSquareBracket: // []type
+		rbrack := p.eatOnly(token.RSquareBracket, "expected ']' after '[' for list type")
+		if rbrack.Type != token.RSquareBracket {
+			return &ast.BadExpr{From: tok.Pos, To: rbrack.Pos}
+		}
+		eltType := p.parseType()
+		return &ast.ListType{Lbrack: tok.Pos, Elt: eltType, Rbrack: rbrack.Pos}
 	default:
 		p.error(tok.Pos, fmt.Errorf("expected type, got %s", tok.Type.String()))
 		return &ast.BadExpr{From: tok.Pos, To: tok.Pos}

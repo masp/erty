@@ -406,6 +406,24 @@ func (t *TupleType) End() token.Pos {
 	return t.Elts.End()
 }
 
+// ListType has the form []T
+type ListType struct {
+	typeNode // the type expression for this list
+
+	Lbrack token.Pos  // position of "["
+	Elt    Expression // type expression for the element
+	Rbrack token.Pos  // position of "]"
+}
+
+func (l *ListType) isExpression() {}
+func (l *ListType) isNode()       {}
+func (l *ListType) Pos() token.Pos {
+	return l.Lbrack
+}
+func (l *ListType) End() token.Pos {
+	return l.Elt.End()
+}
+
 type CallExpr struct {
 	typeNode // the type of the return value of Fun
 
@@ -571,6 +589,26 @@ func (s *FloatLiteral) Pos() token.Pos {
 }
 func (s *FloatLiteral) End() token.Pos {
 	return s.FloatPos + token.Pos(len(s.Lit))
+}
+
+type ListLiteral struct {
+	typeNode // type of list (computed from elements)
+
+	Opener token.Pos
+	Elts   []Expression
+	Closer token.Pos
+}
+
+func (l *ListLiteral) isExpression() {}
+func (l *ListLiteral) isNode()       {}
+func (l *ListLiteral) Literal() string {
+	return "[]"
+}
+func (l *ListLiteral) Pos() token.Pos {
+	return l.Opener
+}
+func (l *ListLiteral) End() token.Pos {
+	return l.Closer + 1
 }
 
 type KVExpr struct {

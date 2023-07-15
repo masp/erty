@@ -56,6 +56,11 @@ func TestParseFunc(t *testing.T) {
 			input:       "func assign() { a = 1.23; b = (2+3)*4; c = 'atom' }",
 			expectedAst: "assign.ast",
 		},
+		{
+			// arrays
+			input:       "func arrays() { a = [1, 2, 3, ]; b = [] }",
+			expectedAst: "arrays.ast",
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
@@ -79,9 +84,11 @@ func TestParseModule(t *testing.T) {
 	}{
 		{
 			input: `module test
+				import "io"
 				func expr() {
 					test = "hello world"
 					a = 3 + 5
+					io.format("hello ~n", []string(["test", "test2"]))
 				}`,
 			expectedAst: "module.ast",
 		},
@@ -92,7 +99,7 @@ func TestParseModule(t *testing.T) {
 		},
 		{
 			// type decl
-			input:       "module test; type Foo tuple[int, int, int]",
+			input:       "module test; type Foo tuple[int, int, int]; type LL [][]int",
 			expectedAst: "type.ast",
 		},
 		{

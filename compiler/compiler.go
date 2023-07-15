@@ -22,9 +22,19 @@ type Compiler struct {
 func (c *Compiler) push() { c.mapping = c.mapping.push() }
 func (c *Compiler) pop()  { c.mapping = c.mapping.Outer }
 func (c *Compiler) declare(id *ast.Identifier) *core.Var {
-	v := &core.Var{Name: c.mapping.uniqueId(), OriginalName: id.Name}
-	v.Type = types.Value(id.Type())
-	c.mapping.bind(id.Name, v)
+	return c.newVar(id.Name, id.Type())
+}
+
+// newVar declares a new variable with the given name. If name is empty, the variable is a temp
+// and not bound to a scope.
+func (c *Compiler) newVar(name string, typ ast.Type) *core.Var {
+	uniq := c.mapping.uniqueId()
+	if name == "" {
+		name = uniq
+	}
+	v := &core.Var{Name: uniq, OriginalName: name}
+	v.Type = types.Value(typ)
+	c.mapping.bind(name, v)
 	return v
 }
 
@@ -177,20 +187,10 @@ func (c *Compiler) compileStatements(stmts []ast.Statement) core.Expr {
 	return root
 }
 
-func (c *Compiler) compileExprs(exprs []ast.Expression) []core.Expr {
-	var coreExprs []core.Expr
-	for _, expr := range exprs {
-		coreExprs = append(coreExprs, c.compileExpr(expr))
-	}
-	return coreExprs
-}
-
 func (c *Compiler) compileExpr(expr ast.Expression) core.Expr {
 	switch expr := expr.(type) {
 	case *ast.IntLiteral:
 		return core.Integer{Value: expr.Value}
-	case *ast.StringLiteral:
-		return core.String{Value: expr.Value}
 	case *ast.Identifier:
 		found := c.mapping.lookup(expr.Name)
 		if found == nil {
@@ -199,6 +199,10 @@ func (c *Compiler) compileExpr(expr ast.Expression) core.Expr {
 		return found
 	case *ast.AtomLiteral:
 		return core.Atom{Value: expr.Value}
+	case *ast.ListLiteral:
+		return c.compileList(expr)
+	case *ast.StringLiteral:
+		return c.compileString(expr)
 	case *ast.CallExpr:
 		return c.compileCallExpr(expr)
 	case *ast.BinaryExpr:
@@ -216,9 +220,12 @@ var tokenToBIF = map[token.Type]core.Atom{
 	token.Slash: {Value: "/"},
 }
 
-func (c *Compiler) compileBinary(expr *ast.BinaryExpr) core.Expr {
-	left := c.compileExpr(expr.Left)
-	right := c.compileExpr(expr.Right)
+func (c *Compiler) compileBinary(expr *ast.BinaryExpr) (result core.Expr) {
+	left, wrap := c.pushVar(expr.Left)
+	defer wrap(&result)
+	right, wrap := c.pushVar(expr.Right)
+	defer wrap(&result)
+
 	bif := tokenToBIF[expr.Op]
 	if bif.Value == "" {
 		c.error(expr, "unsupported binary operator: %s", expr.Op)
@@ -243,6 +250,14 @@ func (c *Compiler) compileLet(assign *ast.MatchAssignExpr) (result *core.LetExpr
 	return result
 }
 
+func (c *Compiler) compileList(list *ast.ListLiteral) core.Expr {
+	var elements []core.Expr
+	for _, elem := range list.Elts {
+		elements = append(elements, c.compileExpr(elem))
+	}
+	return &core.List{Elements: elements}
+}
+
 func (c *Compiler) compileCallExpr(call *ast.CallExpr) core.Expr {
 	switch expr := call.Fun.(type) {
 	case *ast.DotExpr:
@@ -252,30 +267,116 @@ func (c *Compiler) compileCallExpr(call *ast.CallExpr) core.Expr {
 	}
 }
 
-func (c *Compiler) compileLocalCallExpr(expr *ast.CallExpr) core.Expr {
+func (c *Compiler) compileLocalCallExpr(expr *ast.CallExpr) (result core.Expr) {
 	// If an identifier and identifier is not defined in function as variable,
 	// treat as an atom
-	if ident, ok := expr.Fun.(*ast.Identifier); ok {
-		expr.Fun = &ast.AtomLiteral{Value: ident.Name}
+	fnType := expr.Fun.Type()
+	if _, ok := types.Deref(fnType).(*types.Expr); ok {
+		// Type cast expression, we can ignore this unless we need to do a conversion
+		// TODO: Support conversions (e.g. float -> int)
+		if len(expr.Args) != 1 {
+			c.error(expr, "type cast must only have 1 arg: %s", expr.Fun.Type())
+			return &core.BadExpr{}
+		}
+		return c.compileExpr(expr.Args[0])
+	}
+
+	if _, ok := types.Value(fnType).(*types.Func); !ok {
+		c.error(expr.Fun, "unsupported call operation: expected function, got %s", expr.Fun.Type())
+		return &core.BadExpr{}
+	}
+
+	// If we refer to a locally defined function, we should reference it with atom/arity
+	// otherwise, it's probably a locally defined lambda expr and should be referenced by compiling and
+	// pushing it into a let.
+	var fnName core.Expr
+	decl := types.DeclNode(fnType)
+	if fnDecl, ok := decl.(*ast.FuncDecl); ok {
+		fnName = &core.Arity{
+			Name:  core.Atom{Value: fnDecl.Name.Name},
+			Arity: fnDecl.Parameters.NumFields(),
+		}
+	} else {
+		f, wrap := c.pushVar(expr.Fun)
+		defer wrap(&result)
+		fnName = f
+	}
+
+	// apply can only accept variables as arguments, so we need to wrap any
+	var args []core.Expr
+	for _, arg := range expr.Args {
+		arg, wrap := c.pushVar(arg)
+		args = append(args, arg)
+		defer wrap(&result)
 	}
 
 	return &core.ApplyExpr{
-		Func: c.compileExpr(expr.Fun),
-		Args: c.compileExprs(expr.Args),
+		Func: fnName,
+		Args: args,
 	}
 }
 
-func (c *Compiler) compileDotCallExpr(call *ast.CallExpr, dot *ast.DotExpr) core.Expr {
+// pushVar pushes a variable to the stack and returns the reference to it or if it
+// is already a reference, just the value.
+
+// Because let expressions can be nested, and must be before the expression the var
+// is used in, we need to wrap the existing expression which is why a the wrap func is returned as well.
+func (c *Compiler) pushVar(expr ast.Expression) (core.Expr, func(*core.Expr)) {
+	switch expr.(type) {
+	case *ast.Identifier, *ast.AtomLiteral, *ast.IntLiteral, *ast.FloatLiteral:
+		// These values do not need to be wrapped in a let expression
+		return c.compileExpr(expr), func(*core.Expr) {}
+	default:
+		tmp := c.newVar("", expr.Type())
+		let := &core.LetExpr{
+			Vars:   []*core.Var{tmp},
+			Assign: c.compileExpr(expr),
+			// In to be assigned in wrap()
+		}
+
+		wrap := func(toWrap *core.Expr) {
+			let.In = *toWrap
+			*toWrap = let
+		}
+		return tmp, wrap
+	}
+}
+
+func (c *Compiler) compileDotCallExpr(call *ast.CallExpr, dot *ast.DotExpr) (result core.Expr) {
 	// If an identifier and identifier is not defined in function as variable,
 	// treat as an atom
+	module := dot.X
 	if ident, ok := dot.X.(*ast.Identifier); ok {
-		dot.X = &ast.AtomLiteral{Value: ident.Name}
+		module = &ast.AtomLiteral{Value: ident.Name}
 	}
+
+	var args []core.Expr
+	for _, arg := range call.Args {
+		v, wrap := c.pushVar(arg)
+		args = append(args, v)
+		defer wrap(&result)
+	}
+
 	return &core.InterModuleCall{
-		Module: c.compileExpr(dot.X),
+		Module: c.compileExpr(module),
 		Func:   core.Atom{Value: dot.Attr.Name},
-		Args:   c.compileExprs(call.Args),
+		Args:   args,
 	}
+}
+
+func (c *Compiler) compileString(str *ast.StringLiteral) core.Expr {
+	result := &core.Binary{}
+	raw := []byte(str.Value)
+	for i := 0; i < len(raw); i++ {
+		result.Bits = append(result.Bits, &core.Bitstring{
+			Val:    core.Integer{Value: int64(raw[i])},
+			Length: core.Integer{Value: 1},
+			Type:   core.BitTypeInteger,
+			Unit:   core.BitUnitByte,
+			Flags:  core.BitStringFlags,
+		})
+	}
+	return result
 }
 
 // commonModFuncs are default funcs that are included in every Erlang module

@@ -1,7 +1,8 @@
 module 'a' ['add'/1,
-	    'main'/1,
+	    'main'/0,
 	    'module_info'/0,
-	    'module_info'/1]
+	    'module_info'/1,
+	    'nest'/5]
     attributes [%% Line 1
 		'file' =
 		    %% Line 1
@@ -13,24 +14,45 @@ module 'a' ['add'/1,
 	      (( _0
 		 -| [{'function',{'add',1}}] ), 90)
       -| [{'function',{'add',1}}] )
-'main'/1 =
+'main'/0 =
     %% Line 7
-    ( fun (_0) ->
-	  %% Line 8
-	  case ( _0
-		 -| [{'function',{'main',1}}] ) of
-	    %% Line 9
-	    <{'ok',1}> when 'true' ->
-		'true'
-	    %% Line 10
-	    <{'bad',2}> when 'true' ->
-		'false'
-	    ( <_1> when 'true' ->
-		  primop 'match_fail'
-		      ({'case_clause',_1})
-	      -| ['compiler_generated'] )
-	  end
-      -| [{'function',{'main',1}}] )
+    ( fun () ->
+	  let <_0> =
+	      apply %% Line 8
+		    'add'/1
+		  (%% Line 8
+		   1)
+	  in  %% Line 8
+	      call 'io':'format'
+		  (#{#<126>(8,1,'integer',['unsigned'|['big']]),
+		     #<112>(8,1,'integer',['unsigned'|['big']]),
+		     #<126>(8,1,'integer',['unsigned'|['big']]),
+		     #<110>(8,1,'integer',['unsigned'|['big']])}#, [_0|[]])
+      -| [{'function',{'main',0}}] )
+'nest'/5 =
+    %% Line 10
+    ( fun (_0,_1,_2,_3,_4) ->
+	  let <_6> =
+	      call %% Line 11
+		   'erlang':%% Line 11
+			    '+'
+		  (_0, _1)
+	  in  let <_5> =
+		  call %% Line 11
+		       'erlang':%% Line 11
+				'call'
+		      (_2, _3)
+	      in  let <_7> =
+		      call %% Line 11
+			   'erlang':%% Line 11
+				    '+'
+			  (%% Line 11
+			   _6, %% Line 11
+			       _5)
+		  in  %% Line 11
+		      call 'erlang':'-'
+			  (_7, _4)
+      -| [{'function',{'nest',5}}] )
 'module_info'/0 =
     ( fun () ->
 	  call 'erlang':'get_module_info'

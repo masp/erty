@@ -152,6 +152,24 @@ func TestPrintModule(t *testing.T) {
 			},
 			expected: "do.core",
 		},
+		{
+			name: "list",
+			input: &Module{
+				Name: "list",
+				Functions: []*Func{
+					{
+						Name: &FuncName{Name: "a", Arity: 0},
+						Body: &List{
+							Elements: []Expr{
+								Atom{Value: "a"},
+								Atom{Value: "b"},
+							},
+						},
+					},
+				},
+			},
+			expected: "list.core",
+		},
 	}
 
 	for _, tt := range tests {

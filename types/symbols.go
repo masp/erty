@@ -36,6 +36,23 @@ func NewDecl(id *ast.Identifier, typ ast.Type) *Decl {
 	return &Decl{RefersTo: id, Type: typ} // decls refer to themselves
 }
 
+// DeclNode checks if type is a decl and if it is, returns the ast.Node that it refers to.
+// If it is not a *Decl, it returns nil.
+func DeclNode(t ast.Type) ast.Node {
+	if t, ok := t.(*Decl); ok {
+		return t.RefersTo
+	}
+	return nil
+}
+
+// Deref returns the type that t refers to. If t is not a *Decl, it returns t.
+func Deref(t ast.Type) ast.Type {
+	if t, ok := t.(*Decl); ok {
+		return t.Type
+	}
+	return t
+}
+
 type SymbolTable struct {
 	resolved   map[*ast.Identifier]*Decl
 	unresolved map[*ast.Identifier]struct{} // present if it is unresolved

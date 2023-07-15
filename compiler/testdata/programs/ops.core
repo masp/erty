@@ -1,12 +1,25 @@
-module 'ops' ['main'/1,'module_info'/0,'module_info'/1]
+module 'ops' ['main'/1,'add'/1,'module_info'/0,'module_info'/1]
     attributes [
         ]
 'main'/1 =
     (fun (_0) ->
+        let <_1> =
+            #{#<126>(1,8,'integer',['unsigned'|['big'|[]]]),
+                #<119>(1,8,'integer',['unsigned'|['big'|[]]]),
+                #<126>(1,8,'integer',['unsigned'|['big'|[]]]),
+                #<110>(1,8,'integer',['unsigned'|['big'|[]]])}#
+        in let <_2> =
+            [apply 'add'
+                (1)|[]]
+        in call 'io':'format'
+            (_1,_2)
+        -| [{'function',{'main',1}}])
+'add'/1 =
+    (fun (_0) ->
         call 'erlang':'+'
             ((_0
-            -| [{'function',{'main',1}}]),90)
-        -| [{'function',{'main',1}}])
+            -| [{'function',{'add',1}}]),90)
+        -| [{'function',{'add',1}}])
 'module_info'/0 =
     (fun () ->
         call 'erlang':'module_info'

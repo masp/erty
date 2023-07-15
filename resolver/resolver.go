@@ -162,6 +162,13 @@ func (r *resolver) resolveExpr(expr ast.Expression) (result ast.Type) {
 		t := &types.AtomValue{V: e.Value}
 		e.SetType(t)
 		return t
+	case *ast.ListLiteral:
+		return r.resolveListExpr(e)
+	case *ast.ListType:
+		eltType := r.resolveType(e.Elt)
+		t := &types.Expr{Definition: &types.List{Elem: eltType}}
+		e.SetType(t)
+		return t
 	case *ast.BinaryExpr:
 		return r.resolveBinaryExpr(e)
 	case *ast.UnaryExpr:
@@ -353,6 +360,26 @@ func (r *resolver) resolveType(expr ast.Expression) *types.Expr {
 		r.error(expr, "expected type, found %s", expr)
 		return &types.Expr{Definition: types.Invalid}
 	}
+}
+
+func (r *resolver) resolveListExpr(l *ast.ListLiteral) (result *types.List) {
+	defer func() { l.SetType(result) }()
+	if len(l.Elts) == 0 {
+		return &types.List{Elem: types.Invalid}
+	}
+
+	var listType ast.Type
+	for _, elem := range l.Elts {
+		elemType := r.resolveExpr(elem)
+		if listType == nil {
+			listType = elemType
+		} else if types.IsAssignable(elemType, listType) == elemType {
+			listType = elemType
+		} else if types.IsAssignable(listType, elemType) == types.Invalid {
+			r.error(elem, "cannot use %s (%s) as value in %s list", elem, elemType, listType)
+		}
+	}
+	return &types.List{Elem: listType}
 }
 
 func (r *resolver) declare(id *ast.Identifier, decl ast.Node, typ ast.Type) *types.Decl {

@@ -20,7 +20,7 @@
     19  .  .  .  .  .  .  Name: "b"
     20  .  .  .  .  .  }
     21  .  .  .  .  }
-    22  .  .  .  .  Type: *ast.Identifier {
+    22  .  .  .  .  Typ: *ast.Identifier {
     23  .  .  .  .  .  NamePos: <string>:1:18
     24  .  .  .  .  .  Name: "int"
     25  .  .  .  .  }
@@ -32,7 +32,7 @@
     31  .  .  .  .  .  .  Name: "c"
     32  .  .  .  .  .  }
     33  .  .  .  .  }
-    34  .  .  .  .  Type: *ast.Identifier {
+    34  .  .  .  .  Typ: *ast.Identifier {
     35  .  .  .  .  .  NamePos: <string>:1:25
     36  .  .  .  .  .  Name: "string"
     37  .  .  .  .  }
