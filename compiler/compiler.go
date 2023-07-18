@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/masp/garlang/ast"
-	"github.com/masp/garlang/core"
-	"github.com/masp/garlang/parser"
-	"github.com/masp/garlang/resolver"
-	"github.com/masp/garlang/token"
-	"github.com/masp/garlang/types"
+	"github.com/masp/ertylang/ast"
+	"github.com/masp/ertylang/core"
+	"github.com/masp/ertylang/parser"
+	"github.com/masp/ertylang/resolver"
+	"github.com/masp/ertylang/token"
+	"github.com/masp/ertylang/types"
 )
 
 type Compiler struct {
@@ -387,11 +387,11 @@ module common
 
 import "erlang"
 
-func module_info() {
+func module_info() any {
 	return erlang.module_info('{{mod}}')
 }
 
-func module_info(key atom) {
+func module_info(key atom) any {
 	return erlang.module_info('{{mod}}', key)
 }
 `)

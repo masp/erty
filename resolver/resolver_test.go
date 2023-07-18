@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/masp/garlang/ast"
-	"github.com/masp/garlang/parser"
-	"github.com/masp/garlang/token"
-	"github.com/masp/garlang/types"
+	"github.com/masp/ertylang/ast"
+	"github.com/masp/ertylang/parser"
+	"github.com/masp/ertylang/token"
+	"github.com/masp/ertylang/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -114,18 +114,32 @@ e := ["a", z, "c"]
 		},
 		{
 			name: "import modules",
-			src: `module test; import "erlang"; func _(c int) {
-v := erlang.spawn(10, c)
+			src: `module test; import "erlang"
+
+func add(a, b int) int {
+	return a + b
+}
+
+func _(c int) {
+	v := erlang.spawn(add(10, c), c)
 }`,
 			wantResolved: map[string]ast.Type{
 				"test@1:8":   &types.Module{AtomValue: types.AtomValue{V: "test"}},
-				"int@1:40":   types.Int,
-				"c@1:38":     types.Int,
-				"_@1:36":     &types.Func{Args: []ast.Type{types.Builtins["int"]}, Return: types.Void},
-				"c@2:23":     types.Int,
-				"erlang@2:6": &types.Module{AtomValue: types.AtomValue{V: "erlang"}},
-				"spawn@2:13": types.Any,
-				"v@2:1":      types.Any,
+				"add@3:6":    &types.Func{Args: []ast.Type{types.Builtins["int"], types.Builtins["int"]}, Return: types.Builtins["int"]},
+				"a@3:10":     types.Int,
+				"b@3:13":     types.Int,
+				"int@3:15":   types.Int,
+				"a@4:9":      types.Int,
+				"b@4:13":     types.Int,
+				"_@7:6":      &types.Func{Args: []ast.Type{types.Builtins["int"]}, Return: types.Void},
+				"c@7:8":      types.Int,
+				"int@7:10":   types.Int,
+				"v@8:2":      types.Any,
+				"add@8:20":   &types.Func{Args: []ast.Type{types.Builtins["int"], types.Builtins["int"]}, Return: types.Builtins["int"]},
+				"c@8:28":     types.Int,
+				"c@8:32":     types.Int,
+				"erlang@8:7": &types.Module{AtomValue: types.AtomValue{V: "erlang"}},
+				"spawn@8:14": types.Any,
 			},
 		}}
 	for _, tt := range tests {
@@ -191,6 +205,7 @@ func main() {`
 		{`add("a", 1)`, `cannot use "a" (untyped string) as int value in argument to add`},
 		{`"add"(1, 2)`, `cannot call non-function "add" (variable of type untyped string)`},
 		{`a := int("abc")`, `cannot cast untyped string to int`},
+		{`return 10`, `cannot return untyped int from function of return type void`},
 	}
 
 	for _, tt := range tests {

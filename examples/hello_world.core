@@ -1,6 +1,23 @@
-module 'hello_world' ['module_info'/0,'module_info'/1,'main'/0]
+module 'hello_world' ['add'/2,'main'/1,'module_info'/0,'module_info'/1]
     attributes [
         ]
+'add'/2 =
+    (fun (_0,_1) ->
+        call 'erlang':'+'
+            ((_0
+            -| [{'function',{'add',2}}]),(_1
+            -| [{'function',{'add',2}}]))
+        -| [{'function',{'add',2}}])
+'main'/1 =
+    (fun (_0) ->
+        let <_1> =
+            call 'erlang':'*'
+                ((_0
+                -| [{'function',{'main',1}}]),10)
+        in apply 'add'/2
+            ((_0
+            -| [{'function',{'main',1}}]),_1)
+        -| [{'function',{'main',1}}])
 'module_info'/0 =
     (fun () ->
         call 'erlang':'module_info'
@@ -9,10 +26,7 @@ module 'hello_world' ['module_info'/0,'module_info'/1,'main'/0]
 'module_info'/1 =
     (fun (_0) ->
         call 'erlang':'module_info'
-            ('hello_world',_0)
+            ('hello_world',(_0
+            -| [{'function',{'module_info',1}}]))
         -| [{'function',{'module_info',1}}])
-'main'/0 =
-    (fun () ->
-        "hello world!"
-        -| [{'function',{'main',0}}])
 end

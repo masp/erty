@@ -6,13 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
-	"github.com/masp/garlang/compiler"
-	"github.com/masp/garlang/core"
-	"github.com/masp/garlang/parser"
-	"github.com/masp/garlang/resolver"
-	"github.com/masp/garlang/token"
+	"github.com/masp/ertylang/cmd/ert/common"
 )
 
 const Help = `Usage: gar build [options] <file>
@@ -51,37 +46,15 @@ func Main(args []string) error {
 	}
 
 	input := flags.Arg(0)
-	inputName := filepath.Base(input)
-	inputSrc, err := os.ReadFile(input)
+	tmpOutput, err := common.BuildTmp(input)
 	if err != nil {
-		return fmt.Errorf("reading input '%s': %w", input, err)
-	}
-
-	garMod, err := parser.ParseModule(inputName, inputSrc)
-	if err != nil {
-		return printErr(inputName, "parse", err)
-	}
-
-	err = resolver.ResolveModule(garMod, nil)
-	if err != nil {
-		return printErr(inputName, "compile", err)
-	}
-
-	cmplr := compiler.New()
-	coreMod, err := cmplr.CompileModule(garMod)
-	if err != nil {
-		return printErr(inputName, "compile", err)
+		return err
 	}
 
 	output, err := findOutput(input)
 	if err != nil {
 		return err
 	}
-	outputFile, err := os.OpenFile(output, os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return fmt.Errorf("write output '%s': %w", output, err)
-	}
-	core.NewPrinter(outputFile).PrintModule(coreMod)
 
 	if *flagBeam {
 		defer os.Remove(output)
@@ -91,24 +64,13 @@ func Main(args []string) error {
 		if err = erlc.Run(); err != nil {
 			return fmt.Errorf("run erlc: %w", err)
 		}
-	}
-	return nil
-}
-
-func printErr(filename string, stage string, err error) error {
-	if lexErrs, ok := err.(token.ErrorList); ok {
-		for _, err := range lexErrs {
-			fmt.Fprintf(os.Stderr, "%s:%d:%d: %v", filename, err.Pos.Line, err.Pos.Column, err.Msg)
+	} else {
+		err = os.Rename(tmpOutput, output)
+		if err != nil {
+			return fmt.Errorf("rename tmp core output: %w", err)
 		}
-		return err
-	} else if err != nil {
-		return fmt.Errorf("%s: %w", stage, err)
 	}
 	return nil
-}
-
-func trimExt(path string) string {
-	return strings.TrimSuffix(path, filepath.Ext(path))
 }
 
 func findOutput(input string) (string, error) {
@@ -117,7 +79,7 @@ func findOutput(input string) (string, error) {
 	inputFilename := filepath.Base(input)
 	if *flagOutput != "" {
 		if stat, err := os.Stat(*flagOutput); err == nil && stat.IsDir() {
-			return filepath.Join(*flagOutput, trimExt(inputFilename)+".core"), nil
+			return filepath.Join(*flagOutput, common.TrimExt(inputFilename)+".core"), nil
 		}
 
 		ext := filepath.Ext(*flagOutput)
@@ -127,5 +89,5 @@ func findOutput(input string) (string, error) {
 			return "", fmt.Errorf("output file does not have .core extension")
 		}
 	}
-	return filepath.Join(dir, trimExt(inputFilename)+".core"), nil
+	return filepath.Join(dir, common.TrimExt(inputFilename)+".core"), nil
 }

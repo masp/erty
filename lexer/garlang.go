@@ -3,7 +3,7 @@ package lexer
 
 import (
     "bytes"
-    "github.com/masp/garlang/token"
+    "github.com/masp/ertylang/token"
 )
 
 func (l *Lexer) lex() (pos token.Pos, tok token.Type, lit string, err error) {

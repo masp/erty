@@ -1,8 +1,8 @@
 package resolver
 
 import (
-	"github.com/masp/garlang/ast"
-	"github.com/masp/garlang/types"
+	"github.com/masp/ertylang/ast"
+	"github.com/masp/ertylang/types"
 )
 
 // Scope is a symbol table for a given Scope, for example a function

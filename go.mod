@@ -1,4 +1,4 @@
-module github.com/masp/garlang
+module github.com/masp/ertylang
 
 go 1.20
 

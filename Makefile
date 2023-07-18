@@ -1,5 +1,5 @@
 fuzz:
-	go test github.com/masp/garlang/lexer -fuzz FuzzLex
+	go test github.com/masp/ertylang/lexer -fuzz FuzzLex
 
 install:
 	go install ./...

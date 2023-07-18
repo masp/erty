@@ -13,7 +13,7 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/masp/garlang/token"
+	"github.com/masp/ertylang/token"
 )
 
 // A FieldFilter may be provided to Fprint to control the output.

@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/masp/garlang/ast"
-	"github.com/masp/garlang/parser"
-	"github.com/masp/garlang/token"
+	"github.com/masp/ertylang/ast"
+	"github.com/masp/ertylang/parser"
+	"github.com/masp/ertylang/token"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

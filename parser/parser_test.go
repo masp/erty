@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/masp/garlang/ast"
-	"github.com/masp/garlang/token"
+	"github.com/masp/ertylang/ast"
+	"github.com/masp/ertylang/token"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

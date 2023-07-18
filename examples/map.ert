@@ -12,7 +12,7 @@ func map(F func(any) any, L []any) {
 
 func map[T any](f func(T) T, l []T) {
     match L {
-    case [h T, tail T...]:
+    case []T{h, tail...}:
         return [f(h) | map(f, tail)]
     case []:
         return []

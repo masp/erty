@@ -5,7 +5,7 @@
 // which the type came.
 package types
 
-import "github.com/masp/garlang/ast"
+import "github.com/masp/ertylang/ast"
 
 // Decl represents a type that comes from a reference to a declaration. It includes info
 // on what the type is, as well as a reference to the declaration that it came from.

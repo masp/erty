@@ -3,8 +3,8 @@ package ast
 import (
 	"strings"
 
-	"github.com/masp/garlang/lexer"
-	"github.com/masp/garlang/token"
+	"github.com/masp/ertylang/lexer"
+	"github.com/masp/ertylang/token"
 )
 
 type Node interface {

@@ -1,11 +1,11 @@
 package lexer
 
-//go:generate re2go garlang.re -o garlang.go -i
+//go:generate re2go ertylang.re -o ertylang.go -i
 
 import (
 	"errors"
 
-	"github.com/masp/garlang/token"
+	"github.com/masp/ertylang/token"
 )
 
 var (

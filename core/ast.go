@@ -4,7 +4,7 @@ package core
 import (
 	"fmt"
 
-	"github.com/masp/garlang/ast"
+	"github.com/masp/ertylang/ast"
 )
 
 // The definition of the Erlang core is defined at https://www.it.uu.se/research/group/hipe/cerl/doc/core_erlang-1.0.3.pdf

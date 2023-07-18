@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/masp/garlang/ast"
-	"github.com/masp/garlang/token"
+	"github.com/masp/ertylang/ast"
+	"github.com/masp/ertylang/token"
 )
 
 var TokenTable = [...]string{

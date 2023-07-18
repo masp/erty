@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	"github.com/masp/garlang/ast"
+	"github.com/masp/ertylang/ast"
 	"github.com/stretchr/testify/assert"
 )
 

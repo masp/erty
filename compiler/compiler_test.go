@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/masp/garlang/core"
-	"github.com/masp/garlang/parser"
-	"github.com/masp/garlang/resolver"
+	"github.com/masp/ertylang/core"
+	"github.com/masp/ertylang/parser"
+	"github.com/masp/ertylang/resolver"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +17,7 @@ func TestCompileModule(t *testing.T) {
 		expected string
 	}{
 		{
-			input:    `module mod; func a() { return 1 }`,
+			input:    `module mod; func a() int { return 1 }`,
 			expected: "mod.core",
 		},
 	}
@@ -65,11 +65,11 @@ func test(v, d int) int {
 			expected: "arithm.core",
 		},
 		{
-			input:    `func test() {return 'a'}`,
+			input:    `func test() any {return 'a'}`,
 			expected: "a.core",
 		},
 		{
-			input:    `func test() { return erlang.module_info('b') }`,
+			input:    `func test() any { return erlang.module_info('b') }`,
 			expected: "call.core",
 		},
 	}

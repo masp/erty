@@ -1,0 +1,13 @@
+module hello_world
+
+import "io"
+
+func add(a, b int) int {
+    return a + b
+}
+
+func main(args []string) {
+    a := 5
+    b := a * 10
+    io.format("Hello world! ~w~n", [add(a, b)])
+}

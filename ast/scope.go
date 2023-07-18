@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/masp/garlang/token"
+	"github.com/masp/ertylang/token"
 )
 
 // A Scope maintains the set of named language entities declared

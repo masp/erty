@@ -6,10 +6,10 @@ package resolver
 import (
 	"fmt"
 
-	"github.com/masp/garlang/ast"
-	"github.com/masp/garlang/printer"
-	"github.com/masp/garlang/token"
-	"github.com/masp/garlang/types"
+	"github.com/masp/ertylang/ast"
+	"github.com/masp/ertylang/printer"
+	"github.com/masp/ertylang/token"
+	"github.com/masp/ertylang/types"
 )
 
 type context struct {
@@ -87,10 +87,12 @@ func (r *resolver) resolveModule(x *ast.Module) {
 				retType = r.resolveType(decl.ReturnType)
 			}
 
-			r.declare(decl.Name, decl, &types.Func{
+			fnType := &types.Func{
 				Args:   argTypes,
 				Return: retType,
-			})
+			}
+			decl.SetType(fnType)
+			r.declare(decl.Name, decl, fnType)
 		case *ast.ImportDecl:
 			moduleName := decl.Path.Value
 			alias := decl.Alias
@@ -121,16 +123,28 @@ func (r *resolver) resolveFunc(x *ast.FuncDecl) {
 
 	// TODO: Declare parameters and manually specified types
 	for _, stmt := range x.Statements {
-		r.resolveStmt(stmt)
+		r.resolveStmt(x, stmt)
 	}
 }
 
-func (r *resolver) resolveStmt(stmt ast.Statement) {
+func (r *resolver) resolveStmt(fn *ast.FuncDecl, stmt ast.Statement) {
 	switch s := stmt.(type) {
 	case *ast.ExprStatement:
 		r.resolveExpr(s.Expression)
 	case *ast.ReturnStatement:
-		r.resolveExpr(s.Expression)
+		var retType ast.Type = types.Void
+		if s.Expression != nil {
+			retType = r.resolveExpr(s.Expression)
+		}
+
+		fnType, ok := fn.Type().(*types.Func)
+		if !ok {
+			return // error parsing func types, don't bother checking
+		}
+
+		if types.IsAssignable(fnType.Return, retType) == types.Invalid {
+			r.error(s.Expression, "cannot return %s from function of return type %s", retType, fnType.Return)
+		}
 	default:
 		panic(fmt.Sprintf("unhandled statement type %T", stmt))
 	}
@@ -279,13 +293,13 @@ func (r *resolver) resolveCallExpr(e *ast.CallExpr) (result ast.Type) {
 				r.error(arg, "too many arguments to func %s (expected %d, got %d)", e.Fun, len(cl.Args), len(e.Args))
 				break
 			}
-			declType := cl.Args[i]
+			declType := types.Value(cl.Args[i])
 			if t := types.IsAssignable(declType, argType); t != declType {
 				r.error(arg, "cannot use %s (%s) as %s value in argument to %s", arg, argType, declType, e.Fun)
 				continue
 			}
 		}
-		return cl.Return
+		return types.Value(cl.Return)
 	case *types.Expr:
 		// Type cast expression
 		if len(e.Args) != 1 {

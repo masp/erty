@@ -3,7 +3,7 @@ package resolver
 import (
 	"fmt"
 
-	"github.com/masp/garlang/types"
+	"github.com/masp/ertylang/types"
 )
 
 func (r *resolver) ImportModule(name string) (*types.SymbolTable, error) {

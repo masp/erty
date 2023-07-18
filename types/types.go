@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/masp/garlang/ast"
+	"github.com/masp/ertylang/ast"
 )
 
 type Node interface {

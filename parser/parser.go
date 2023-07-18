@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/masp/garlang/ast"
-	"github.com/masp/garlang/lexer"
-	"github.com/masp/garlang/token"
+	"github.com/masp/ertylang/ast"
+	"github.com/masp/ertylang/lexer"
+	"github.com/masp/ertylang/token"
 )
 
 const maxErrors = 10

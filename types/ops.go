@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/masp/garlang/ast"
+	"github.com/masp/ertylang/ast"
 )
 
 var (
@@ -71,6 +71,17 @@ func ApplyOp(t1, t2 ast.Type) (ast.Type, error) {
 //
 // The rules above apply the same if the var type is user-define (var.Underlying() != var).
 func IsAssignable(to, value ast.Type) ast.Type {
+	value = Deref(value)
+	to = Deref(to)
+	if toExpr, ok := to.(*Expr); ok {
+		// If we're trying to assign to a type expression, use the type definition instead
+		to = toExpr.Underlying()
+	}
+
+	if to == Any {
+		return to
+	}
+
 	if IsUntyped(value) && isConvertible(to.Underlying(), value) {
 		return to
 	}

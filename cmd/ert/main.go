@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/masp/garlang/cmd/gar/build"
-	"github.com/masp/garlang/cmd/gar/run"
+	"github.com/masp/ertylang/cmd/ert/build"
+	"github.com/masp/ertylang/cmd/ert/run"
 )
 
 const VERSION = "0.1.0"
@@ -15,7 +15,7 @@ func printUsage() {
 	
 Commands:
   build  Compile a gar module to Core Erlang or BEAM
-  run    Run a garlang module directly in the shell
+  run    Run a ertylang module directly in the shell
 
 Run 'gar help <command>' for more information on a command.
 `)

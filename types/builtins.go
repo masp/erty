@@ -1,6 +1,6 @@
 package types
 
-import "github.com/masp/garlang/ast"
+import "github.com/masp/ertylang/ast"
 
 var Builtins = map[string]ast.Type{
 	"int":    Int,

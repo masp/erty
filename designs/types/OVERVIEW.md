@@ -6,7 +6,7 @@ what they can do. For example, Dialyzer can only check the types of functions th
 Part of what makes types in other languages valuable is instant feedback from the compiler whether code is calling functions, matching
 patterns, or passing arguments correctly. This is not possible with Erlang specs.
 
-Garlang will support types that are enforced by the compiler. Types are mandatory for all Garlang code, but is optional for Erlang code. The compiler behaves similar to Typescript, where it tries to be as helpful as possible, but assumes `any` if it's working with typeless Erlang code.
+ertylang will support types that are enforced by the compiler. Types are mandatory for all ertylang code, but is optional for Erlang code. The compiler behaves similar to Typescript, where it tries to be as helpful as possible, but assumes `any` if it's working with typeless Erlang code.
 
 ## Goals
 1. Types are enforced by the compiler.
@@ -17,7 +17,7 @@ Garlang will support types that are enforced by the compiler. Types are mandator
 # Examples
 
 ## Simple types
-```garlang
+```ertylang
 int (64 bit signed integer)
 float (64 bit IEEE float)
 string (UTf-8 byte sequence, binary in Erlang)

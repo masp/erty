@@ -3,9 +3,9 @@ package parser
 import (
 	"fmt"
 
-	"github.com/masp/garlang/ast"
-	"github.com/masp/garlang/lexer"
-	"github.com/masp/garlang/token"
+	"github.com/masp/ertylang/ast"
+	"github.com/masp/ertylang/lexer"
+	"github.com/masp/ertylang/token"
 )
 
 func ParseModule(filename string, src []byte) (mod *ast.Module, err error) {

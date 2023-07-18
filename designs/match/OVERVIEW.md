@@ -43,13 +43,13 @@ To separate the binding and enforcing semantics would require something like:
 5> end.
 ```
 
-This is much more verbose, but clearly communicates the possibility of an error. Erlang, unlike Go or Rust, has a robust runtime and platform to handle unexpected errors, so unexpected errors is par for the course. For this reason, Garlang supports binding and enforcing with the `=` operator just like Erlang.
+This is much more verbose, but clearly communicates the possibility of an error. Erlang, unlike Go or Rust, has a robust runtime and platform to handle unexpected errors, so unexpected errors is par for the course. For this reason, ertylang supports binding and enforcing with the `=` operator just like Erlang.
 
-```garlang
+```ertylang
 {'ok', X} = call_api()
 ```
 
-Non-explicit error handling does cause challenges for applications like CLIs where you want to communicate errors more cleanly than stack traces from crashes. Since Garlang favors consistency with Erlang, it will favor implicit error handling over explicit.
+Non-explicit error handling does cause challenges for applications like CLIs where you want to communicate errors more cleanly than stack traces from crashes. Since ertylang favors consistency with Erlang, it will favor implicit error handling over explicit.
 
 #### Types with `=`
 Imagine a type like:
@@ -62,7 +62,7 @@ start_opt() =
 ```
 
 
-```garlang
+```ertylang
 type Timeout interface {
     int
     'infinity'
@@ -131,7 +131,7 @@ case A string:
 
 ### Ambiguity of type match on interface
 
-```garlang
+```ertylang
 type array interface {
     []int
     []float
