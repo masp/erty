@@ -30,8 +30,22 @@ hello() ->
 ```
 
 ### Usage
+
+To execute a `ert` file with a `main` function:
+```
+ert run examples/hello_world.ert
+```
+
+To load a module interactively into an Erlang shell:
+```
+ert run -shell examples/hello_world.ert
+```
+
+To build core files:
 ```
 ert build -o examples/ examples/hello_world.ert
 ```
+
+
 
 
