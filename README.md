@@ -2,12 +2,12 @@
 
 > Work in progress.
 
-Erty is Erlang built from scratch to be more friendly to programmers coming from C/Java/Python/Typescript.
+Erty is Erlang built from scratch to be more friendly to programmers coming from C/Java/Go/Rust/Typescript.
 
 Erty is closely related to Erlang, but with the following differences:
 - Enforced, static typing
 - Modern syntax (inspired by Go)
-- Easy interop between Erlang
+- Easy interop between Erlang and Elixir
 
 ## Example
 
