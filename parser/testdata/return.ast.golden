@@ -12,7 +12,7 @@
     11  .  }
     12  .  Statements: []ast.Statement (len = 1) {
     13  .  .  0: *ast.ReturnStatement {
-    14  .  .  .  Return: <string>
+    14  .  .  .  Return: <string>:1:14
     15  .  .  .  Expression: *ast.UnaryExpr {
     16  .  .  .  .  Op: Minus
     17  .  .  .  .  OpPos: <string>:1:21

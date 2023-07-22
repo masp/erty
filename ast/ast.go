@@ -339,8 +339,9 @@ func (f *Field) End() token.Pos {
 	}
 	return token.NoPos
 }
-func (f *Field) isNode()    {}
-func (f *Field) Type() Type { return f.Typ.Type() }
+func (f *Field) isNode()       {}
+func (f *Field) isExpression() {}
+func (f *Field) Type() Type    { return f.Typ.Type() }
 
 // A FieldList represents a list of Fields, enclosed by parentheses,
 // curly braces, or square brackets.
@@ -707,4 +708,37 @@ func (a *MatchAssignExpr) End() token.Pos {
 }
 func (a *MatchAssignExpr) Type() Type {
 	return a.Right.Type()
+}
+
+type Match struct {
+	typeNode
+
+	MatchPos       token.Pos  // position of match keyword
+	Opener, Closer token.Pos  // '{' and '}' positions
+	Value          Expression // value being matched
+	Cases          []*Case
+}
+
+func (m *Match) isExpression() {}
+func (m *Match) isNode()       {}
+func (m *Match) Pos() token.Pos {
+	return m.MatchPos
+}
+func (m *Match) End() token.Pos {
+	return m.Closer + 1
+}
+
+type Case struct {
+	CaseKeyword, Colon token.Pos // position of case keyword and preceding colon
+
+	Pattern Expression  // left: expression that is matched against
+	Body    []Statement // right: statements that are executed if left matches
+}
+
+func (c *Case) isNode() {}
+func (c *Case) Pos() token.Pos {
+	return c.CaseKeyword
+}
+func (c *Case) End() token.Pos {
+	return c.Body[len(c.Body)-1].End()
 }

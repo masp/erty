@@ -23,6 +23,11 @@ var (
 		token.Func: true,
 	}
 
+	curlyEnd = map[token.Type]bool{
+		token.RCurlyBracket: true,
+		token.EOF:           true,
+	}
+
 	exprEnd = map[token.Type]bool{
 		token.EOF:           true,
 		token.Semicolon:     true,
@@ -35,6 +40,12 @@ var (
 		token.Return:        true,
 		token.Identifier:    true, // assignment
 		token.LCurlyBracket: true, // block/tuple
+	}
+
+	caseStart = map[token.Type]bool{
+		token.Case:          true,
+		token.EOF:           true,
+		token.RCurlyBracket: true,
 	}
 
 	paramStart = map[token.Type]bool{
@@ -104,8 +115,9 @@ func (p *Parser) peek() (tok lexer.Token) {
 }
 
 func (p *Parser) matches(types ...token.Type) bool {
+	next := p.peek()
 	for _, t := range types {
-		if p.peek().Type == t {
+		if next.Type == t {
 			return true
 		}
 	}
@@ -325,8 +337,9 @@ func (p *Parser) parseStatement(tok lexer.Token) ast.Statement {
 }
 
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
-	p.eatOnly(token.Return, "expected 'return' keyword")
+	retTok := p.eatOnly(token.Return, "expected 'return' keyword")
 	return &ast.ReturnStatement{
+		Return:     retTok.Pos,
 		Expression: p.parseExpression(),
 	}
 }
@@ -351,15 +364,15 @@ func (p *Parser) parseExpressionStatement(tok lexer.Token) *ast.ExprStatement {
 //                | "(" expression ")" ;
 
 func (p *Parser) parseExpression() ast.Expression {
-	return p.parseMatch()
+	return p.parseAssign()
 }
 
-func (p *Parser) parseMatch() ast.Expression {
+func (p *Parser) parseAssign() ast.Expression {
 	left := p.parseEquality()
 	// just if and not while because these are right-associative
 	if p.matches(token.Equal) {
 		equals := p.eat()
-		right := p.parseMatch()
+		right := p.parseAssign()
 		if leftId, ok := left.(*ast.Identifier); ok {
 			return &ast.AssignExpr{
 				Left:   leftId,
@@ -522,11 +535,19 @@ func (p *Parser) parsePrimary() ast.Expression {
 			Value:    p.parseFloat(tok),
 		}
 	case token.Identifier:
-		return &ast.Identifier{NamePos: tok.Pos, Name: tok.Lit}
+		id := &ast.Identifier{NamePos: tok.Pos, Name: tok.Lit}
+		if p.matches(token.Identifier, token.Tuple, token.LSquareBracket) {
+			// If it looks like a type, wrap the id in an ast.Field
+			typ := p.parseType()
+			return &ast.Field{Names: []*ast.Identifier{id}, Typ: typ}
+		}
+		return id
 	case token.String:
 		return ast.NewString(tok)
 	case token.Atom:
 		return ast.NewAtom(tok)
+	case token.Match:
+		return p.parseMatch(tok)
 	case token.LParen:
 		expr := p.parseExpression()
 		rparen := p.eatOnly(token.RParen, "unclosed '(' around expression")

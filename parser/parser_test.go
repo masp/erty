@@ -61,6 +61,25 @@ func TestParseFunc(t *testing.T) {
 			input:       "func arrays() { a = [1, 2, 3, ]; b = [] }",
 			expectedAst: "arrays.ast",
 		},
+		{
+			// match statements
+			input: `
+			func matchStmt() {
+				a := 10
+				match a {
+					case 10:
+						return 10
+					case A int:
+						A + 10
+					case [A int, B string]:
+						A = 10
+						B = "hello"
+						return 10
+				}
+			}
+			`,
+			expectedAst: "match.ast",
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {

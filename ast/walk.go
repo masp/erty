@@ -88,6 +88,16 @@ func walk(n Node, v Visitor) {
 		for _, elt := range n.Elts {
 			walk(elt, v)
 		}
+	case *Match:
+		walk(n.Value, v)
+		for _, cs := range n.Cases {
+			walk(cs, v)
+		}
+	case *Case:
+		walk(n.Pattern, v)
+		for _, stmt := range n.Body {
+			walk(stmt, v)
+		}
 	case *ListType:
 		walk(n.Elt, v)
 	default:

@@ -55,6 +55,8 @@ const (
 	Map
 	TypeKeyword
 	Import
+	Match
+	Case
 
 	EOF Type = 999 // must be at end
 )
@@ -93,6 +95,12 @@ var types = [...]string{
 	Func:           "Func",
 	Return:         "Return",
 	Module:         "Module",
+	Tuple:          "Tuple",
+	Map:            "Map",
+	TypeKeyword:    "Type",
+	Import:         "Import",
+	Match:          "Match",
+	Case:           "Case",
 	EOF:            "EOF",
 }
 

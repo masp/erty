@@ -1,0 +1,166 @@
+     0  *ast.FuncDecl {
+     1  .  Func: <string>:2:4
+     2  .  LeftBrace: <string>:2:21
+     3  .  RightBrace: <string>:14:4
+     4  .  Name: *ast.Identifier {
+     5  .  .  NamePos: <string>:2:9
+     6  .  .  Name: "matchStmt"
+     7  .  }
+     8  .  Parameters: *ast.FieldList {
+     9  .  .  Opening: <string>:2:18
+    10  .  .  Closing: <string>:2:19
+    11  .  }
+    12  .  Statements: []ast.Statement (len = 2) {
+    13  .  .  0: *ast.ExprStatement {
+    14  .  .  .  Expression: *ast.MatchAssignExpr {
+    15  .  .  .  .  Left: *ast.Identifier {
+    16  .  .  .  .  .  NamePos: <string>:3:5
+    17  .  .  .  .  .  Name: "a"
+    18  .  .  .  .  }
+    19  .  .  .  .  Equals: <string>:3:7
+    20  .  .  .  .  Right: *ast.IntLiteral {
+    21  .  .  .  .  .  IntPos: <string>:3:10
+    22  .  .  .  .  .  Lit: "10"
+    23  .  .  .  .  .  Value: 10
+    24  .  .  .  .  }
+    25  .  .  .  }
+    26  .  .  }
+    27  .  .  1: *ast.ExprStatement {
+    28  .  .  .  Expression: *ast.Match {
+    29  .  .  .  .  MatchPos: <string>:4:5
+    30  .  .  .  .  Opener: <string>:4:13
+    31  .  .  .  .  Closer: <string>:13:5
+    32  .  .  .  .  Value: *ast.Identifier {
+    33  .  .  .  .  .  NamePos: <string>:4:11
+    34  .  .  .  .  .  Name: "a"
+    35  .  .  .  .  }
+    36  .  .  .  .  Cases: []*ast.Case (len = 3) {
+    37  .  .  .  .  .  0: *ast.Case {
+    38  .  .  .  .  .  .  CaseKeyword: <string>:5:6
+    39  .  .  .  .  .  .  Colon: <string>:5:13
+    40  .  .  .  .  .  .  Pattern: *ast.IntLiteral {
+    41  .  .  .  .  .  .  .  IntPos: <string>:5:11
+    42  .  .  .  .  .  .  .  Lit: "10"
+    43  .  .  .  .  .  .  .  Value: 10
+    44  .  .  .  .  .  .  }
+    45  .  .  .  .  .  .  Body: []ast.Statement (len = 1) {
+    46  .  .  .  .  .  .  .  0: *ast.ReturnStatement {
+    47  .  .  .  .  .  .  .  .  Return: <string>:6:7
+    48  .  .  .  .  .  .  .  .  Expression: *ast.IntLiteral {
+    49  .  .  .  .  .  .  .  .  .  IntPos: <string>:6:14
+    50  .  .  .  .  .  .  .  .  .  Lit: "10"
+    51  .  .  .  .  .  .  .  .  .  Value: 10
+    52  .  .  .  .  .  .  .  .  }
+    53  .  .  .  .  .  .  .  }
+    54  .  .  .  .  .  .  }
+    55  .  .  .  .  .  }
+    56  .  .  .  .  .  1: *ast.Case {
+    57  .  .  .  .  .  .  CaseKeyword: <string>:7:6
+    58  .  .  .  .  .  .  Colon: <string>:7:16
+    59  .  .  .  .  .  .  Pattern: *ast.Field {
+    60  .  .  .  .  .  .  .  Names: []*ast.Identifier (len = 1) {
+    61  .  .  .  .  .  .  .  .  0: *ast.Identifier {
+    62  .  .  .  .  .  .  .  .  .  NamePos: <string>:7:11
+    63  .  .  .  .  .  .  .  .  .  Name: "A"
+    64  .  .  .  .  .  .  .  .  }
+    65  .  .  .  .  .  .  .  }
+    66  .  .  .  .  .  .  .  Typ: *ast.Identifier {
+    67  .  .  .  .  .  .  .  .  NamePos: <string>:7:13
+    68  .  .  .  .  .  .  .  .  Name: "int"
+    69  .  .  .  .  .  .  .  }
+    70  .  .  .  .  .  .  }
+    71  .  .  .  .  .  .  Body: []ast.Statement (len = 1) {
+    72  .  .  .  .  .  .  .  0: *ast.ExprStatement {
+    73  .  .  .  .  .  .  .  .  Expression: *ast.BinaryExpr {
+    74  .  .  .  .  .  .  .  .  .  Left: *ast.Identifier {
+    75  .  .  .  .  .  .  .  .  .  .  NamePos: <string>:8:7
+    76  .  .  .  .  .  .  .  .  .  .  Name: "A"
+    77  .  .  .  .  .  .  .  .  .  }
+    78  .  .  .  .  .  .  .  .  .  OpPos: <string>:8:9
+    79  .  .  .  .  .  .  .  .  .  Op: Plus
+    80  .  .  .  .  .  .  .  .  .  Right: *ast.IntLiteral {
+    81  .  .  .  .  .  .  .  .  .  .  IntPos: <string>:8:11
+    82  .  .  .  .  .  .  .  .  .  .  Lit: "10"
+    83  .  .  .  .  .  .  .  .  .  .  Value: 10
+    84  .  .  .  .  .  .  .  .  .  }
+    85  .  .  .  .  .  .  .  .  }
+    86  .  .  .  .  .  .  .  }
+    87  .  .  .  .  .  .  }
+    88  .  .  .  .  .  }
+    89  .  .  .  .  .  2: *ast.Case {
+    90  .  .  .  .  .  .  CaseKeyword: <string>:9:6
+    91  .  .  .  .  .  .  Colon: <string>:9:28
+    92  .  .  .  .  .  .  Pattern: *ast.ListLiteral {
+    93  .  .  .  .  .  .  .  Opener: <string>:9:11
+    94  .  .  .  .  .  .  .  Elts: []ast.Expression (len = 2) {
+    95  .  .  .  .  .  .  .  .  0: *ast.Field {
+    96  .  .  .  .  .  .  .  .  .  Names: []*ast.Identifier (len = 1) {
+    97  .  .  .  .  .  .  .  .  .  .  0: *ast.Identifier {
+    98  .  .  .  .  .  .  .  .  .  .  .  NamePos: <string>:9:12
+    99  .  .  .  .  .  .  .  .  .  .  .  Name: "A"
+   100  .  .  .  .  .  .  .  .  .  .  }
+   101  .  .  .  .  .  .  .  .  .  }
+   102  .  .  .  .  .  .  .  .  .  Typ: *ast.Identifier {
+   103  .  .  .  .  .  .  .  .  .  .  NamePos: <string>:9:14
+   104  .  .  .  .  .  .  .  .  .  .  Name: "int"
+   105  .  .  .  .  .  .  .  .  .  }
+   106  .  .  .  .  .  .  .  .  }
+   107  .  .  .  .  .  .  .  .  1: *ast.Field {
+   108  .  .  .  .  .  .  .  .  .  Names: []*ast.Identifier (len = 1) {
+   109  .  .  .  .  .  .  .  .  .  .  0: *ast.Identifier {
+   110  .  .  .  .  .  .  .  .  .  .  .  NamePos: <string>:9:19
+   111  .  .  .  .  .  .  .  .  .  .  .  Name: "B"
+   112  .  .  .  .  .  .  .  .  .  .  }
+   113  .  .  .  .  .  .  .  .  .  }
+   114  .  .  .  .  .  .  .  .  .  Typ: *ast.Identifier {
+   115  .  .  .  .  .  .  .  .  .  .  NamePos: <string>:9:21
+   116  .  .  .  .  .  .  .  .  .  .  Name: "string"
+   117  .  .  .  .  .  .  .  .  .  }
+   118  .  .  .  .  .  .  .  .  }
+   119  .  .  .  .  .  .  .  }
+   120  .  .  .  .  .  .  .  Closer: <string>:9:27
+   121  .  .  .  .  .  .  }
+   122  .  .  .  .  .  .  Body: []ast.Statement (len = 3) {
+   123  .  .  .  .  .  .  .  0: *ast.ExprStatement {
+   124  .  .  .  .  .  .  .  .  Expression: *ast.AssignExpr {
+   125  .  .  .  .  .  .  .  .  .  Left: *ast.Identifier {
+   126  .  .  .  .  .  .  .  .  .  .  NamePos: <string>:10:7
+   127  .  .  .  .  .  .  .  .  .  .  Name: "A"
+   128  .  .  .  .  .  .  .  .  .  }
+   129  .  .  .  .  .  .  .  .  .  Equals: <string>:10:9
+   130  .  .  .  .  .  .  .  .  .  Right: *ast.IntLiteral {
+   131  .  .  .  .  .  .  .  .  .  .  IntPos: <string>:10:11
+   132  .  .  .  .  .  .  .  .  .  .  Lit: "10"
+   133  .  .  .  .  .  .  .  .  .  .  Value: 10
+   134  .  .  .  .  .  .  .  .  .  }
+   135  .  .  .  .  .  .  .  .  }
+   136  .  .  .  .  .  .  .  }
+   137  .  .  .  .  .  .  .  1: *ast.ExprStatement {
+   138  .  .  .  .  .  .  .  .  Expression: *ast.AssignExpr {
+   139  .  .  .  .  .  .  .  .  .  Left: *ast.Identifier {
+   140  .  .  .  .  .  .  .  .  .  .  NamePos: <string>:11:7
+   141  .  .  .  .  .  .  .  .  .  .  Name: "B"
+   142  .  .  .  .  .  .  .  .  .  }
+   143  .  .  .  .  .  .  .  .  .  Equals: <string>:11:9
+   144  .  .  .  .  .  .  .  .  .  Right: *ast.StringLiteral {
+   145  .  .  .  .  .  .  .  .  .  .  QuotePos: <string>:11:11
+   146  .  .  .  .  .  .  .  .  .  .  Value: "hello"
+   147  .  .  .  .  .  .  .  .  .  .  Lit: "\"hello\""
+   148  .  .  .  .  .  .  .  .  .  }
+   149  .  .  .  .  .  .  .  .  }
+   150  .  .  .  .  .  .  .  }
+   151  .  .  .  .  .  .  .  2: *ast.ReturnStatement {
+   152  .  .  .  .  .  .  .  .  Return: <string>:12:7
+   153  .  .  .  .  .  .  .  .  Expression: *ast.IntLiteral {
+   154  .  .  .  .  .  .  .  .  .  IntPos: <string>:12:14
+   155  .  .  .  .  .  .  .  .  .  Lit: "10"
+   156  .  .  .  .  .  .  .  .  .  Value: 10
+   157  .  .  .  .  .  .  .  .  }
+   158  .  .  .  .  .  .  .  }
+   159  .  .  .  .  .  .  }
+   160  .  .  .  .  .  }
+   161  .  .  .  .  }
+   162  .  .  .  }
+   163  .  .  }
+   164  .  }
+   165  }
