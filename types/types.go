@@ -114,23 +114,22 @@ var Bool = &Enum{
 	},
 }
 
-func (e *Enum) IsSubset(t ast.Type) bool {
+func (e *Enum) Intersect(t ast.Type) ast.Type {
 	for _, c := range e.Cases {
 		if IsAssignable(c, t) != Invalid {
-			return true
+			return c // return case that matches
 		}
 	}
 
 	if other, ok := t.(*Enum); ok {
-		all := true
 		for _, c := range other.Cases {
-			if !e.IsSubset(c) {
-				return false // all cases must be a subset of other enum
+			if e.Intersect(c) == Invalid {
+				return Invalid // all cases must be a subset of other enum
 			}
 		}
-		return all
+		return other
 	}
-	return false
+	return Invalid
 }
 
 type Func struct {

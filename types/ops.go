@@ -80,19 +80,9 @@ func IsAssignable(to, value ast.Type) ast.Type {
 
 	if to == Any {
 		return to
-	}
-
-	if IsUntyped(value) && isConvertible(to.Underlying(), value) {
+	} else if IsEqual(to, value) {
 		return to
-	}
-	if toAtom, ok := to.(*AtomValue); ok {
-		if valueAtom, ok := value.(*AtomValue); ok {
-			if toAtom.V == valueAtom.V {
-				return to
-			}
-		}
-	}
-	if to == value {
+	} else if IsUntyped(value) && isConvertible(to.Underlying(), value) {
 		return to
 	}
 	return Invalid
@@ -122,6 +112,26 @@ func isConvertible(to, value ast.Type) bool {
 			return false
 		}
 	}
+	return false
+}
+
+// IsEqual returns true only if types are truly equal (untyped types are different). Handles
+// recursive types like ast.Tuple where you need to recursively check rather than pointer equality.
+func IsEqual(t1, t2 ast.Type) bool {
+	if t1 == t2 {
+		return true // common fast case
+	}
+
+	if toAtom, ok := t1.(*AtomValue); ok {
+		if valueAtom, ok := t2.(*AtomValue); ok {
+			if toAtom.V == valueAtom.V {
+				return true
+			}
+		}
+	}
+
+	// TODO: Support tuple types
+	// TODO: Support maps
 	return false
 }
 

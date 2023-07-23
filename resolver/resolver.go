@@ -111,8 +111,9 @@ func (r *resolver) resolveModule(x *ast.Module) {
 }
 
 func (r *resolver) resolveFunc(x *ast.FuncDecl) {
-	r.pushScope() // function scope
+	scope := r.pushScope() // function scope
 	defer r.popScope()
+	scope.currFn = x
 
 	for _, arg := range x.Parameters.List {
 		t := r.resolveType(arg.Typ)
@@ -122,15 +123,18 @@ func (r *resolver) resolveFunc(x *ast.FuncDecl) {
 	}
 
 	// TODO: Declare parameters and manually specified types
+	// TODO: Determine return type from last statement
 	for _, stmt := range x.Statements {
-		r.resolveStmt(x, stmt)
+		r.resolveStmt(stmt)
 	}
 }
 
-func (r *resolver) resolveStmt(fn *ast.FuncDecl, stmt ast.Statement) {
+func (r *resolver) resolveStmt(stmt ast.Statement) ast.Type {
+	fn := r.ctx.scope.CurrentFunc()
+
 	switch s := stmt.(type) {
 	case *ast.ExprStatement:
-		r.resolveExpr(s.Expression)
+		return r.resolveExpr(s.Expression)
 	case *ast.ReturnStatement:
 		var retType ast.Type = types.Void
 		if s.Expression != nil {
@@ -139,12 +143,13 @@ func (r *resolver) resolveStmt(fn *ast.FuncDecl, stmt ast.Statement) {
 
 		fnType, ok := fn.Type().(*types.Func)
 		if !ok {
-			return // error parsing func types, don't bother checking
+			return types.Void // error parsing func types, don't bother checking
 		}
 
 		if types.IsAssignable(fnType.Return, retType) == types.Invalid {
 			r.error(s.Expression, "cannot return %s from function of return type %s", retType, fnType.Return)
 		}
+		return types.Void
 	default:
 		panic(fmt.Sprintf("unhandled statement type %T", stmt))
 	}
@@ -163,6 +168,8 @@ func (r *resolver) resolveExpr(expr ast.Expression) (result ast.Type) {
 		r.symbols.AddResolved(e, decl)
 		e.SetType(decl)
 		return decl.Type
+	case *ast.Field:
+		return r.resolveField(e)
 	case *ast.IntLiteral:
 		e.SetType(types.UntypedInt)
 		return types.UntypedInt
@@ -191,6 +198,8 @@ func (r *resolver) resolveExpr(expr ast.Expression) (result ast.Type) {
 		return r.resolveCallExpr(e)
 	case *ast.DotExpr:
 		return r.resolveDotExpr(e)
+	case *ast.Match:
+		return r.resolveMatch(e)
 	default:
 		panic(fmt.Errorf("unsupported expression %T", expr))
 	}
@@ -253,16 +262,14 @@ func (r *resolver) resolveUnaryExpr(expr *ast.UnaryExpr) (result ast.Type) {
 	case token.Minus, token.Plus:
 		t := r.resolveExpr(expr.Right)
 		if !types.IsNumeric(t) {
-			desc, _ := printer.Print(r.file, expr.Right)
-			r.error(expr.Right, "operator %s not defined on %s (%s)", printer.TokenTable[expr.Op], desc, t)
+			r.error(expr.Right, "operator %s not defined on %s (%s)", printer.TokenTable[expr.Op], expr.Right, t)
 			return types.Invalid
 		}
 		return t
 	case token.Bang:
 		t := r.resolveExpr(expr.Right)
-		if !types.Bool.IsSubset(t) {
-			desc, _ := printer.Print(r.file, expr.Right)
-			r.error(expr.Right, "operator %s not defined on %s (%s)", printer.TokenTable[expr.Op], desc, t)
+		if types.Bool.Intersect(t) == types.Invalid {
+			r.error(expr.Right, "operator %s not defined on %s (%s)", printer.TokenTable[expr.Op], expr.Right, t)
 			return types.Invalid
 		}
 		return types.Bool
@@ -397,7 +404,7 @@ func (r *resolver) resolveListExpr(l *ast.ListLiteral) (result *types.List) {
 }
 
 func (r *resolver) declare(id *ast.Identifier, decl ast.Node, typ ast.Type) *types.Decl {
-	d := &types.Decl{RefersTo: decl, Type: typ}
+	d := &types.Decl{RefersTo: decl, Type: types.Value(typ)}
 	r.symbols.AddResolved(id, d)
 	id.SetType(d)
 	return r.ctx.scope.Insert(id.Name, d)

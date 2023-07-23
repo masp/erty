@@ -23,11 +23,6 @@ var (
 		token.Func: true,
 	}
 
-	curlyEnd = map[token.Type]bool{
-		token.RCurlyBracket: true,
-		token.EOF:           true,
-	}
-
 	exprEnd = map[token.Type]bool{
 		token.EOF:           true,
 		token.Semicolon:     true,
@@ -589,7 +584,7 @@ func (p *Parser) parseList(end token.Type) []ast.Expression {
 		next := p.peek()
 		switch next.Type {
 		case end:
-			break
+			return elements
 		case token.Comma:
 			p.eat()
 		default:

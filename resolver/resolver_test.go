@@ -163,6 +163,52 @@ func _(c int) {
 	}
 }
 
+func TestResolveExpression(t *testing.T) {
+	premodule := `
+	module test
+	func add(a, b int) int {
+		return a + b
+	}
+	
+	func main() int { got := `
+	postmodule := `}`
+
+	tests := map[string]struct {
+		eval string
+		want ast.Type
+	}{
+		"int": {`10`, types.Int},
+		"match statement": {
+			eval: `match 10+12 {
+				case a int: return a
+				case 10: 10
+			}`,
+			want: types.Int,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.eval, func(t *testing.T) {
+			src := premodule + tt.eval + postmodule
+			mod, err := parser.ParseModule("<test>", []byte(src))
+			require.NoError(t, err)
+
+			err = ResolveModule(mod, nil)
+			require.NoError(t, err)
+			var gotId *ast.Identifier
+			ids := collectIds(mod)
+			for _, id := range ids {
+				if id.Name == "got" {
+					gotId = id
+				}
+			}
+			require.NotNil(t, gotId, "testValue was not found in the program")
+
+			assert.Equal(t, tt.want, types.Deref(gotId.Type()))
+		})
+	}
+}
+
 func TestTypeResolveErrorExpr(t *testing.T) {
 	tests := []struct {
 		src     string
@@ -174,6 +220,7 @@ func TestTypeResolveErrorExpr(t *testing.T) {
 		{`-"b"`, `<string>:1:2: operator - not defined on "b" (untyped string)`},
 		{`3+"b"`, `operator + has mismatched types: untyped int and untyped string`},
 		{`[3, "a"]`, `cannot use "a" (untyped string) as value in untyped int list`},
+		{`match 10 { case "hello": 10 }`, `cannot unify value 10 (untyped int) with case pattern "hello" (untyped string)`},
 	}
 
 	for _, tt := range tests {

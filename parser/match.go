@@ -44,12 +44,14 @@ func (p *Parser) parseCase() *ast.Case {
 	caseClause.Pattern = p.parsePattern()
 	caseClause.Colon = p.eatOnly(token.Colon, "expected ':' after pattern").Pos
 
-	for {
-		if p.matches(token.EOF, token.RCurlyBracket, token.Case) {
-			break
-		}
+	i := 0
+	for !p.matches(token.EOF, token.RCurlyBracket, token.Case) {
 		caseClause.Body = append(caseClause.Body, p.parseStatement(p.peek()))
+		if p.matches(token.RCurlyBracket) {
+			break // no semi needed
+		}
 		p.eatOnly(token.Semicolon, "expected ';' at end of statement")
+		i += 1
 	}
 	return caseClause
 }

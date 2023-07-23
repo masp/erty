@@ -125,6 +125,15 @@ func (p *printer) printExpr(expr ast.Expression) {
 	case *ast.DotExpr:
 		p.printExpr(expr.X)
 		p.write(token.Period, expr.Attr.Name)
+	case *ast.Field:
+		for i, name := range expr.Names {
+			if i > 0 {
+				p.write(token.Comma, " ")
+			}
+			p.write(name.Name)
+		}
+		p.write(" ")
+		p.printExpr(expr.Typ)
 	default:
 		panic(fmt.Errorf("printer does not support expressions of type %T", expr))
 	}

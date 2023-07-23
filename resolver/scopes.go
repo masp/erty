@@ -12,6 +12,7 @@ import (
 type Scope struct {
 	Outer   *Scope
 	Symbols map[string]*types.Decl
+	currFn  *ast.FuncDecl // ptr to current function body (nil if scope is not defined by func)
 }
 
 func NewScope(outer *Scope) *Scope {
@@ -25,6 +26,16 @@ func (s *Scope) Lookup(name string) *types.Decl {
 
 	if s.Outer != nil {
 		return s.Outer.Lookup(name)
+	}
+	return nil
+}
+
+func (s *Scope) CurrentFunc() *ast.FuncDecl {
+	if s.currFn != nil {
+		return s.currFn
+	}
+	if s.Outer != nil {
+		return s.Outer.CurrentFunc()
 	}
 	return nil
 }
