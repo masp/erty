@@ -1,0 +1,17 @@
+output=987
+---
+module fib
+
+import "io"
+
+func main(args []string) {
+    io.format("~w", [fib(16)])
+}
+
+func fib(n int) int {
+    return match n {
+        case 0: 0
+        case 1: 1
+        case n int: fib(n-1) + fib(n-2)
+    }
+}
