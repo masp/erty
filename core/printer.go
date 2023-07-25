@@ -188,6 +188,8 @@ func (c *Printer) emitExpr(expr Expr) {
 		c.emitLet(expr)
 	case *DoExpr:
 		c.emitDo(expr)
+	case *Case:
+		c.emitCase(expr)
 	case *List:
 		cons := expr.Elements
 		for {
@@ -324,4 +326,28 @@ func (c *Printer) emitBitstring(bs *Bitstring) {
 	c.emitf(",")
 	c.emitConst(bs.Flags)
 	c.emitf(")")
+}
+
+func (c *Printer) emitCase(e *Case) {
+	c.emitf("case ")
+	c.emitExpr(e.E)
+	c.emitf(" of")
+	c.indent()
+	for _, clause := range e.Clauses {
+		c.emitln()
+		c.emitClause(clause)
+	}
+	c.dedent()
+	c.emitln()
+	c.emitf("end")
+}
+
+func (c *Printer) emitClause(clause *Clause) {
+	c.emitf("<")
+	c.emitExpr(clause.Pattern)
+	c.emitf("> when 'true' ->")
+	c.indent()
+	defer c.dedent()
+	c.emitln()
+	c.emitExpr(clause.Body)
 }

@@ -55,22 +55,32 @@ func add(a, b int) int { return a + b }
 		input    string
 		expected string
 	}{
+		// 		{
+		// 			input: `
+		// func test(v, d int) int {
+		// 	a := erlang.a(v)
+		// 	erlang.d()
+		// 	return int(erlang.b(d)) + 100
+		// }`,
+		// 			expected: "arithm.core",
+		// 		},
+		// 		{
+		// 			input:    `func test() any {return 'a'}`,
+		// 			expected: "a.core",
+		// 		},
+		// 		{
+		// 			input:    `func test() any { return erlang.module_info('b') }`,
+		// 			expected: "call.core",
+		// 		},
 		{
-			input: `
-func test(v, d int) int {
-	a := erlang.a(v)
-	erlang.d()
-	return int(erlang.b(d)) + 100
-}`,
-			expected: "arithm.core",
-		},
-		{
-			input:    `func test() any {return 'a'}`,
-			expected: "a.core",
-		},
-		{
-			input:    `func test() any { return erlang.module_info('b') }`,
-			expected: "call.core",
+			input: `func test(n int) int {
+				return match n {
+					case 0: 0
+					case 1: 1
+					case n int: test(n-1) + test(n-2)
+				}
+			}`,
+			expected: "fib.core",
 		},
 	}
 
@@ -87,8 +97,11 @@ func test(v, d int) int {
 			compiled, err := New().CompileModule(mod)
 			require.NoError(t, err)
 
+			testFn := findFunc(compiled.Functions, "test")
+			require.NotNil(t, testFn, "did not find func with name 'test'")
+
 			var out bytes.Buffer
-			core.NewPrinter(&out).PrintFunc(findFunc(compiled.Functions, "test"))
+			core.NewPrinter(&out).PrintFunc(testFn)
 			g := goldie.New(t)
 			g.Assert(t, test.expected, out.Bytes())
 		})

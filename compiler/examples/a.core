@@ -1,8 +1,9 @@
 module 'a' ['add'/1,
+	    'cases'/1,
+	    'fib'/1,
 	    'main'/0,
 	    'module_info'/0,
-	    'module_info'/1,
-	    'nest'/5]
+	    'module_info'/1]
     attributes [%% Line 1
 		'file' =
 		    %% Line 1
@@ -29,30 +30,67 @@ module 'a' ['add'/1,
 		     #<126>(8,1,'integer',['unsigned'|['big']]),
 		     #<110>(8,1,'integer',['unsigned'|['big']])}#, [_0|[]])
       -| [{'function',{'main',0}}] )
-'nest'/5 =
-    %% Line 10
-    ( fun (_0,_1,_2,_3,_4) ->
-	  let <_6> =
-	      call %% Line 11
-		   'erlang':%% Line 11
-			    '+'
-		  (_0, _1)
-	  in  let <_5> =
-		  call %% Line 11
-		       'erlang':%% Line 11
-				'call'
-		      (_2, _3)
-	      in  let <_7> =
-		      call %% Line 11
-			   'erlang':%% Line 11
-				    '+'
-			  (%% Line 11
-			   _6, %% Line 11
-			       _5)
-		  in  %% Line 11
-		      call 'erlang':'-'
-			  (_7, _4)
-      -| [{'function',{'nest',5}}] )
+'fib'/1 =
+    %% Line 14
+    ( fun (_0) ->
+	  %% Line 15
+	  case ( _0
+		 -| [{'function',{'fib',1}}] ) of
+	    %% Line 16
+	    <0> when 'true' ->
+		0
+	    %% Line 17
+	    <1> when 'true' ->
+		1
+	    %% Line 18
+	    <A> when 'true' ->
+		let <_3> =
+		    call 'erlang':'-'
+			(A, 1)
+		in  let <_4> =
+			apply 'fib'/1
+			    (_3)
+		    in  let <_1> =
+			    call 'erlang':'-'
+				(A, 2)
+			in  let <_2> =
+				apply 'fib'/1
+				    (_1)
+			    in  call 'erlang':'+'
+				    (_4, _2)
+	  end
+      -| [{'function',{'fib',1}}] )
+'cases'/1 =
+    %% Line 21
+    ( fun (_0) ->
+	  let <_2> =
+	      apply %% Line 23
+		    'add'/1
+		  (( _0
+		     -| [{'function',{'cases',1}}] ))
+	  in  %% Line 23
+	      case call 'erlang':'+'
+		       (_2, 10) of
+		%% Line 24
+		<10> when 'true' ->
+		    10
+		%% Line 25
+		<_5>
+		    when call 'erlang':'=:='
+			  (_5,
+			   10) ->
+		    10
+		%% Line 26
+		<{10,Z}> when 'true' ->
+		    Z
+		%% Line 27
+		<{10,20}> when 'true' ->
+		    30
+		%% Line 28
+		<B> when 'true' ->
+		    B
+	      end
+      -| [{'function',{'cases',1}}] )
 'module_info'/0 =
     ( fun () ->
 	  call 'erlang':'get_module_info'

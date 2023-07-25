@@ -14,6 +14,7 @@ func TestUnify(t *testing.T) {
 	}{
 		"matching integer types":   {Int, Int, Int},
 		"untyped int with integer": {UntypedInt, Int, Int},
+		"typed with untyped":       {Int, UntypedInt, Int},
 		"enum":                     {Bool, Bool, Bool},
 		"subset of enum":           {Bool, &AtomValue{V: "true"}, &AtomValue{V: "true"}},
 		"bad":                      {Int, String, Invalid},
@@ -32,8 +33,9 @@ func TestMerge(t *testing.T) {
 		ts   []ast.Type
 		want ast.Type
 	}{
-		"ints":  {[]ast.Type{Int, UntypedInt, Int, Int}, Int},
-		"mixed": {[]ast.Type{Int, String, Int}, &Enum{Cases: []ast.Type{Int, String}}},
+		"ints":          {[]ast.Type{Int, UntypedInt, Int, Int}, Int},
+		"untyped first": {[]ast.Type{UntypedInt, Int, Int}, Int},
+		"mixed":         {[]ast.Type{Int, String, Int}, &Enum{Cases: []ast.Type{Int, String}}},
 		"enums": {
 			ts: []ast.Type{
 				&Enum{Cases: []ast.Type{Int, String}},

@@ -9,6 +9,9 @@ import "github.com/masp/ertylang/ast"
 func Unify(pattern, value ast.Type) ast.Type {
 	// If the value can be assigned to a variable with the type, then it can unify.
 	result := IsAssignable(pattern, value)
+	if result == Invalid {
+		result = IsAssignable(value, pattern)
+	}
 	if result != Invalid {
 		return result
 	}
@@ -39,6 +42,8 @@ func Merge(ts ...ast.Type) ast.Type {
 	for _, t := range ts {
 		if e, ok := t.(*Enum); ok {
 			flattened = append(flattened, e.Cases...)
+		} else if IsUntyped(t) {
+			flattened = append(flattened, MakeTyped(t))
 		} else {
 			flattened = append(flattened, t)
 		}
@@ -51,8 +56,9 @@ func Merge(ts ...ast.Type) ast.Type {
 		if dedupd[i] {
 			continue
 		}
-		// Find all duplicates of t
+
 		result = append(result, t)
+		// Find all duplicates of t
 		dedupd[i] = true
 		for j := i + 1; j < len(flattened); j++ {
 			if IsEqual(t, flattened[j]) {

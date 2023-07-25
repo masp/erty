@@ -68,6 +68,12 @@ func IsUntyped(t ast.Type) bool {
 	}
 	return false
 }
+func MakeTyped(t ast.Type) ast.Type {
+	if IsUntyped(t) {
+		return -t.(BasicType)
+	}
+	return t
+}
 
 type AtomValue struct {
 	V string // Values of tuples can also be unique types
@@ -105,7 +111,13 @@ type Enum struct {
 }
 
 func (e *Enum) Underlying() ast.Type { return e }
-func (e *Enum) String() string       { return "enum" }
+func (e *Enum) String() string {
+	var parts []string
+	for _, c := range e.Cases {
+		parts = append(parts, c.String())
+	}
+	return "enum (" + strings.Join(parts, ", ") + ")"
+}
 
 var Bool = &Enum{
 	Cases: []ast.Type{

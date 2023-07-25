@@ -197,6 +197,8 @@ func (c *Compiler) compileExpr(expr ast.Expression) core.Expr {
 			c.error(expr, "unbound variable %s", expr.Name)
 		}
 		return found
+	case *ast.Field:
+		return c.compileField(expr)
 	case *ast.AtomLiteral:
 		return core.Atom{Value: expr.Value}
 	case *ast.ListLiteral:
@@ -207,6 +209,8 @@ func (c *Compiler) compileExpr(expr ast.Expression) core.Expr {
 		return c.compileCallExpr(expr)
 	case *ast.BinaryExpr:
 		return c.compileBinary(expr)
+	case *ast.Match:
+		return c.compileMatch(expr)
 	default:
 		panic(fmt.Errorf("unrecognized expression type: %T", expr))
 	}

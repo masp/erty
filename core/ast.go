@@ -242,3 +242,24 @@ type Bitstring struct {
 	Type   Atom       // e.g. integer, binary
 	Flags  *ConstList // list of flags (usually atoms) like 'unsigned', 'big', 'little', 'signed
 }
+
+// Case is an expression that matches a value against a set of patterns.
+// It has the following definition:
+//
+//	case <exprs> of c1 · · · cn end
+//
+// where each clause has the form:
+//
+//	<pats> when exprs1 -> bodyexpr
+type Case struct {
+	E       Expr
+	Clauses []*Clause
+}
+
+func (*Case) isExpr() {}
+
+type Clause struct {
+	Pattern Expr
+	When    Expr
+	Body    Expr
+}
