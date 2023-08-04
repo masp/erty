@@ -17,11 +17,11 @@ type context struct {
 }
 
 type resolver struct {
-	ctx     context
-	symbols *types.SymbolTable
+	ctx context
 
-	file    *token.File
-	errlist token.ErrorList
+	file     *token.File
+	errlist  token.ErrorList
+	importer Importer
 }
 
 func (r *resolver) error(node ast.Node, format string, args ...any) {
@@ -37,95 +37,73 @@ func (r *resolver) error(node ast.Node, format string, args ...any) {
 	r.errlist.Add(r.file.Position(node.Pos()), fmt.Errorf(format, resolvedArgs...))
 }
 
+type Config struct {
+	// Outer contains symbols that can be referenced globally (e.g. abs). If nil, no
+	// globals defined.
+	Outer *Scope
+
+	// Importer is called to resolve import paths whenever an import declaration is found.
+	// If nil, all imports cause ErrNoImporter to be returned.
+	Importer Importer
+}
+
 // ResolveModule walks the AST trying to match every identifier to a declaration in scope. If a match is found, it
 // is returned in the symbol table. If a match is not found, the entry is returned in Unresolved. All identifiers
 // must be either resolved or unresolved by the end of the walk.
-func ResolveModule(module *ast.Module, outer *Scope) error {
+func ResolveModule(module *ast.Module, cfg *Config) error {
 	r := &resolver{
-		symbols: types.NewSymbolTable(),
-		file:    module.File,
+		file: module.File,
 	}
 
-	r.ctx.scope = outer
+	if cfg != nil {
+		r.ctx.scope = cfg.Outer
+		r.importer = cfg.Importer
+	}
+	if r.ctx.scope == nil {
+		r.ctx.scope = Universe
+	}
 	r.pushScope()
 	r.resolveModule(module)
 	return r.errlist.Err()
 }
 
-func ResolveExpr(file *token.File, expr ast.Expression, outer *Scope) (*types.SymbolTable, error) {
+func ResolveExpr(file *token.File, expr ast.Expression, cfg *Config) error {
 	r := &resolver{
-		symbols: types.NewSymbolTable(),
-		file:    file,
+		file: file,
 	}
 
-	r.ctx.scope = outer
+	if cfg != nil {
+		r.ctx.scope = cfg.Outer
+		r.importer = cfg.Importer
+	}
+	if r.ctx.scope == nil {
+		r.ctx.scope = Universe
+	}
 	r.pushScope()
 	r.resolveExpr(expr)
-	return r.symbols, r.errlist.Err()
+	return r.errlist.Err()
 }
 
 // resolve recursively traverses the expression and declares all identifiers the given scope as well as defining
 // subscopes for each block found.
 func (r *resolver) resolveModule(x *ast.Module) {
-	r.declare(x.Id, x, &types.Module{AtomValue: types.AtomValue{V: x.Id.Name}})
+	// Resolve the module name, but do not add to any scope.
+	x.Id.SetType(&types.Decl{RefersTo: x, Type: &types.Module{AtomValue: types.AtomValue{V: x.Id.Name}}})
+	// r.declare(x.Id, x, &types.Module{AtomValue: types.AtomValue{V: x.Id.Name}})
 
 	for _, decl := range x.Decls {
 		switch decl := decl.(type) {
 		case *ast.FuncDecl:
-			var argTypes []ast.Type
-			for _, arg := range decl.Parameters.List {
-				t := r.resolveType(arg.Typ)
-				for j := 0; j < len(arg.Names); j++ {
-					argTypes = append(argTypes, t)
-				}
-			}
-
-			var retType ast.Type
-			if decl.ReturnType == nil {
-				retType = types.Void
-			} else {
-				retType = r.resolveType(decl.ReturnType)
-			}
-
-			fnType := &types.Func{
-				Args:   argTypes,
-				Return: retType,
-			}
-			decl.SetType(fnType)
-			r.declare(decl.Name, decl, fnType)
+			r.resolveFuncDecl(decl)
 		case *ast.ImportDecl:
-			moduleName := decl.Path.Value
-			alias := decl.Alias
-			if alias == nil {
-				alias = &ast.Identifier{Name: moduleName}
-			}
-			r.declare(alias, decl, &types.Module{AtomValue: types.AtomValue{V: moduleName}})
+			r.resolveImport(decl)
 		}
 	}
 
 	for _, decl := range x.Decls {
 		if fd, ok := decl.(*ast.FuncDecl); ok {
-			r.resolveFunc(fd)
+			r.resolveFuncBody(fd)
 		}
-	}
-}
-
-func (r *resolver) resolveFunc(x *ast.FuncDecl) {
-	scope := r.pushScope() // function scope
-	defer r.popScope()
-	scope.currFn = x
-
-	for _, arg := range x.Parameters.List {
-		t := r.resolveType(arg.Typ)
-		for _, name := range arg.Names {
-			r.declare(name, arg, t.Definition)
-		}
-	}
-
-	// TODO: Declare parameters and manually specified types
-	// TODO: Determine return type from last statement
-	for _, stmt := range x.Statements {
-		r.resolveStmt(stmt)
 	}
 }
 
@@ -146,7 +124,7 @@ func (r *resolver) resolveStmt(stmt ast.Statement) ast.Type {
 			return types.Void // error parsing func types, don't bother checking
 		}
 
-		if types.IsAssignable(fnType.Return, retType) == types.Invalid {
+		if !types.IsAssignable(fnType.Return, retType) {
 			r.error(s.Expression, "cannot return %s from function of return type %s", retType, fnType.Return)
 		}
 		return types.Void
@@ -162,10 +140,10 @@ func (r *resolver) resolveExpr(expr ast.Expression) (result ast.Type) {
 	case *ast.Identifier:
 		decl := r.lookup(e.Name)
 		if decl == nil {
-			r.missing(e)
+			e.SetType(types.Invalid)
+			r.error(e, "undefined: %s", e.Name)
 			return types.Invalid
 		}
-		r.symbols.AddResolved(e, decl)
 		e.SetType(decl)
 		return decl.Type
 	case *ast.Field:
@@ -278,67 +256,6 @@ func (r *resolver) resolveUnaryExpr(expr *ast.UnaryExpr) (result ast.Type) {
 	}
 }
 
-func (r *resolver) resolveCallExpr(e *ast.CallExpr) (result ast.Type) {
-	defer func() { e.SetType(result) }()
-	fnType := r.resolveExpr(e.Fun)
-	if fnType == types.Any {
-		var typs []ast.Type
-		for _, arg := range e.Args {
-			typs = append(typs, r.resolveExpr(arg)) // resolve, but we can't do any checks about the types
-		}
-		deduced := &types.Func{Args: typs, Return: types.Any}
-		if fn, ok := e.Fun.(types.Node); ok {
-			fn.SetType(deduced)
-		}
-		return types.Any
-	}
-	switch cl := fnType.(type) {
-	case *types.Func:
-		for i, arg := range e.Args {
-			argType := r.resolveExpr(arg)
-			if i >= len(cl.Args) {
-				r.error(arg, "too many arguments to func %s (expected %d, got %d)", e.Fun, len(cl.Args), len(e.Args))
-				break
-			}
-			declType := types.Value(cl.Args[i])
-			if t := types.IsAssignable(declType, argType); t != declType {
-				r.error(arg, "cannot use %s (%s) as %s value in argument to %s", arg, argType, declType, e.Fun)
-				continue
-			}
-		}
-		return types.Value(cl.Return)
-	case *types.Expr:
-		// Type cast expression
-		if len(e.Args) != 1 {
-			r.error(e, "type cast takes exactly one argument")
-			return types.Invalid
-		}
-		argType := r.resolveExpr(e.Args[0])
-		result, err := types.Cast(argType, cl.Definition)
-		if err != nil {
-			r.error(e.Args[0], "cannot cast %s to %s", argType, cl)
-			return types.Invalid
-		}
-		return result
-	default:
-		r.error(e.Fun, "cannot call non-function %s (variable of type %s)", e.Fun, fnType)
-		return types.Any
-	}
-}
-
-func (r *resolver) resolveDotExpr(e *ast.DotExpr) (result ast.Type) {
-	defer func() { e.SetType(result) }()
-	leftT := r.resolveExpr(e.X)
-	if mod, ok := leftT.(*types.Module); ok {
-		modName := mod.AtomValue.V
-		r.ImportModule(modName)
-		e.Attr.SetType(types.Any)
-		// TODO: Handle importing modules recursively and typechecking them with values defined there
-		return types.Any
-	}
-	return types.Any
-}
-
 func (r *resolver) pushScope() *Scope {
 	scope := NewScope(r.ctx.scope)
 	r.ctx.scope = scope
@@ -394,9 +311,12 @@ func (r *resolver) resolveListExpr(l *ast.ListLiteral) (result *types.List) {
 		elemType := r.resolveExpr(elem)
 		if listType == nil {
 			listType = elemType
-		} else if types.IsAssignable(elemType, listType) == elemType {
+		} else if types.IsAssignable(elemType, listType) {
+			// Handles cases like [1, A int, 3] where a following elements matches an earlier element's type
+			// but the previous element is untyped. We want to use the typed element's type instead of having
+			// the list be untyped as well.
 			listType = elemType
-		} else if types.IsAssignable(listType, elemType) == types.Invalid {
+		} else if !types.IsAssignable(listType, elemType) {
 			r.error(elem, "cannot use %s (%s) as value in %s list", elem, elemType, listType)
 		}
 	}
@@ -404,20 +324,62 @@ func (r *resolver) resolveListExpr(l *ast.ListLiteral) (result *types.List) {
 }
 
 func (r *resolver) declare(id *ast.Identifier, decl ast.Node, typ ast.Type) *types.Decl {
-	d := &types.Decl{RefersTo: decl, Type: types.Value(typ)}
-	r.symbols.AddResolved(id, d)
-	id.SetType(d)
-	return r.ctx.scope.Insert(id.Name, d)
+	newDecl := &types.Decl{RefersTo: decl, Type: types.Value(typ)}
+	id.SetType(newDecl)
+
+	if r.ctx.scope.Level == ScopeModule {
+		// Do not allow overriding declarations in the same scope *unless* it's a function overload
+		existing := r.lookup(id.Name)
+		newFn, isFunc := typ.(*types.Func)
+		if existing != nil {
+			if isFunc {
+				// Override the declaration with an enum of overloaded functions
+				newDecl = r.declareOverload(decl.(*ast.FuncDecl), newFn, existing)
+			} else {
+				for _, node := range []ast.Node{existing.RefersTo, decl} {
+					r.error(node, "cannot redeclare '%s' in the same module", id.Name, typ)
+				}
+				return existing
+			}
+		}
+	} // otherwise, the most recent declaration overrides the previous one
+	return r.ctx.scope.Insert(id.Name, newDecl)
+}
+
+// declareOverload handles if there is an existing declaration of a function with the same name as decl
+// but different number of arguments. We store function overloads as enums of declarations of funcs,
+// and then when the type is applied, we automatically select the correct overload.
+func (r *resolver) declareOverload(decl *ast.FuncDecl, newFn *types.Func, existing *types.Decl) *types.Decl {
+	switch existingT := existing.Type.(type) {
+	case *types.Func:
+		// Just one function has been defined previously
+		if len(existingT.Args) == len(newFn.Args) {
+			for _, node := range []ast.Node{existing.RefersTo, decl} {
+				r.error(node, "cannot redeclare func '%s/%d' in module", decl.Name, len(newFn.Args))
+			}
+			return existing
+		}
+		return &types.Decl{RefersTo: decl, Type: types.Overload{
+			existingT,
+			newFn,
+		}}
+	case types.Overload:
+		for _, overload := range existingT {
+			if len(overload.Args) == len(newFn.Args) {
+				for _, node := range []ast.Node{existing.RefersTo, decl} {
+					r.error(node, "cannot redeclare func '%s/%d' in module", decl.Name, len(newFn.Args))
+				}
+				return existing
+			}
+		}
+	default:
+		for _, node := range []ast.Node{existing.RefersTo, decl} {
+			r.error(node, "cannot redeclare '%s' in the same module", decl.Name.Name)
+		}
+	}
+	return existing
 }
 
 func (r *resolver) lookup(name string) *types.Decl {
-	if obj := Universe.Lookup(name); obj != nil {
-		return obj
-	}
 	return r.ctx.scope.Lookup(name)
-}
-
-// missing adds a new identifier to be associated in the symbol table as missing.
-func (r *resolver) missing(ident *ast.Identifier) {
-	r.symbols.MarkUnresolved(ident)
 }

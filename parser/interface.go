@@ -8,7 +8,16 @@ import (
 	"github.com/masp/ertylang/token"
 )
 
-func ParseModule(filename string, src []byte) (mod *ast.Module, err error) {
+type Options struct {
+	// DeclarationOnly will parse only the declaration of a function, not the body. If a body
+	// exists, it is considered an error. This mode is used for .d.ert files.
+	DeclarationOnly bool
+}
+
+func ParseModule(filename string, src []byte, opts *Options) (mod *ast.Module, err error) {
+	if opts == nil {
+		opts = &Options{}
+	}
 	lex := lexer.NewLexer(filename, src)
 	mod = &ast.Module{File: lex.File()}
 	tokens := lex.All()
@@ -30,7 +39,7 @@ func ParseModule(filename string, src []byte) (mod *ast.Module, err error) {
 		}
 	}()
 
-	err = parser.parseModuleHeader(mod, lex.File())
+	parser.parseModuleHeader(mod, lex.File())
 	if err != nil {
 		// exit early if module header is bad (likely not our file)
 		return mod, err
@@ -44,7 +53,11 @@ func ParseModule(filename string, src []byte) (mod *ast.Module, err error) {
 
 		switch tok.Type {
 		case token.Func:
-			mod.Decls = append(mod.Decls, parser.parseFunction())
+			fn := parser.parseFunctionHeader()
+			if fn, ok := fn.(*ast.FuncDecl); ok && !opts.DeclarationOnly {
+				parser.parseFunctionBody(fn)
+			}
+			mod.Decls = append(mod.Decls, fn)
 			if !parser.matches(token.EOF) {
 				parser.eatOnly(token.Semicolon, "expected ';' after function declaration")
 			}
@@ -84,8 +97,9 @@ func ParseFunc(src []byte) (file *token.File, function *ast.FuncDecl, err error)
 			err = errlist.Err()
 		}
 	}()
-	fn := parser.parseFunction()
+	fn := parser.parseFunctionHeader()
 	if fn, ok := fn.(*ast.FuncDecl); ok {
+		parser.parseFunctionBody(fn)
 		return parser.file, fn, err
 	}
 	return nil, nil, err

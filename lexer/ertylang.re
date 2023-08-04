@@ -50,7 +50,6 @@ func (l *Lexer) lex() (pos token.Pos, tok token.Type, lit string, err error) {
 
 		// Keywords
 		"return" { tok = token.Return; lit = "return"; return }
-		"module" { tok = token.Module; lit = "module"; return }
         "func" { tok = token.Func; lit = "func"; return }
 		"map" { tok = token.Map; lit = "map"; return }
 		"tuple" { tok = token.Tuple; lit = "tuple"; return }

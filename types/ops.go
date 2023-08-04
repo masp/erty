@@ -70,7 +70,7 @@ func ApplyOp(t1, t2 ast.Type) (ast.Type, error) {
 // 7. Assignable(string, untyped string) -> nil
 //
 // The rules above apply the same if the var type is user-define (var.Underlying() != var).
-func IsAssignable(to, value ast.Type) ast.Type {
+func IsAssignable(to, value ast.Type) bool {
 	value = Deref(value)
 	to = Deref(to)
 	if toExpr, ok := to.(*Expr); ok {
@@ -79,13 +79,22 @@ func IsAssignable(to, value ast.Type) ast.Type {
 	}
 
 	if to == Any {
-		return to
+		return true
 	} else if IsEqual(to, value) {
-		return to
+		return true
 	} else if IsUntyped(value) && isConvertible(to.Underlying(), value) {
-		return to
+		return true
+	} else {
+		switch to := to.(type) {
+		case *List:
+			value, ok := value.(*List)
+			if !ok {
+				return false
+			}
+			return IsAssignable(to.Elem, value.Elem)
+		}
 	}
-	return Invalid
+	return false
 }
 
 func isConvertible(to, value ast.Type) bool {
@@ -129,9 +138,6 @@ func IsEqual(t1, t2 ast.Type) bool {
 			}
 		}
 	}
-
-	// TODO: Support tuple types
-	// TODO: Support maps
 	return false
 }
 
@@ -144,11 +150,15 @@ func Cast(from, to ast.Type) (ast.Type, error) {
 		return to, nil
 	}
 
+	if (IsAtom(from) && to == ModuleName) || (from == ModuleName && to == Atom) {
+		return to, nil
+	}
+
 	if to.Underlying() == from.Underlying() {
 		return to, nil // Actual values are equivalent, just different aliases
 	}
 
-	if IsAssignable(to, from) != Invalid {
+	if IsAssignable(to, from) {
 		return to, nil
 	}
 	return Invalid, fmt.Errorf("non-castable types")

@@ -24,7 +24,7 @@ func TestCompileModule(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			mod, err := parser.ParseModule("<test>", []byte(tt.input))
+			mod, err := parser.ParseModule("<test>", []byte(tt.input), nil)
 			if err != nil {
 				t.Fatalf("parse program: %v", err)
 			}
@@ -45,7 +45,7 @@ func TestCompileModule(t *testing.T) {
 }
 
 func TestCompileFunc(t *testing.T) {
-	premodule := `module test
+	premodule := `module testcompile
 
 import "erlang"
 
@@ -55,23 +55,23 @@ func add(a, b int) int { return a + b }
 		input    string
 		expected string
 	}{
-		// 		{
-		// 			input: `
-		// func test(v, d int) int {
-		// 	a := erlang.a(v)
-		// 	erlang.d()
-		// 	return int(erlang.b(d)) + 100
-		// }`,
-		// 			expected: "arithm.core",
-		// 		},
-		// 		{
-		// 			input:    `func test() any {return 'a'}`,
-		// 			expected: "a.core",
-		// 		},
-		// 		{
-		// 			input:    `func test() any { return erlang.module_info('b') }`,
-		// 			expected: "call.core",
-		// 		},
+		{
+			input: `
+		func test(v, d int) int {
+			a := 'erlang'.a(v)
+			'erlang'.d()
+			return int('erlang'.b(d)) + 100
+		}`,
+			expected: "arithm.core",
+		},
+		{
+			input:    `func test() any {return 'a'}`,
+			expected: "a.core",
+		},
+		{
+			input:    `func test() any { return erlang.module_info(module('b')) }`,
+			expected: "call.core",
+		},
 		{
 			input: `func test(n int) int {
 				return match n {
@@ -86,12 +86,12 @@ func add(a, b int) int { return a + b }
 
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			mod, err := parser.ParseModule("<test>", []byte(premodule+test.input))
+			mod, err := parser.ParseModule("<test>", []byte(premodule+test.input), nil)
 			if err != nil {
 				t.Fatalf("parse program: %v", err)
 			}
 
-			err = resolver.ResolveModule(mod, nil)
+			err = resolver.ResolveModule(mod, &resolver.Config{Importer: resolver.BuiltinsImporter})
 			require.NoError(t, err)
 
 			compiled, err := New().CompileModule(mod)

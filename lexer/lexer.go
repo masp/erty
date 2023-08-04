@@ -120,6 +120,8 @@ func (l *Lexer) NextToken() (tok Token) {
 	tok.Pos = pos
 	tok.Lit = lit
 	tok.Type = typ
-	l.prevToken = tok
+	if tok.Type != token.Comment {
+		l.prevToken = tok
+	}
 	return
 }

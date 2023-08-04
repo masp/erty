@@ -13,7 +13,7 @@ func FuzzParse(f *testing.F) {
 	f.Add("module A; func A()\n1()=")
 
 	f.Fuzz(func(t *testing.T, input string) {
-		mod, _ := ParseModule("<test>", []byte(input))
+		mod, _ := ParseModule("<test>", []byte(input), nil)
 		if mod == nil {
 			t.Fatalf("Expect non-nil module always")
 		}

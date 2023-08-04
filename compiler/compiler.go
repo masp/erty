@@ -392,11 +392,11 @@ module common
 import "erlang"
 
 func module_info() any {
-	return erlang.module_info('{{mod}}')
+	return erlang.module_info(module('{{mod}}'))
 }
 
 func module_info(key atom) any {
-	return erlang.module_info('{{mod}}', key)
+	return erlang.module_info(module('{{mod}}'), key)
 }
 `)
 }
@@ -406,12 +406,12 @@ func module_info(key atom) any {
 //
 // The functions are very simple: just call 'erlang':module_info/1 with the appropriate atom.
 func addBaseFuncs(cmod *core.Module) {
-	commonMod, err := parser.ParseModule("<builtin>", []byte(commonModFuncs(cmod.Name)))
+	commonMod, err := parser.ParseModule("<builtin>", []byte(commonModFuncs(cmod.Name)), nil)
 	if err != nil {
 		panic(err)
 	}
 
-	err = resolver.ResolveModule(commonMod, nil)
+	err = resolver.ResolveModule(commonMod, &resolver.Config{Importer: resolver.BuiltinsImporter})
 	if err != nil {
 		panic(err)
 	}

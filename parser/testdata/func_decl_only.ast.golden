@@ -1,0 +1,43 @@
+     0  *ast.Module {
+     1  .  File: *token.File {
+     2  .  .  Name: "<test>"
+     3  .  .  Size: 34
+     4  .  }
+     5  .  Id: *ast.Identifier {
+     6  .  .  NamePos: <test>:1:8
+     7  .  .  Name: "test"
+     8  .  }
+     9  .  Decls: []ast.Decl (len = 1) {
+    10  .  .  0: *ast.FuncDecl {
+    11  .  .  .  Func: <test>:1:14
+    12  .  .  .  LeftBrace: <test>
+    13  .  .  .  RightBrace: <test>
+    14  .  .  .  Name: *ast.Identifier {
+    15  .  .  .  .  NamePos: <test>:1:19
+    16  .  .  .  .  Name: "test"
+    17  .  .  .  }
+    18  .  .  .  Parameters: *ast.FieldList {
+    19  .  .  .  .  Opening: <test>:1:23
+    20  .  .  .  .  List: []*ast.Field (len = 1) {
+    21  .  .  .  .  .  0: *ast.Field {
+    22  .  .  .  .  .  .  Names: []*ast.Identifier (len = 1) {
+    23  .  .  .  .  .  .  .  0: *ast.Identifier {
+    24  .  .  .  .  .  .  .  .  NamePos: <test>:1:24
+    25  .  .  .  .  .  .  .  .  Name: "a"
+    26  .  .  .  .  .  .  .  }
+    27  .  .  .  .  .  .  }
+    28  .  .  .  .  .  .  Typ: *ast.Identifier {
+    29  .  .  .  .  .  .  .  NamePos: <test>:1:26
+    30  .  .  .  .  .  .  .  Name: "int"
+    31  .  .  .  .  .  .  }
+    32  .  .  .  .  .  }
+    33  .  .  .  .  }
+    34  .  .  .  .  Closing: <test>:1:29
+    35  .  .  .  }
+    36  .  .  .  ReturnType: *ast.Identifier {
+    37  .  .  .  .  NamePos: <test>:1:31
+    38  .  .  .  .  Name: "int"
+    39  .  .  .  }
+    40  .  .  }
+    41  .  }
+    42  }

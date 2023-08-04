@@ -100,6 +100,7 @@ func TestParseModule(t *testing.T) {
 	tests := []struct {
 		input       string
 		expectedAst string
+		options     Options
 	}{
 		{
 			input: `module test
@@ -132,10 +133,15 @@ func TestParseModule(t *testing.T) {
 				// comment`,
 			expectedAst: "module_comments.ast",
 		},
+		{
+			input:       `module test; func test(a int) int`,
+			expectedAst: "func_decl_only.ast",
+			options:     Options{DeclarationOnly: true},
+		},
 	}
-	for _, test := range tests {
-		t.Run(test.input, func(t *testing.T) {
-			mod, err := ParseModule("<test>", []byte(test.input))
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			mod, err := ParseModule("<test>", []byte(tt.input), &tt.options)
 			if err != nil {
 				t.Fatalf("parse program: %v", err)
 			}
@@ -143,7 +149,7 @@ func TestParseModule(t *testing.T) {
 			var out bytes.Buffer
 			ast.Fprint(&out, mod.File, mod, ast.NotNilFilter)
 			g := goldie.New(t)
-			g.Assert(t, test.expectedAst, out.Bytes())
+			g.Assert(t, tt.expectedAst, out.Bytes())
 		})
 	}
 }
@@ -164,7 +170,7 @@ func TestParseFail(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			_, err := ParseModule("<test>", []byte(tt.input))
+			_, err := ParseModule("<test>", []byte(tt.input), nil)
 			if err == nil {
 				t.Fatalf("expected error")
 			}
@@ -203,7 +209,7 @@ func bad() {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			mod, err := ParseModule("<test>", []byte(tt.input))
+			mod, err := ParseModule("<test>", []byte(tt.input), nil)
 			require.Error(t, err, "there should be at least 1 error in the program")
 			require.NotNil(t, mod)
 
@@ -220,6 +226,7 @@ func TestAllErrors(t *testing.T) {
 	tests := []struct {
 		input        string
 		expectedErrs string
+		options      Options
 	}{
 		{
 			input:        "module test; func bad(a b c) {}",
@@ -254,11 +261,16 @@ fn bad() { return 1 }
 			input:        "module {}",
 			expectedErrs: "badmodule.errors",
 		},
+		{
+			input:        "module test; func bad() { return 1 }",
+			expectedErrs: "bodyindecl.errors",
+			options:      Options{DeclarationOnly: true},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			mod, err := ParseModule("<test>", []byte(tt.input))
+			mod, err := ParseModule("<test>", []byte(tt.input), &tt.options)
 			require.Error(t, err, "there should be at least 1 error in the program")
 			require.NotNil(t, mod)
 

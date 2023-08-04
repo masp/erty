@@ -8,6 +8,7 @@ var Builtins = map[string]ast.Type{
 	"string": String,
 	"atom":   Atom,
 	"any":    Any,
+	"module": ModuleName,
 }
 
 func init() {

@@ -56,12 +56,12 @@ func runProgramTest(t *testing.T, path string) {
 
 	// Compile the program
 	cmplr := New()
-	module, err := parser.ParseModule(testName+".gar", []byte(testFile.ProgramBody))
+	module, err := parser.ParseModule(testName+".ert", []byte(testFile.ProgramBody), nil)
 	if err != nil {
 		t.Fatalf("parse module: %v", err)
 	}
 
-	err = resolver.ResolveModule(module, nil)
+	err = resolver.ResolveModule(module, &resolver.Config{Importer: resolver.BuiltinsImporter})
 	if err != nil {
 		t.Fatalf("resolve module: %v", err)
 	}

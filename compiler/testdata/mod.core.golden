@@ -7,13 +7,17 @@ module 'mod' ['a'/0,'module_info'/0,'module_info'/1]
         -| [{'function',{'a',0}}])
 'module_info'/0 =
     (fun () ->
-        call 'erlang':'module_info'
-            ('mod')
+        let <_0> =
+            'mod'
+        in call 'erlang':'module_info'
+            (_0)
         -| [{'function',{'module_info',0}}])
 'module_info'/1 =
     (fun (_0) ->
-        call 'erlang':'module_info'
-            ('mod',(_0
+        let <_1> =
+            'mod'
+        in call 'erlang':'module_info'
+            (_1,(_0
             -| [{'function',{'module_info',1}}]))
         -| [{'function',{'module_info',1}}])
 end

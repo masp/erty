@@ -20,18 +20,18 @@ func BuildTmp(input string) (string, error) {
 		return "", fmt.Errorf("reading input '%s': %w", input, err)
 	}
 
-	garMod, err := parser.ParseModule(inputName, inputSrc)
+	ertModule, err := parser.ParseModule(inputName, inputSrc, nil)
 	if err != nil {
 		return "", PrintErr(inputName, "parse", err)
 	}
 
-	err = resolver.ResolveModule(garMod, nil)
+	err = resolver.ResolveModule(ertModule, nil)
 	if err != nil {
 		return "", PrintErr(inputName, "compile", err)
 	}
 
 	cmplr := compiler.New()
-	mod, err := cmplr.CompileModule(garMod)
+	mod, err := cmplr.CompileModule(ertModule)
 	if err != nil {
 		return "", PrintErr(inputName, "compile", err)
 	}

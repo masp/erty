@@ -53,7 +53,7 @@ func TestLex(t *testing.T) {
 		{
 			input: "module foo",
 			expected: []Token{
-				{Type: token.Module, Lit: "module"},
+				{Type: token.Identifier, Lit: "module"},
 				{Type: token.Identifier, Lit: "foo"},
 				{Type: token.EOF},
 			},
@@ -152,13 +152,16 @@ func TestLex(t *testing.T) {
 		// Comments
 		{
 			input: `// This is a comment
-			foo = "bar" // This is another comment`,
+			foo = "bar" // This is another comment
+			abc`,
 			expected: []Token{
 				{Type: token.Comment, Lit: "// This is a comment"},
 				{Type: token.Identifier, Lit: "foo"},
 				{Type: token.Equal, Lit: "="},
 				{Type: token.String, Lit: `"bar"`},
 				{Type: token.Comment, Lit: "// This is another comment"},
+				{Type: token.Semicolon, Lit: "\n"},
+				{Type: token.Identifier, Lit: "abc"},
 				{Type: token.EOF},
 			},
 		},

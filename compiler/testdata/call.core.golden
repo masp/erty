@@ -1,5 +1,7 @@
 'test'/0 =
     (fun () ->
-        call 'erlang':'module_info'
-            ('b')
+        let <_0> =
+            'b'
+        in call 'erlang':'module_info'
+            (_0)
         -| [{'function',{'test',0}}])

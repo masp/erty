@@ -50,7 +50,6 @@ const (
 	// Keywords
 	Func
 	Return
-	Module
 	Tuple
 	Map
 	TypeKeyword
@@ -94,7 +93,6 @@ var types = [...]string{
 	Comma:          "Comma",
 	Func:           "Func",
 	Return:         "Return",
-	Module:         "Module",
 	Tuple:          "Tuple",
 	Map:            "Map",
 	TypeKeyword:    "Type",

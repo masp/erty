@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"path"
 	"strings"
 
 	"github.com/masp/ertylang/lexer"
@@ -154,16 +155,34 @@ func (p *Module) End() token.Pos {
 	return p.File.Pos(p.File.Size)
 }
 
+// Lookup returns the declaration in the module with the given name or nil if none exists. If
+// there are multiple declarations, all declarations are returned (e.g. function overloads).
+func (p *Module) Lookup(name string) (result []Decl) {
+	for _, d := range p.Decls {
+		if d.ExportName() == name {
+			result = append(result, d)
+		}
+	}
+	return result
+}
+
 type Decl interface {
 	Node
 	isDeclaration()
+
+	// ExportName is the identifier this declaration is referencable through module name. Returns empty
+	// if the declaration is not exported.
+	ExportName() string
+
+	// Type returns the details of the declaration (see individual declarations for specifics).
+	Type() Type
 }
 
 type ImportDecl struct {
-	noType
-	Import token.Pos      // `import` keyword
-	Alias  *Identifier    // name to import (default to last element of path). Can be nil.
-	Path   *StringLiteral // value of import
+	typeNode                // describes imported module's types
+	Import   token.Pos      // `import` keyword
+	Alias    *Identifier    // name to import (default to last element of path). Can be nil.
+	Path     *StringLiteral // value of import
 }
 
 func (i *ImportDecl) isDeclaration() {}
@@ -173,6 +192,14 @@ func (i *ImportDecl) Pos() token.Pos {
 }
 func (i *ImportDecl) End() token.Pos {
 	return i.Path.End()
+}
+func (i *ImportDecl) ExportName() string { return "" } // imports never exported
+
+// ModuleName extracts the module name from the import declaration. Some examples:
+// - otp/random -> random
+// - github.com/masp/reiter/reitr_server -> reiter_server
+func (i *ImportDecl) ModuleName() string {
+	return path.Base(i.Path.Value)
 }
 
 // TypeDecl defines a new type, and looks like `[export] type <name> <definition>`
@@ -192,6 +219,12 @@ func (t *TypeDecl) Pos() token.Pos {
 func (t *TypeDecl) End() token.Pos {
 	return t.Definition.End()
 }
+func (t *TypeDecl) ExportName() string {
+	if t.Name.IsPublic() {
+		return t.Name.Name
+	}
+	return ""
+}
 
 type ConstDecl struct {
 	typeNode               // type of the constant
@@ -208,6 +241,12 @@ func (c *ConstDecl) Pos() token.Pos {
 func (c *ConstDecl) End() token.Pos {
 	return c.Value.End()
 }
+func (c *ConstDecl) ExportName() string {
+	if c.Identifier.IsPublic() {
+		return c.Identifier.Name
+	}
+	return ""
+}
 
 type FuncDecl struct {
 	typeNode // signature of the function (see subnodes for individual types)
@@ -223,7 +262,7 @@ type FuncDecl struct {
 }
 
 func (f *FuncDecl) IsPublic() bool {
-	return f.Name.Name[0] != '_'
+	return f.Name.IsPublic()
 }
 
 func (f *FuncDecl) isDeclaration() {}
@@ -233,6 +272,12 @@ func (f *FuncDecl) Pos() token.Pos {
 }
 func (f *FuncDecl) End() token.Pos {
 	return f.RightBrace + 1
+}
+func (f *FuncDecl) ExportName() string {
+	if f.Name.IsPublic() {
+		return f.Name.Name
+	}
+	return ""
 }
 
 type BadDecl struct {
@@ -248,6 +293,8 @@ func (b *BadDecl) Pos() token.Pos {
 func (b *BadDecl) End() token.Pos {
 	return b.To
 }
+func (b *BadDecl) ExportName() string { return "" }
+func (b *BadDecl) Type() Type         { return nil }
 
 type Statement interface {
 	Node

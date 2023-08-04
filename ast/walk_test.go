@@ -51,7 +51,6 @@ func TestWalkError(t *testing.T) {
 	// Given an input AST, make sure that ast.Walk with a print func produces the whole syntax tree
 	tree := &Module{
 		Decls: []Decl{
-			&ImportDecl{Path: &StringLiteral{Value: "fmt"}, Alias: &Identifier{Name: "f"}},
 			&FuncDecl{
 				Name: &Identifier{
 					Name: "main",

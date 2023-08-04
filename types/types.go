@@ -20,10 +20,11 @@ type Node interface {
 type BasicType int
 
 const (
-	Invalid BasicType = 0
-	Atom    BasicType = 125 // represents the infinite class of atoms, not a specific atom. See AtomValue.
-	Void    BasicType = 126
-	Any     BasicType = 127
+	Invalid    BasicType = 0
+	ModuleName BasicType = 124 // module names are technically atoms, but the typechecker can enforce that an atom imported is used.
+	Atom       BasicType = 125 // represents the infinite class of atoms, not a specific atom. See AtomValue.
+	Void       BasicType = 126
+	Any        BasicType = 127
 
 	// these are set for constants. They are coercible to the respective types as constants. See Coerce()
 	UntypedInt    BasicType = -1
@@ -58,6 +59,8 @@ func (b BasicType) String() string {
 		return "void"
 	case Atom:
 		return "atom"
+	case ModuleName:
+		return "module name"
 	default:
 		panic("unreachable")
 	}
@@ -94,8 +97,20 @@ func IsString(t ast.Type) bool {
 	return t.Underlying() == String || t.Underlying() == UntypedString
 }
 
+func IsAtom(t ast.Type) bool {
+	if t.Underlying() == Atom {
+		return true
+	}
+	if t, ok := t.(*AtomValue); ok && t.V != "" {
+		return true
+	}
+	return false
+}
+
 type Module struct {
 	AtomValue
+
+	Imported *ast.Module // the resolved and imported module (nil if unsuccessful)
 }
 
 // Enum defines what types of values can be assigned to a variable. It is mostly useful for message passing
@@ -128,7 +143,7 @@ var Bool = &Enum{
 
 func (e *Enum) Intersect(t ast.Type) ast.Type {
 	for _, c := range e.Cases {
-		if IsAssignable(c, t) != Invalid {
+		if IsAssignable(c, t) {
 			return c // return case that matches
 		}
 	}
@@ -156,6 +171,17 @@ func (f *Func) String() string {
 		args = append(args, t.String())
 	}
 	return fmt.Sprintf("func(%s) %s", strings.Join(args, ", "), f.Return)
+}
+
+type Overload []*Func
+
+func (o Overload) Underlying() ast.Type { return o }
+func (o Overload) String() string {
+	var parts []string
+	for _, f := range o {
+		parts = append(parts, f.String())
+	}
+	return strings.Join(parts, ", ")
 }
 
 // Expr represents a type declaration, for example `type A int` int is a type expression as well as

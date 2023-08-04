@@ -8,12 +8,10 @@ import "github.com/masp/ertylang/ast"
 //	types.Unify(int, untyped int) -> int
 func Unify(pattern, value ast.Type) ast.Type {
 	// If the value can be assigned to a variable with the type, then it can unify.
-	result := IsAssignable(pattern, value)
-	if result == Invalid {
-		result = IsAssignable(value, pattern)
-	}
-	if result != Invalid {
-		return result
+	if IsAssignable(pattern, value) {
+		return pattern
+	} else if IsAssignable(value, pattern) {
+		return value
 	}
 
 	// If one of the types is a subset of the other, than it can be unified. For example,

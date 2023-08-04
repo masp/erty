@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/masp/ertylang/ast"
@@ -29,6 +30,42 @@ func TestApplyOp(t *testing.T) {
 			got, err := ApplyOp(tt.t1, tt.t2)
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, tt.wantErr, err)
+		})
+	}
+}
+
+func TestIsAssignable(t *testing.T) {
+	tests := []struct {
+		to, value ast.Type
+	}{
+		{Int, Int},
+		{Int, UntypedInt},
+		{Any, String},
+		{&Expr{Definition: Int}, Int},
+		{&List{Elem: Any}, &List{Elem: Int}},
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%s = %s", tt.to, tt.value), func(t *testing.T) {
+			got := IsAssignable(tt.to, tt.value)
+			assert.True(t, got, "expected %s to be assignable to %s", tt.value, tt.to)
+		})
+	}
+}
+
+func TestIsNotAssignable(t *testing.T) {
+	tests := []struct {
+		to, value ast.Type
+	}{
+		{Int, String},
+		{&List{Elem: Int}, &List{Elem: String}},
+		{&List{Elem: Int}, Int},
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%s = %s", tt.to, tt.value), func(t *testing.T) {
+			assignable := IsAssignable(tt.to, tt.value)
+			assert.False(t, assignable, "expected %s to NOT be assignable to %s", tt.value, tt.to)
 		})
 	}
 }

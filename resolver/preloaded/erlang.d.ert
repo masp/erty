@@ -1,0 +1,11 @@
+module erlang
+
+// Module erlang is automatically preloaded with every Erlang program. The built-ins do not require using the module name
+// `erlang`, and the types for these built-ins are also defined here and linked by the compiler automatically.
+//
+// See source erlang.erl: https://github.com/erlang/otp/blob/master/erts/preloaded/src/erlang.erl
+
+func abs(number int) int
+
+func module_info(mod module) any
+func module_info(mod module, key atom) any

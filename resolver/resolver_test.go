@@ -45,7 +45,7 @@ func other() {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mod, err := parser.ParseModule("<test>", []byte(tt.src))
+			mod, err := parser.ParseModule("<test>", []byte(tt.src), nil)
 			require.NoError(t, err)
 
 			err = ResolveModule(mod, nil)
@@ -93,7 +93,7 @@ e := ["a", z, "c"]
 					},
 					Return: types.Builtins["string"],
 				},
-				"test@1:8":  &types.Module{AtomValue: types.AtomValue{V: "test"}},
+				"test@1:8":  &types.AtomValue{V: "test"},
 				"arg1@1:23": types.Int,
 				"arg2@1:29": types.Int,
 				"int@1:34":  types.Int,
@@ -114,40 +114,29 @@ e := ["a", z, "c"]
 		},
 		{
 			name: "import modules",
-			src: `module test; import "erlang"
-
-func add(a, b int) int {
-	return a + b
-}
-
-func _(c int) {
-	v := erlang.spawn(add(10, c), c)
+			src: `
+module test
+import "erlang" // not necessary for BIFs, but good for testing
+func _() {
+	v := erlang.abs(10)
 }`,
 			wantResolved: map[string]ast.Type{
-				"test@1:8":   &types.Module{AtomValue: types.AtomValue{V: "test"}},
-				"add@3:6":    &types.Func{Args: []ast.Type{types.Builtins["int"], types.Builtins["int"]}, Return: types.Builtins["int"]},
-				"a@3:10":     types.Int,
-				"b@3:13":     types.Int,
-				"int@3:15":   types.Int,
-				"a@4:9":      types.Int,
-				"b@4:13":     types.Int,
-				"_@7:6":      &types.Func{Args: []ast.Type{types.Builtins["int"]}, Return: types.Void},
-				"c@7:8":      types.Int,
-				"int@7:10":   types.Int,
-				"v@8:2":      types.Any,
-				"add@8:20":   &types.Func{Args: []ast.Type{types.Builtins["int"], types.Builtins["int"]}, Return: types.Builtins["int"]},
-				"c@8:28":     types.Int,
-				"c@8:32":     types.Int,
-				"erlang@8:7": &types.Module{AtomValue: types.AtomValue{V: "erlang"}},
-				"spawn@8:14": types.Any,
+				"test@2:8":   &types.AtomValue{V: "test"},
+				"_@4:6":      &types.Func{Args: nil, Return: types.Void},
+				"v@5:2":      types.Int,
+				"erlang@5:7": &types.AtomValue{V: "erlang"},
+				"abs@5:14": &types.Func{
+					Args:   []ast.Type{&types.Expr{Definition: types.Int}},
+					Return: &types.Expr{Definition: types.Int},
+				},
 			},
 		}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mod, err := parser.ParseModule("<test>", []byte(tt.src))
+			mod, err := parser.ParseModule("<test>", []byte(tt.src), nil)
 			require.NoError(t, err)
 
-			err = ResolveModule(mod, nil)
+			err = ResolveModule(mod, &Config{Importer: BuiltinsImporter})
 			require.NoError(t, err)
 
 			ids := collectIds(mod)
@@ -156,7 +145,11 @@ func _(c int) {
 			for _, id := range ids {
 				assert.NotNil(t, id.Type(), "id %s is unresolved", id.Name)
 				enc := encodeIdent(mod.File, id)
-				got[enc] = types.Value(id.Type())
+				if t, ok := types.Deref(id.Type()).(*types.Module); ok {
+					got[enc] = &t.AtomValue // don't care about the rest of the fields
+				} else {
+					got[enc] = types.Value(id.Type())
+				}
 			}
 			assert.Equal(t, tt.wantResolved, got)
 		})
@@ -190,7 +183,7 @@ func TestResolveExpression(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.eval, func(t *testing.T) {
 			src := premodule + tt.eval + postmodule
-			mod, err := parser.ParseModule("<test>", []byte(src))
+			mod, err := parser.ParseModule("<test>", []byte(src), nil)
 			require.NoError(t, err)
 
 			err = ResolveModule(mod, nil)
@@ -221,6 +214,7 @@ func TestTypeResolveErrorExpr(t *testing.T) {
 		{`3+"b"`, `operator + has mismatched types: untyped int and untyped string`},
 		{`[3, "a"]`, `cannot use "a" (untyped string) as value in untyped int list`},
 		{`match 10 { case "hello": 10 }`, `cannot unify value 10 (untyped int) with case pattern "hello" (untyped string)`},
+		{`erlang.abc`, `undefined: erlang`},
 	}
 
 	for _, tt := range tests {
@@ -228,7 +222,7 @@ func TestTypeResolveErrorExpr(t *testing.T) {
 			file, expr, err := parser.ParseExpr(tt.src)
 			require.NoError(t, err)
 
-			_, err = ResolveExpr(file, expr, nil)
+			err = ResolveExpr(file, expr, nil)
 			assert.ErrorContains(t, err, tt.wantErr)
 		})
 	}
@@ -237,8 +231,18 @@ func TestTypeResolveErrorExpr(t *testing.T) {
 func TestTypeResolveErrorModule(t *testing.T) {
 	premodule := `
 module test
+import "erlang"
+
+func mul(a, b int) int {
+	return a * b
+}
+
 func add(a, b int) int {
 	return a + b
+}
+
+func add(a int) int {
+	return a + 10
 }
 
 func main() {`
@@ -248,20 +252,68 @@ func main() {`
 		src     string
 		wantErr string
 	}{
-		{`add(1, 2, 3)`, `too many arguments to func add (expected 2, got 3)`},
-		{`add("a", 1)`, `cannot use "a" (untyped string) as int value in argument to add`},
+		{`mul(1, 2, 3)`, `too many arguments to func mul (expected 2, got 3)`},
+		{`add("a", 1)`, `cannot use "a" (untyped string) as int value in argument to func(int, int) int`},
 		{`"add"(1, 2)`, `cannot call non-function "add" (variable of type untyped string)`},
 		{`a := int("abc")`, `cannot cast untyped string to int`},
 		{`return 10`, `cannot return untyped int from function of return type void`},
+		{`erlang.abc`, `undefined: abc`},
+		{`"10".abc`, `type untyped string has no field or method abc`},
+		{`erlang.module_info('abc', 123)`, `cannot use 'abc' (atom 'abc') as module name value in argument to func(module name, atom) any`},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.src, func(t *testing.T) {
 			src := premodule + tt.src + postmodule
-			mod, err := parser.ParseModule("<test>", []byte(src))
+			mod, err := parser.ParseModule("<test>", []byte(src), nil)
 			require.NoError(t, err)
 
-			err = ResolveModule(mod, nil)
+			err = ResolveModule(mod, &Config{Importer: BuiltinsImporter})
+			assert.ErrorContains(t, err, tt.wantErr)
+		})
+	}
+}
+
+func TestTypeResolveErrorOverloads(t *testing.T) {
+	premodule := `
+module test
+`
+
+	tests := []struct {
+		src     string
+		wantErr string
+	}{
+		{
+			`
+func add(a int) {}
+func add(a, b int) {}
+func add(c, d float) {}
+`,
+			`cannot redeclare func 'add/2' in module`,
+		},
+		{
+			`
+func add(a int) {}
+func add(a int) {}
+`,
+			`cannot redeclare func 'add/1' in module`,
+		},
+		{
+			`
+import "erlang"
+func erlang() {}
+`,
+			`cannot redeclare 'erlang' in the same module`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.src, func(t *testing.T) {
+			src := premodule + tt.src
+			mod, err := parser.ParseModule("<test>", []byte(src), nil)
+			require.NoError(t, err)
+
+			err = ResolveModule(mod, &Config{Importer: BuiltinsImporter})
 			assert.ErrorContains(t, err, tt.wantErr)
 		})
 	}
@@ -279,7 +331,7 @@ func collectIds(n ast.Node) []*ast.Identifier {
 }
 
 func encodeRefersTo(file *token.File, id *ast.Identifier) (result string) {
-	if id.Type() == nil {
+	if id.Type() == types.Invalid {
 		return fmt.Sprintf("%s -> unresolved", encodeIdent(file, id))
 	}
 

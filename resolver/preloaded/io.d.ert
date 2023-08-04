@@ -1,0 +1,3 @@
+module io
+
+func format(fmt string, args []any)

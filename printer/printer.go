@@ -122,6 +122,15 @@ func (p *printer) printExpr(expr ast.Expression) {
 		p.write(expr.Lit)
 	case *ast.AtomLiteral:
 		p.write("'", expr.Value, "'")
+	case *ast.ListLiteral:
+		p.write(token.LSquareBracket)
+		for i, elem := range expr.Elts {
+			if i > 0 {
+				p.write(token.Comma, " ")
+			}
+			p.printExpr(elem)
+		}
+		p.write(token.RSquareBracket)
 	case *ast.DotExpr:
 		p.printExpr(expr.X)
 		p.write(token.Period, expr.Attr.Name)

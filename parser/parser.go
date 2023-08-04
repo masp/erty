@@ -143,10 +143,14 @@ func (p *Parser) catchErrors() token.ErrorList {
 }
 
 func (p *Parser) parseModuleHeader(mod *ast.Module, file *token.File) error {
-	if tok := p.eatOnly(token.Module, "expected 'module' keyword at start of file"); tok.Type != token.Module {
+	if tok := p.eatOnly(token.Identifier, "expected 'module' keyword at start of file"); tok.Type != token.Identifier || tok.Lit != "module" {
 		p.advance(declStart)
+		if tok.Lit != "module" {
+			p.error(tok.Pos, fmt.Errorf("expected 'module' keyword at start of file"))
+		}
 		return ErrBadModule
 	}
+
 	name := p.eatOnly(token.Identifier, "expected module name after 'module' keyword")
 	if name.Type != token.Identifier {
 		p.advance(declStart)
@@ -158,7 +162,6 @@ func (p *Parser) parseModuleHeader(mod *ast.Module, file *token.File) error {
 		p.eatOnly(token.Semicolon, "expected ';' after module name")
 	}
 	p.eatAll(token.Semicolon)
-
 	mod.Imports = p.parseImports(mod)
 	return nil
 }
@@ -228,7 +231,7 @@ func (p *Parser) parseTypeDecl() ast.Decl {
 	}
 }
 
-func (p *Parser) parseFunction() ast.Decl {
+func (p *Parser) parseFunctionHeader() ast.Decl {
 	funcTok := p.eatOnly(token.Func, "expected 'func' keyword at start of function")
 	if funcTok.Type != token.Func {
 		to := p.advance(declStart)
@@ -247,18 +250,20 @@ func (p *Parser) parseFunction() ast.Decl {
 		retType = p.parseExpression()
 	}
 
-	lbrace := p.eatOnly(token.LCurlyBracket, "expected '{' after function parameters")
-	body := p.parseBody()
-	rbrace := p.eatOnly(token.RCurlyBracket, "expected '}' to end function body")
 	return &ast.FuncDecl{
 		Name:       ast.NewIdent(name),
 		Func:       funcTok.Pos,
-		Statements: body,
 		Parameters: params,
 		ReturnType: retType,
-		LeftBrace:  lbrace.Pos,
-		RightBrace: rbrace.Pos,
 	}
+}
+func (p *Parser) parseFunctionBody(fn *ast.FuncDecl) {
+	lbrace := p.eatOnly(token.LCurlyBracket, "expected '{' after function parameters")
+	body := p.parseBody()
+	rbrace := p.eatOnly(token.RCurlyBracket, "expected '}' to end function body")
+	fn.Statements = body
+	fn.LeftBrace = lbrace.Pos
+	fn.RightBrace = rbrace.Pos
 }
 
 func (p *Parser) parseParams() *ast.FieldList {
