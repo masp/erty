@@ -2,12 +2,14 @@
 
 > Work in progress.
 
-Erty is Erlang built from scratch to be more friendly to programmers coming from C/Java/Go/Rust/Typescript.
+Erty is Erlang but with stronger support for types (ERlang with TYpes).
 
-Erty is closely related to Erlang, but with the following differences:
-- Enforced, static typing
-- Modern syntax (inspired by Go)
-- Easy interop between Erlang and Elixir
+Erty's primary differences from Erlang are:
+- Strongly enforced, static typing
+- C family, imperative syntax (based on Golang)
+- Easy interop to and from Erlang
+
+Unlike Elixir, Erty makes very few extensions to the core features of Erlang. Erty is intended to be easy to drop into a large, existing Erlang project and be beneficial immediately with a low learning curve.
 
 ## Example
 
@@ -41,7 +43,7 @@ To load a module interactively into an Erlang shell:
 ert run -shell examples/hello_world.ert
 ```
 
-To build core files:
+To compile files:
 ```
 ert build -o examples/ examples/hello_world.ert
 ```

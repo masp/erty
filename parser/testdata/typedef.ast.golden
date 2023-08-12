@@ -1,0 +1,144 @@
+     0  *ast.Module {
+     1  .  File: *token.File {
+     2  .  .  Name: "<test>"
+     3  .  .  Size: 171
+     4  .  }
+     5  .  Id: *ast.Identifier {
+     6  .  .  NamePos: <test>:2:8
+     7  .  .  Name: "test"
+     8  .  }
+     9  .  Decls: []ast.Decl (len = 4) {
+    10  .  .  0: *ast.TypeDecl {
+    11  .  .  .  TypePos: <test>:3:1
+    12  .  .  .  Name: *ast.Identifier {
+    13  .  .  .  .  NamePos: <test>:3:6
+    14  .  .  .  .  Name: "myint"
+    15  .  .  .  }
+    16  .  .  .  Definition: *ast.Identifier {
+    17  .  .  .  .  NamePos: <test>:3:12
+    18  .  .  .  .  Name: "int"
+    19  .  .  .  }
+    20  .  .  }
+    21  .  .  1: *ast.TypeDecl {
+    22  .  .  .  TypePos: <test>:4:1
+    23  .  .  .  Name: *ast.Identifier {
+    24  .  .  .  .  NamePos: <test>:4:6
+    25  .  .  .  .  Name: "myenum"
+    26  .  .  .  }
+    27  .  .  .  Definition: *ast.EnumType {
+    28  .  .  .  .  EnumPos: <test>:4:13
+    29  .  .  .  .  Opener: <test>:4:18
+    30  .  .  .  .  Cases: []ast.Expression (len = 2) {
+    31  .  .  .  .  .  0: *ast.TupleType {
+    32  .  .  .  .  .  .  Opener: <test>:5:2
+    33  .  .  .  .  .  .  Elts: []ast.Expression (len = 2) {
+    34  .  .  .  .  .  .  .  0: *ast.Identifier {
+    35  .  .  .  .  .  .  .  .  NamePos: <test>:5:3
+    36  .  .  .  .  .  .  .  .  Name: "myint"
+    37  .  .  .  .  .  .  .  }
+    38  .  .  .  .  .  .  .  1: *ast.Identifier {
+    39  .  .  .  .  .  .  .  .  NamePos: <test>:5:10
+    40  .  .  .  .  .  .  .  .  Name: "string"
+    41  .  .  .  .  .  .  .  }
+    42  .  .  .  .  .  .  }
+    43  .  .  .  .  .  .  Closer: <test>:5:16
+    44  .  .  .  .  .  }
+    45  .  .  .  .  .  1: *ast.DotExpr {
+    46  .  .  .  .  .  .  X: *ast.Identifier {
+    47  .  .  .  .  .  .  .  NamePos: <test>:6:2
+    48  .  .  .  .  .  .  .  Name: "erlang"
+    49  .  .  .  .  .  .  }
+    50  .  .  .  .  .  .  Dot: <test>:6:8
+    51  .  .  .  .  .  .  Attr: *ast.Identifier {
+    52  .  .  .  .  .  .  .  NamePos: <test>:6:9
+    53  .  .  .  .  .  .  .  Name: "port"
+    54  .  .  .  .  .  .  }
+    55  .  .  .  .  .  }
+    56  .  .  .  .  }
+    57  .  .  .  .  Closer: <test>:6:13
+    58  .  .  .  }
+    59  .  .  }
+    60  .  .  2: *ast.TypeDecl {
+    61  .  .  .  TypePos: <test>:8:1
+    62  .  .  .  Name: *ast.Identifier {
+    63  .  .  .  .  NamePos: <test>:8:6
+    64  .  .  .  .  Name: "myenum2"
+    65  .  .  .  }
+    66  .  .  .  Definition: *ast.BinaryExpr {
+    67  .  .  .  .  Left: *ast.BinaryExpr {
+    68  .  .  .  .  .  Left: *ast.Identifier {
+    69  .  .  .  .  .  .  NamePos: <test>:8:14
+    70  .  .  .  .  .  .  Name: "int"
+    71  .  .  .  .  .  }
+    72  .  .  .  .  .  OpPos: <test>:8:18
+    73  .  .  .  .  .  Op: Pipe
+    74  .  .  .  .  .  Right: *ast.Identifier {
+    75  .  .  .  .  .  .  NamePos: <test>:8:20
+    76  .  .  .  .  .  .  Name: "string"
+    77  .  .  .  .  .  }
+    78  .  .  .  .  }
+    79  .  .  .  .  OpPos: <test>:8:27
+    80  .  .  .  .  Op: Pipe
+    81  .  .  .  .  Right: *ast.EnumType {
+    82  .  .  .  .  .  EnumPos: <test>:8:29
+    83  .  .  .  .  .  Opener: <test>:8:34
+    84  .  .  .  .  .  Cases: []ast.Expression (len = 2) {
+    85  .  .  .  .  .  .  0: *ast.Identifier {
+    86  .  .  .  .  .  .  .  NamePos: <test>:8:35
+    87  .  .  .  .  .  .  .  Name: "bool"
+    88  .  .  .  .  .  .  }
+    89  .  .  .  .  .  .  1: *ast.Identifier {
+    90  .  .  .  .  .  .  .  NamePos: <test>:8:41
+    91  .  .  .  .  .  .  .  Name: "atom"
+    92  .  .  .  .  .  .  }
+    93  .  .  .  .  .  }
+    94  .  .  .  .  .  Closer: <test>:8:45
+    95  .  .  .  .  }
+    96  .  .  .  }
+    97  .  .  }
+    98  .  .  3: *ast.TypeDecl {
+    99  .  .  .  TypePos: <test>:10:1
+   100  .  .  .  Name: *ast.Identifier {
+   101  .  .  .  .  NamePos: <test>:10:6
+   102  .  .  .  .  Name: "myfunc"
+   103  .  .  .  }
+   104  .  .  .  Definition: *ast.FuncDecl {
+   105  .  .  .  .  Func: <test>:10:13
+   106  .  .  .  .  LeftBrace: <test>
+   107  .  .  .  .  RightBrace: <test>
+   108  .  .  .  .  Parameters: *ast.FieldList {
+   109  .  .  .  .  .  Opening: <test>:10:17
+   110  .  .  .  .  .  List: []*ast.Field (len = 1) {
+   111  .  .  .  .  .  .  0: *ast.Field {
+   112  .  .  .  .  .  .  .  Typ: *ast.BinaryExpr {
+   113  .  .  .  .  .  .  .  .  Left: *ast.Identifier {
+   114  .  .  .  .  .  .  .  .  .  NamePos: <test>:10:18
+   115  .  .  .  .  .  .  .  .  .  Name: "int"
+   116  .  .  .  .  .  .  .  .  }
+   117  .  .  .  .  .  .  .  .  OpPos: <test>:10:22
+   118  .  .  .  .  .  .  .  .  Op: Pipe
+   119  .  .  .  .  .  .  .  .  Right: *ast.Identifier {
+   120  .  .  .  .  .  .  .  .  .  NamePos: <test>:10:24
+   121  .  .  .  .  .  .  .  .  .  Name: "string"
+   122  .  .  .  .  .  .  .  .  }
+   123  .  .  .  .  .  .  .  }
+   124  .  .  .  .  .  .  }
+   125  .  .  .  .  .  }
+   126  .  .  .  .  .  Closing: <test>:10:30
+   127  .  .  .  .  }
+   128  .  .  .  .  ReturnType: *ast.BinaryExpr {
+   129  .  .  .  .  .  Left: *ast.Identifier {
+   130  .  .  .  .  .  .  NamePos: <test>:10:32
+   131  .  .  .  .  .  .  Name: "int"
+   132  .  .  .  .  .  }
+   133  .  .  .  .  .  OpPos: <test>:10:36
+   134  .  .  .  .  .  Op: Pipe
+   135  .  .  .  .  .  Right: *ast.Identifier {
+   136  .  .  .  .  .  .  NamePos: <test>:10:38
+   137  .  .  .  .  .  .  Name: "string"
+   138  .  .  .  .  .  }
+   139  .  .  .  .  }
+   140  .  .  .  }
+   141  .  .  }
+   142  .  }
+   143  }

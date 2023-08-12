@@ -56,20 +56,77 @@ func (p *Parser) parseCase() *ast.Case {
 	return caseClause
 }
 
-// parsePattern is a much more restricted behavior of parseExpression. For example, operators like
-// + are not allowed, and in addition type information can be specified within the pattern after an
-// identifier, like:
+// parsePattern is a more restricted behavior of parseExpression. For example, calling functions is not allowed, and in addition type information can be specified within the pattern
+// after an identifier, like:
 // - `A int`
-// - [A int, Tail int...]
+// - [A, Tail int...]
 func (p *Parser) parsePattern() ast.Expression {
-	pattern := p.parseCall()
-	switch expr := pattern.(type) {
-	case *ast.ParenExpr:
-		p.error(expr.Pos(), fmt.Errorf("parenthesis are not allowed in patterns"))
-		return expr.Expression
-	case *ast.CallExpr:
-		p.error(expr.Pos(), fmt.Errorf("func calls are not allowed in patterns"))
-		return &ast.BadExpr{From: expr.Pos(), To: expr.End()}
+	tok := p.eat()
+	switch tok.Type {
+	case token.Integer:
+		return p.parseInt(tok)
+	case token.Float:
+		return p.parseFloat(tok)
+	case token.Identifier:
+		id := ast.NewIdent(tok)
+		if _, isType := typeStart[p.peek().Type]; isType {
+			return &ast.Field{Names: []*ast.Identifier{id}, Typ: p.parseType()}
+		}
+		return id
+	case token.String:
+		return ast.NewString(tok)
+	case token.Atom:
+		return ast.NewAtom(tok)
+	case token.LParen: // parenthesis are tuples in pattern if they have a comma or are ()
+		if p.matches(token.RParen) {
+			closer := p.eat()
+			return &ast.TupleLit{Opener: tok.Pos, Closer: closer.Pos}
+		}
+
+		first := p.parsePattern()
+		if p.matches(token.Comma) {
+			p.eat()
+			rest := parseSequence(p, token.Comma, token.RParen, func(p *Parser) ast.Expression {
+				return p.parsePattern()
+			})
+			rparen := p.eatOnly(token.RParen, "expected ')' to close tuple")
+			return &ast.TupleLit{
+				Opener: tok.Pos,
+				Elts:   append([]ast.Expression{first}, rest...),
+				Closer: rparen.Pos,
+			}
+		} else {
+			rparen := p.eatOnly(token.RParen, "unclosed '(' around expression")
+			return &ast.ParenExpr{
+				Expression: first,
+				LParen:     tok.Pos,
+				RParen:     rparen.Pos,
+			}
+		}
+	case token.LSquareBracket:
+		if p.matches(token.RSquareBracket) {
+			// Either it's an empty list (value) or a list type, or a pattern of list elements
+			// 1. Empty list will not have a type annotation after the []
+			// 2. List type will have a type annotation after the []
+			rbracket := p.eat()
+
+			if _, isType := typeStart[p.peek().Type]; isType {
+				eltType := p.parseType()
+				return &ast.ListType{Lbrack: tok.Pos, Elt: eltType, Rbrack: rbracket.Pos}
+			} else {
+				// Empty list
+				return &ast.ListLiteral{Opener: tok.Pos, Closer: rbracket.Pos}
+			}
+		}
+
+		elts := parseSequence(p, token.Comma, token.RSquareBracket, func(p *Parser) ast.Expression {
+			return p.parsePattern()
+		})
+		rbracket := p.eatOnly(token.RSquareBracket, "expected ']' to close list")
+		return &ast.ListLiteral{Opener: tok.Pos, Elts: elts, Closer: rbracket.Pos}
+	default:
+		p.error(tok.Pos, fmt.Errorf("expected pattern, got %s", tok.Type.String()))
+		to := p.advance(exprEnd)
+		return &ast.BadExpr{From: tok.Pos, To: to.Pos}
 	}
-	return pattern
 }

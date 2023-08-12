@@ -52,11 +52,11 @@ func (l *Lexer) lex() (pos token.Pos, tok token.Type, lit string, err error) {
 		"return" { tok = token.Return; lit = "return"; return }
         "func" { tok = token.Func; lit = "func"; return }
 		"map" { tok = token.Map; lit = "map"; return }
-		"tuple" { tok = token.Tuple; lit = "tuple"; return }
 		"type" { tok = token.TypeKeyword; lit = "type"; return }
 		"import" { tok = token.Import; lit = "import"; return }
 		"case" { tok = token.Case; lit = "case"; return }
 		"match" { tok = token.Match; lit = "match"; return }
+		"enum" { tok = token.Enum; lit = "enum"; return }
 
 		// Operators and punctuation
 		"(" { tok = token.LParen; lit = "("; return }
@@ -79,6 +79,7 @@ func (l *Lexer) lex() (pos token.Pos, tok token.Type, lit string, err error) {
         "-" { tok = token.Minus; lit = "-"; return }
         "*" { tok = token.Star; lit = "*"; return }
         "/" { tok = token.Slash; lit = "/"; return }
+		"|" { tok = token.Pipe; lit = "|"; return }
 
 		"." { tok = token.Period; lit = "."; return }
 		"," { tok = token.Comma; lit = ","; return }

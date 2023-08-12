@@ -266,6 +266,7 @@ func (f *FuncDecl) IsPublic() bool {
 }
 
 func (f *FuncDecl) isDeclaration() {}
+func (f *FuncDecl) isExpression()  {} // is an expression without a name
 func (f *FuncDecl) isNode()        {}
 func (f *FuncDecl) Pos() token.Pos {
 	return f.Func
@@ -441,17 +442,18 @@ func (f *FieldList) NumFields() int {
 type TupleType struct {
 	typeNode // the type expression for this tuple
 
-	Tuple token.Pos  // `tuple` keyword
-	Elts  *FieldList // types for elements
+	Opener token.Pos    // '('
+	Elts   []Expression // types for elements
+	Closer token.Pos    // ')'
 }
 
 func (t *TupleType) isExpression() {}
 func (t *TupleType) isNode()       {}
 func (t *TupleType) Pos() token.Pos {
-	return t.Tuple
+	return t.Opener
 }
 func (t *TupleType) End() token.Pos {
-	return t.Elts.End()
+	return t.Closer + 1
 }
 
 // ListType has the form []T
@@ -470,6 +472,25 @@ func (l *ListType) Pos() token.Pos {
 }
 func (l *ListType) End() token.Pos {
 	return l.Elt.End()
+}
+
+// EnumType has the form enum { type... }
+type EnumType struct {
+	typeNode // the declared type of the enum
+
+	EnumPos token.Pos    // position of "enum" keyword
+	Opener  token.Pos    // position of "{"
+	Cases   []Expression // type expressions for each enum case (one per line)
+	Closer  token.Pos    // position of "}"
+}
+
+func (l *EnumType) isExpression() {}
+func (l *EnumType) isNode()       {}
+func (l *EnumType) Pos() token.Pos {
+	return l.Opener
+}
+func (l *EnumType) End() token.Pos {
+	return l.Closer + 1
 }
 
 type CallExpr struct {
@@ -656,6 +677,25 @@ func (l *ListLiteral) Pos() token.Pos {
 	return l.Opener
 }
 func (l *ListLiteral) End() token.Pos {
+	return l.Closer + 1
+}
+
+type TupleLit struct {
+	typeNode
+	Opener, Closer token.Pos // '(' and ')' if present
+
+	Elts []Expression
+}
+
+func (l *TupleLit) isExpression() {}
+func (l *TupleLit) isNode()       {}
+func (l *TupleLit) Literal() string {
+	return "tuple()"
+}
+func (l *TupleLit) Pos() token.Pos {
+	return l.Opener
+}
+func (l *TupleLit) End() token.Pos {
 	return l.Closer + 1
 }
 

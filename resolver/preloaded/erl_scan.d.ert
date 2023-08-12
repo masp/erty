@@ -1,0 +1,29 @@
+module erl_scan
+
+import "erl_anno"
+
+type category atom
+type error_description any
+type error_info (erl_anno.location, module, error_description)
+
+type option enum {
+    'return'
+    'return_white_spaces'
+    'return_comments'
+    'text'
+    ('reserved_word_fun', resword_fun)
+    ('text_fun', text_fun)
+    ('compiler_internal', []any)
+}
+type options option | []option
+type symbol atom | float | int | string
+type resword_fun func(atom) bool
+type text_fun func(atom, string) bool
+
+type token (category, erl_anno.anno, symbol) | (category, erl_anno.anno)
+type tokens []token
+type tokens_result enum {
+    ('ok', tokens, erl_anno.location)
+    ('eof', erl_anno.location)
+    ('error', error_info, erl_anno.location)
+}

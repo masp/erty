@@ -4,6 +4,7 @@ import "github.com/masp/ertylang/ast"
 
 var Builtins = map[string]ast.Type{
 	"int":    Int,
+	"char":   Int,
 	"float":  Float,
 	"string": String,
 	"atom":   Atom,

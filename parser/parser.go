@@ -19,8 +19,9 @@ var (
 
 var (
 	declStart = map[token.Type]bool{
-		token.EOF:  true,
-		token.Func: true,
+		token.EOF:         true,
+		token.Func:        true,
+		token.TypeKeyword: true,
 	}
 
 	exprEnd = map[token.Type]bool{
@@ -46,6 +47,16 @@ var (
 	paramStart = map[token.Type]bool{
 		token.Identifier: true,
 		token.RParen:     true,
+	}
+
+	// Each one of these can signify that the value is a type
+	typeStart = map[token.Type]bool{
+		token.Identifier:     true,
+		token.LParen:         true, // tuple
+		token.LSquareBracket: true, // list
+		token.Atom:           true,
+		token.Func:           true,
+		token.Enum:           true,
 	}
 )
 
@@ -109,6 +120,25 @@ func (p *Parser) peek() (tok lexer.Token) {
 	return lexer.Token{Type: token.EOF}
 }
 
+func (p *Parser) peekN(n int) (toks []lexer.Token) {
+	for i := p.pos; i < len(p.tokens); i++ {
+		tok := p.tokens[i]
+		if tok.Type == token.Comment {
+			continue
+		}
+		toks = append(toks, tok)
+		if len(toks) == n {
+			return toks
+		}
+	}
+	if len(toks) < n {
+		for i := 0; i < n-len(toks); i++ {
+			toks = append(toks, lexer.Token{Type: token.EOF})
+		}
+	}
+	return toks
+}
+
 func (p *Parser) matches(types ...token.Type) bool {
 	next := p.peek()
 	for _, t := range types {
@@ -117,6 +147,39 @@ func (p *Parser) matches(types ...token.Type) bool {
 		}
 	}
 	return false
+}
+
+// finalElt either consumes sep for an end of current node and returns false that there is more statments.
+// Or, if closer or EOF is found, the function does nothing and returns true.
+func (p *Parser) finalElt(sep, closer token.Type) bool {
+	if p.matches(closer, token.EOF) {
+		return true
+	}
+
+	if p.matches(sep) {
+		p.eat()
+		// if the final stmt has a semicolon and then the closer
+		// e.g. { return a; }
+		return p.matches(closer, token.EOF)
+	}
+	next := p.peek()
+	p.error(next.Pos, fmt.Errorf("expected '%v', got %v", sep, next.Type))
+	p.advance(stmtStart)
+	return false
+}
+
+// parseSequence parses a generic sequence of nodes with a given separator. For example,
+// a list, a tuple, a enum all are sequences of nodes with different openers and separators.
+//
+// Should be called after eating the opener to the sequence, and will end with the next token
+// being either EOF or the closer.
+func parseSequence[T ast.Node](p *Parser, sep, closer token.Type, parseElt func(p *Parser) T) (result []T) {
+	for {
+		result = append(result, parseElt(p))
+		if p.finalElt(sep, closer) {
+			return result
+		}
+	}
 }
 
 func (p *Parser) error(pos token.Pos, err error) {
@@ -210,27 +273,6 @@ func (p *Parser) parseImport(mod *ast.Module) ast.Decl {
 	}
 }
 
-func (p *Parser) parseTypeDecl() ast.Decl {
-	typeTok := p.eatOnly(token.TypeKeyword, "expected 'type' keyword at start of type declaration")
-	if typeTok.Type != token.TypeKeyword {
-		to := p.advance(declStart)
-		return &ast.BadDecl{From: typeTok.Pos, To: to.Pos}
-	}
-
-	name := p.eatOnly(token.Identifier, "expected type name after 'type' keyword")
-	if name.Type != token.Identifier {
-		to := p.advance(declStart)
-		return &ast.BadDecl{From: typeTok.Pos, To: to.Pos}
-	}
-
-	def := p.parseType()
-	return &ast.TypeDecl{
-		TypePos:    typeTok.Pos,
-		Name:       ast.NewIdent(name),
-		Definition: def,
-	}
-}
-
 func (p *Parser) parseFunctionHeader() ast.Decl {
 	funcTok := p.eatOnly(token.Func, "expected 'func' keyword at start of function")
 	if funcTok.Type != token.Func {
@@ -270,6 +312,7 @@ func (p *Parser) parseParams() *ast.FieldList {
 	lparen := p.eatOnly(token.LParen, "expected '(' after function name")
 	params := &ast.FieldList{Opening: lparen.Pos}
 	i := 0
+	var named bool // true if parameters have names
 	for !p.matches(token.EOF) {
 		if p.matches(token.RParen) {
 			rparen := p.eat()
@@ -282,18 +325,39 @@ func (p *Parser) parseParams() *ast.FieldList {
 			}
 		}
 		var names []*ast.Identifier
+		var typ ast.Expression
+		var isNamed bool
 	parse_name:
-		name := p.eatOnly(token.Identifier, "expected parameter name")
-		if name.Type != token.Identifier {
-			break
+		// A set of parameters can take the following form:
+		// 1: func(a int)             -> 1 int
+		// 2: func(a, b int)          -> 2 ints
+		// 3: func(int | string, int) -> 2 ints
+		toks := p.peekN(2)
+		first, second := toks[0], toks[1]
+		if first.Type == token.Identifier && second.Type == token.Comma {
+			// case 2: func(a, b int)
+			isNamed = true
+			name := p.eatOnly(token.Identifier, "expected parameter name")
+			names = append(names, ast.NewIdent(name))
+			p.eat()         // comma
+			goto parse_name // parse rest of names and type
+		} else if _, secondIsType := typeStart[second.Type]; first.Type == token.Identifier && secondIsType {
+			// case 1: func(a int)
+			isNamed = true
+			name := p.eatOnly(token.Identifier, "expected parameter name")
+			names = append(names, ast.NewIdent(name))
+			typ = p.parseType()
+		} else if _, firstIsType := typeStart[first.Type]; firstIsType {
+			// case 3: unnamed parameter func(int | string, int)
+			isNamed = false
+			typ = p.parseType()
 		}
-		names = append(names, ast.NewIdent(name))
-		if p.matches(token.Comma) {
-			// More than 1 name with same type (e.g. a, b, c int)
-			p.eat()
-			goto parse_name
+
+		if i == 0 {
+			named = isNamed
+		} else if named != isNamed {
+			p.error(first.Pos, fmt.Errorf("mix of named and unnamed parameters"))
 		}
-		typ := p.parseType()
 		params.List = append(params.List, &ast.Field{
 			Names: names,
 			Typ:   typ,
@@ -523,25 +587,11 @@ func (p *Parser) parsePrimary() ast.Expression {
 	tok := p.eat()
 	switch tok.Type {
 	case token.Integer:
-		return &ast.IntLiteral{
-			IntPos: tok.Pos,
-			Lit:    tok.Lit,
-			Value:  p.parseInt(tok),
-		}
+		return p.parseInt(tok)
 	case token.Float:
-		return &ast.FloatLiteral{
-			FloatPos: tok.Pos,
-			Lit:      tok.Lit,
-			Value:    p.parseFloat(tok),
-		}
+		return p.parseFloat(tok)
 	case token.Identifier:
-		id := &ast.Identifier{NamePos: tok.Pos, Name: tok.Lit}
-		if p.matches(token.Identifier, token.Tuple, token.LSquareBracket) {
-			// If it looks like a type, wrap the id in an ast.Field
-			typ := p.parseType()
-			return &ast.Field{Names: []*ast.Identifier{id}, Typ: typ}
-		}
-		return id
+		return ast.NewIdent(tok)
 	case token.String:
 		return ast.NewString(tok)
 	case token.Atom:
@@ -549,12 +599,30 @@ func (p *Parser) parsePrimary() ast.Expression {
 	case token.Match:
 		return p.parseMatch(tok)
 	case token.LParen:
-		expr := p.parseExpression()
-		rparen := p.eatOnly(token.RParen, "unclosed '(' around expression")
-		return &ast.ParenExpr{
-			Expression: expr,
-			LParen:     tok.Pos,
-			RParen:     rparen.Pos,
+		if p.matches(token.RParen) {
+			closer := p.eat()
+			return &ast.TupleLit{Opener: tok.Pos, Closer: closer.Pos}
+		}
+
+		first := p.parseExpression()
+		if p.matches(token.Comma) {
+			p.eat()
+			rest := parseSequence(p, token.Comma, token.RParen, func(p *Parser) ast.Expression {
+				return p.parseExpression()
+			})
+			rparen := p.eatOnly(token.RParen, "expected ')' to close tuple")
+			return &ast.TupleLit{
+				Opener: tok.Pos,
+				Elts:   append([]ast.Expression{first}, rest...),
+				Closer: rparen.Pos,
+			}
+		} else {
+			rparen := p.eatOnly(token.RParen, "unclosed '(' around expression")
+			return &ast.ParenExpr{
+				Expression: first,
+				LParen:     tok.Pos,
+				RParen:     rparen.Pos,
+			}
 		}
 	case token.LSquareBracket:
 		if p.matches(token.RSquareBracket) {
@@ -563,7 +631,7 @@ func (p *Parser) parsePrimary() ast.Expression {
 			// 2. List type will have a type annotation after the []
 			rbracket := p.eat()
 
-			if p.matches(token.Identifier, token.Tuple, token.Map, token.LSquareBracket) {
+			if _, isType := typeStart[p.peek().Type]; isType {
 				eltType := p.parseType()
 				return &ast.ListType{Lbrack: tok.Pos, Elt: eltType, Rbrack: rbracket.Pos}
 			} else {
@@ -572,7 +640,9 @@ func (p *Parser) parsePrimary() ast.Expression {
 			}
 		}
 
-		elts := p.parseList(token.RSquareBracket)
+		elts := parseSequence(p, token.Comma, token.RSquareBracket, func(p *Parser) ast.Expression {
+			return p.parseExpression()
+		})
 		rbracket := p.eatOnly(token.RSquareBracket, "unclosed '[' around list")
 		return &ast.ListLiteral{Opener: tok.Pos, Elts: elts, Closer: rbracket.Pos}
 	default:
@@ -582,95 +652,28 @@ func (p *Parser) parsePrimary() ast.Expression {
 	}
 }
 
-func (p *Parser) parseList(end token.Type) []ast.Expression {
-	var elements []ast.Expression
-	for !p.matches(end) {
-		elements = append(elements, p.parseExpression())
-		next := p.peek()
-		switch next.Type {
-		case end:
-			return elements
-		case token.Comma:
-			p.eat()
-		default:
-			p.error(next.Pos, fmt.Errorf("expected ',' or '%s', got %s", end.String(), next.Type))
-			return elements
-		}
-	}
-	return elements
-}
-
 // parseInt converts a string to an integer.
-func (p *Parser) parseInt(tok lexer.Token) int64 {
+func (p *Parser) parseInt(tok lexer.Token) *ast.IntLiteral {
 	v, err := strconv.ParseInt(tok.Lit, 10, 64)
 	if err != nil {
 		p.error(tok.Pos, fmt.Errorf("parse int: %s", err))
 	}
-	return v
+	return &ast.IntLiteral{
+		IntPos: tok.Pos,
+		Lit:    tok.Lit,
+		Value:  v,
+	}
 }
 
 // parseFloat converts a string to a floating point number
-func (p *Parser) parseFloat(tok lexer.Token) float64 {
+func (p *Parser) parseFloat(tok lexer.Token) *ast.FloatLiteral {
 	v, err := strconv.ParseFloat(tok.Lit, 64)
 	if err != nil {
 		p.error(tok.Pos, fmt.Errorf("parse float: %s", err))
 	}
-	return v
-}
-
-// parseType only parses types expressions. Types can either be identifiers,
-// or one of the built in types like lists, tuples, binaries, etc...
-func (p *Parser) parseType() ast.Expression {
-	tok := p.eat()
-	switch tok.Type {
-	case token.Identifier: // external type, built-in type (like string)
-		ident := ast.NewIdent(tok)
-		if p.matches(token.Period) {
-			// dot expr
-			dot := p.eat()
-			attr := p.eatOnly(token.Identifier, "expected identifier after '.'")
-			if attr.Type != token.Identifier {
-				return &ast.BadExpr{From: dot.Pos, To: attr.Pos}
-			}
-			return &ast.DotExpr{X: ident, Dot: dot.Pos, Attr: ast.NewIdent(attr)}
-		}
-		return ident
-	case token.Tuple: // tuple[...]
-		return p.parseTupleType(tok)
-	case token.LSquareBracket: // []type
-		rbrack := p.eatOnly(token.RSquareBracket, "expected ']' after '[' for list type")
-		if rbrack.Type != token.RSquareBracket {
-			return &ast.BadExpr{From: tok.Pos, To: rbrack.Pos}
-		}
-		eltType := p.parseType()
-		return &ast.ListType{Lbrack: tok.Pos, Elt: eltType, Rbrack: rbrack.Pos}
-	default:
-		p.error(tok.Pos, fmt.Errorf("expected type, got %s", tok.Type.String()))
-		return &ast.BadExpr{From: tok.Pos, To: tok.Pos}
-	}
-}
-
-// parseTupleType parses a tuple of the form `tuple[<fieldlist>]` and returns
-// the resulting expression. A tuple can look like:
-// - tuple[] (only empty tuple {} allowed)
-// - tuple[int, int] (2 ints)
-func (p *Parser) parseTupleType(tupleTok lexer.Token) *ast.TupleType {
-	lbracket := p.eatOnly(token.LSquareBracket, "expected '[' after 'tuple'")
-	fields := &ast.FieldList{}
-	for !p.matches(token.RSquareBracket) {
-		typExpr := p.parseType()
-		fields.List = append(fields.List, &ast.Field{Typ: typExpr})
-		if p.matches(token.RSquareBracket) {
-			break
-		}
-		p.eatOnly(token.Comma, "missing ',' in tuple type list")
-	}
-
-	fields.Opening = lbracket.Pos
-	rbracket := p.eatOnly(token.RSquareBracket, "expected ']' after tuple field list")
-	fields.Closing = rbracket.Pos
-	return &ast.TupleType{
-		Tuple: tupleTok.Pos,
-		Elts:  fields,
+	return &ast.FloatLiteral{
+		FloatPos: tok.Pos,
+		Lit:      tok.Lit,
+		Value:    v,
 	}
 }

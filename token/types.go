@@ -32,6 +32,7 @@ const (
 	Minus
 	Slash
 	Star
+	Pipe
 
 	// Other
 	Period
@@ -50,12 +51,12 @@ const (
 	// Keywords
 	Func
 	Return
-	Tuple
 	Map
 	TypeKeyword
 	Import
 	Match
 	Case
+	Enum
 
 	EOF Type = 999 // must be at end
 )
@@ -79,6 +80,7 @@ var types = [...]string{
 	Minus:          "Minus",
 	Slash:          "Slash",
 	Star:           "Star",
+	Pipe:           "Pipe",
 	Period:         "Period",
 	Colon:          "Colon",
 	Equal:          "Equal",
@@ -93,12 +95,12 @@ var types = [...]string{
 	Comma:          "Comma",
 	Func:           "Func",
 	Return:         "Return",
-	Tuple:          "Tuple",
 	Map:            "Map",
 	TypeKeyword:    "Type",
 	Import:         "Import",
 	Match:          "Match",
 	Case:           "Case",
+	Enum:           "Enum",
 	EOF:            "EOF",
 }
 

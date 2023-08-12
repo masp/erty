@@ -57,7 +57,7 @@ func walk(n Node, v Visitor) {
 	case *ExprStatement:
 		walk(n.Expression, v)
 	case *TupleType:
-		for _, field := range n.Elts.List {
+		for _, field := range n.Elts {
 			walk(field, v)
 		}
 	case *Field:

@@ -1,1 +1,1 @@
-<test>:4:1: expected func, got "fn" (Identifier)
+<test>:1:14: expected func, got "fn" (Identifier)

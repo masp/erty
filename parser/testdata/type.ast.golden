@@ -1,7 +1,7 @@
      0  *ast.Module {
      1  .  File: *token.File {
      2  .  .  Name: "<test>"
-     3  .  .  Size: 60
+     3  .  .  Size: 55
      4  .  }
      5  .  Id: *ast.Identifier {
      6  .  .  NamePos: <test>:1:8
@@ -15,51 +15,42 @@
     14  .  .  .  .  Name: "Foo"
     15  .  .  .  }
     16  .  .  .  Definition: *ast.TupleType {
-    17  .  .  .  .  Tuple: <test>:1:23
-    18  .  .  .  .  Elts: *ast.FieldList {
-    19  .  .  .  .  .  Opening: <test>:1:28
-    20  .  .  .  .  .  List: []*ast.Field (len = 3) {
-    21  .  .  .  .  .  .  0: *ast.Field {
-    22  .  .  .  .  .  .  .  Typ: *ast.Identifier {
-    23  .  .  .  .  .  .  .  .  NamePos: <test>:1:29
-    24  .  .  .  .  .  .  .  .  Name: "int"
-    25  .  .  .  .  .  .  .  }
-    26  .  .  .  .  .  .  }
-    27  .  .  .  .  .  .  1: *ast.Field {
-    28  .  .  .  .  .  .  .  Typ: *ast.Identifier {
-    29  .  .  .  .  .  .  .  .  NamePos: <test>:1:34
-    30  .  .  .  .  .  .  .  .  Name: "int"
-    31  .  .  .  .  .  .  .  }
-    32  .  .  .  .  .  .  }
-    33  .  .  .  .  .  .  2: *ast.Field {
-    34  .  .  .  .  .  .  .  Typ: *ast.Identifier {
-    35  .  .  .  .  .  .  .  .  NamePos: <test>:1:39
-    36  .  .  .  .  .  .  .  .  Name: "int"
-    37  .  .  .  .  .  .  .  }
-    38  .  .  .  .  .  .  }
-    39  .  .  .  .  .  }
-    40  .  .  .  .  .  Closing: <test>:1:42
-    41  .  .  .  .  }
-    42  .  .  .  }
-    43  .  .  }
-    44  .  .  1: *ast.TypeDecl {
-    45  .  .  .  TypePos: <test>:1:45
-    46  .  .  .  Name: *ast.Identifier {
-    47  .  .  .  .  NamePos: <test>:1:50
-    48  .  .  .  .  Name: "LL"
-    49  .  .  .  }
-    50  .  .  .  Definition: *ast.ListType {
-    51  .  .  .  .  Lbrack: <test>:1:53
-    52  .  .  .  .  Elt: *ast.ListType {
-    53  .  .  .  .  .  Lbrack: <test>:1:55
-    54  .  .  .  .  .  Elt: *ast.Identifier {
-    55  .  .  .  .  .  .  NamePos: <test>:1:57
-    56  .  .  .  .  .  .  Name: "int"
-    57  .  .  .  .  .  }
-    58  .  .  .  .  .  Rbrack: <test>:1:56
-    59  .  .  .  .  }
-    60  .  .  .  .  Rbrack: <test>:1:54
-    61  .  .  .  }
-    62  .  .  }
-    63  .  }
-    64  }
+    17  .  .  .  .  Opener: <test>:1:23
+    18  .  .  .  .  Elts: []ast.Expression (len = 3) {
+    19  .  .  .  .  .  0: *ast.Identifier {
+    20  .  .  .  .  .  .  NamePos: <test>:1:24
+    21  .  .  .  .  .  .  Name: "int"
+    22  .  .  .  .  .  }
+    23  .  .  .  .  .  1: *ast.AtomLiteral {
+    24  .  .  .  .  .  .  QuotePos: <test>:1:29
+    25  .  .  .  .  .  .  Value: "a"
+    26  .  .  .  .  .  }
+    27  .  .  .  .  .  2: *ast.Identifier {
+    28  .  .  .  .  .  .  NamePos: <test>:1:34
+    29  .  .  .  .  .  .  Name: "int"
+    30  .  .  .  .  .  }
+    31  .  .  .  .  }
+    32  .  .  .  .  Closer: <test>:1:37
+    33  .  .  .  }
+    34  .  .  }
+    35  .  .  1: *ast.TypeDecl {
+    36  .  .  .  TypePos: <test>:1:40
+    37  .  .  .  Name: *ast.Identifier {
+    38  .  .  .  .  NamePos: <test>:1:45
+    39  .  .  .  .  Name: "LL"
+    40  .  .  .  }
+    41  .  .  .  Definition: *ast.ListType {
+    42  .  .  .  .  Lbrack: <test>:1:48
+    43  .  .  .  .  Elt: *ast.ListType {
+    44  .  .  .  .  .  Lbrack: <test>:1:50
+    45  .  .  .  .  .  Elt: *ast.Identifier {
+    46  .  .  .  .  .  .  NamePos: <test>:1:52
+    47  .  .  .  .  .  .  Name: "int"
+    48  .  .  .  .  .  }
+    49  .  .  .  .  .  Rbrack: <test>:1:51
+    50  .  .  .  .  }
+    51  .  .  .  .  Rbrack: <test>:1:49
+    52  .  .  .  }
+    53  .  .  }
+    54  .  }
+    55  }

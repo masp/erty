@@ -1,0 +1,25 @@
+module erl_anno
+
+type annotation enum {
+    ('file', filename)
+    ('generated', generated)
+    ('location', location)
+    ('record', record)
+    ('text', []char)
+}
+type anno enum {
+    location
+    []annotation
+}
+
+type line int
+type column int
+type generated bool
+type filename []char
+
+type location enum {
+    line
+    (line, column)
+}
+type record bool
+type text []char

@@ -1,7 +1,7 @@
      0  *ast.Module {
      1  .  File: *token.File {
      2  .  .  Name: "<test>"
-     3  .  .  Size: 149
+     3  .  .  Size: 168
      4  .  }
      5  .  Id: *ast.Identifier {
      6  .  .  NamePos: <test>:1:8
@@ -19,7 +19,7 @@
     18  .  .  1: *ast.FuncDecl {
     19  .  .  .  Func: <test>:3:5
     20  .  .  .  LeftBrace: <test>:3:17
-    21  .  .  .  RightBrace: <test>:7:5
+    21  .  .  .  RightBrace: <test>:8:5
     22  .  .  .  Name: *ast.Identifier {
     23  .  .  .  .  NamePos: <test>:3:10
     24  .  .  .  .  Name: "expr"
@@ -28,7 +28,7 @@
     27  .  .  .  .  Opening: <test>:3:14
     28  .  .  .  .  Closing: <test>:3:15
     29  .  .  .  }
-    30  .  .  .  Statements: []ast.Statement (len = 3) {
+    30  .  .  .  Statements: []ast.Statement (len = 4) {
     31  .  .  .  .  0: *ast.ExprStatement {
     32  .  .  .  .  .  Expression: *ast.AssignExpr {
     33  .  .  .  .  .  .  Left: *ast.Identifier {
@@ -120,10 +120,28 @@
    119  .  .  .  .  .  .  RightParen: <test>:6:55
    120  .  .  .  .  .  }
    121  .  .  .  .  }
-   122  .  .  .  }
-   123  .  .  }
-   124  .  }
-   125  .  Imports: []*ast.ImportDecl (len = 1) {
-   126  .  .  0: *(obj @ 10)
-   127  .  }
-   128  }
+   122  .  .  .  .  3: *ast.ReturnStatement {
+   123  .  .  .  .  .  Return: <test>:7:6
+   124  .  .  .  .  .  Expression: *ast.TupleLit {
+   125  .  .  .  .  .  .  Opener: <test>:7:13
+   126  .  .  .  .  .  .  Closer: <test>:7:18
+   127  .  .  .  .  .  .  Elts: []ast.Expression (len = 2) {
+   128  .  .  .  .  .  .  .  0: *ast.IntLiteral {
+   129  .  .  .  .  .  .  .  .  IntPos: <test>:7:14
+   130  .  .  .  .  .  .  .  .  Lit: "1"
+   131  .  .  .  .  .  .  .  .  Value: 1
+   132  .  .  .  .  .  .  .  }
+   133  .  .  .  .  .  .  .  1: *ast.Identifier {
+   134  .  .  .  .  .  .  .  .  NamePos: <test>:7:17
+   135  .  .  .  .  .  .  .  .  Name: "a"
+   136  .  .  .  .  .  .  .  }
+   137  .  .  .  .  .  .  }
+   138  .  .  .  .  .  }
+   139  .  .  .  .  }
+   140  .  .  .  }
+   141  .  .  }
+   142  .  }
+   143  .  Imports: []*ast.ImportDecl (len = 1) {
+   144  .  .  0: *(obj @ 10)
+   145  .  }
+   146  }

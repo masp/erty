@@ -75,6 +75,8 @@ func TestParseFunc(t *testing.T) {
 						A = 10
 						B = "hello"
 						return 10
+					case (int, S, Y int):
+						return S
 				}
 			}
 			`,
@@ -109,6 +111,7 @@ func TestParseModule(t *testing.T) {
 					test = "hello world"
 					a = 3 + 5
 					io.format("hello ~n", []string(["test", "test2"]))
+					return (1, a)
 				}`,
 			expectedAst: "module.ast",
 		},
@@ -119,7 +122,7 @@ func TestParseModule(t *testing.T) {
 		},
 		{
 			// type decl
-			input:       "module test; type Foo tuple[int, int, int]; type LL [][]int",
+			input:       "module test; type Foo (int, 'a', int); type LL [][]int",
 			expectedAst: "type.ast",
 		},
 		{
@@ -136,6 +139,21 @@ func TestParseModule(t *testing.T) {
 		{
 			input:       `module test; func test(a int) int`,
 			expectedAst: "func_decl_only.ast",
+			options:     Options{DeclarationOnly: true},
+		},
+		{
+			input: `
+module test
+type myint int
+type myenum enum {
+	(myint, string)
+	erlang.port}
+
+type myenum2 int | string | enum {bool; atom}
+
+type myfunc func(int | string) int | string
+`,
+			expectedAst: "typedef.ast",
 			options:     Options{DeclarationOnly: true},
 		},
 	}
@@ -233,16 +251,7 @@ func TestAllErrors(t *testing.T) {
 			expectedErrs: "nocommaparam.errors",
 		},
 		{
-			// bad match expressoin
-			input:        "module test; func bad() { () := 10 }",
-			expectedErrs: "badmatch.errors",
-		},
-		{
-			input: `module test
-
-
-fn bad() { return 1 }
-`,
+			input:        `module test; fn bad() { return 1 }`,
 			expectedErrs: "badfunc.errors",
 		},
 		{
@@ -264,6 +273,15 @@ fn bad() { return 1 }
 		{
 			input:        "module test; func bad() { return 1 }",
 			expectedErrs: "bodyindecl.errors",
+			options:      Options{DeclarationOnly: true},
+		},
+		{
+			input: `module test
+type bad {int, int}
+type badfunc func((int), a int)
+type badtype 5
+`,
+			expectedErrs: "typedef.errors",
 			options:      Options{DeclarationOnly: true},
 		},
 	}
