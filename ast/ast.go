@@ -568,8 +568,9 @@ type Literal interface {
 type StringLiteral struct {
 	typeNode // type of literal
 
-	QuotePos   token.Pos
-	Value, Lit string
+	QuotePos token.Pos
+	Value    string // import path without quotes
+	Lit      string // import path with quotes
 }
 
 func NewString(tok lexer.Token) *StringLiteral {

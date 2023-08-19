@@ -1,0 +1,80 @@
+     0  *ast.FuncDecl {
+     1  .  Func: <string>:2:4
+     2  .  LeftBrace: <string>:2:19
+     3  .  RightBrace: <string>:4:4
+     4  .  Name: *ast.Identifier {
+     5  .  .  NamePos: <string>:2:9
+     6  .  .  Name: "lambdas"
+     7  .  }
+     8  .  Parameters: *ast.FieldList {
+     9  .  .  Opening: <string>:2:16
+    10  .  .  Closing: <string>:2:17
+    11  .  }
+    12  .  Statements: []ast.Statement (len = 1) {
+    13  .  .  0: *ast.ExprStatement {
+    14  .  .  .  Expression: *ast.MatchAssignExpr {
+    15  .  .  .  .  Left: *ast.Identifier {
+    16  .  .  .  .  .  NamePos: <string>:3:5
+    17  .  .  .  .  .  Name: "a"
+    18  .  .  .  .  }
+    19  .  .  .  .  Equals: <string>:3:7
+    20  .  .  .  .  Right: *ast.CallExpr {
+    21  .  .  .  .  .  Fun: *ast.FuncDecl {
+    22  .  .  .  .  .  .  Func: <string>:3:10
+    23  .  .  .  .  .  .  LeftBrace: <string>:3:26
+    24  .  .  .  .  .  .  RightBrace: <string>:3:42
+    25  .  .  .  .  .  .  Parameters: *ast.FieldList {
+    26  .  .  .  .  .  .  .  Opening: <string>:3:14
+    27  .  .  .  .  .  .  .  List: []*ast.Field (len = 1) {
+    28  .  .  .  .  .  .  .  .  0: *ast.Field {
+    29  .  .  .  .  .  .  .  .  .  Names: []*ast.Identifier (len = 1) {
+    30  .  .  .  .  .  .  .  .  .  .  0: *ast.Identifier {
+    31  .  .  .  .  .  .  .  .  .  .  .  NamePos: <string>:3:15
+    32  .  .  .  .  .  .  .  .  .  .  .  Name: "a"
+    33  .  .  .  .  .  .  .  .  .  .  }
+    34  .  .  .  .  .  .  .  .  .  }
+    35  .  .  .  .  .  .  .  .  .  Typ: *ast.Identifier {
+    36  .  .  .  .  .  .  .  .  .  .  NamePos: <string>:3:17
+    37  .  .  .  .  .  .  .  .  .  .  Name: "int"
+    38  .  .  .  .  .  .  .  .  .  }
+    39  .  .  .  .  .  .  .  .  }
+    40  .  .  .  .  .  .  .  }
+    41  .  .  .  .  .  .  .  Closing: <string>:3:20
+    42  .  .  .  .  .  .  }
+    43  .  .  .  .  .  .  Statements: []ast.Statement (len = 1) {
+    44  .  .  .  .  .  .  .  0: *ast.ReturnStatement {
+    45  .  .  .  .  .  .  .  .  Return: <string>:3:28
+    46  .  .  .  .  .  .  .  .  Expression: *ast.BinaryExpr {
+    47  .  .  .  .  .  .  .  .  .  Left: *ast.Identifier {
+    48  .  .  .  .  .  .  .  .  .  .  NamePos: <string>:3:35
+    49  .  .  .  .  .  .  .  .  .  .  Name: "a"
+    50  .  .  .  .  .  .  .  .  .  }
+    51  .  .  .  .  .  .  .  .  .  OpPos: <string>:3:37
+    52  .  .  .  .  .  .  .  .  .  Op: Plus
+    53  .  .  .  .  .  .  .  .  .  Right: *ast.IntLiteral {
+    54  .  .  .  .  .  .  .  .  .  .  IntPos: <string>:3:39
+    55  .  .  .  .  .  .  .  .  .  .  Lit: "10"
+    56  .  .  .  .  .  .  .  .  .  .  Value: 10
+    57  .  .  .  .  .  .  .  .  .  }
+    58  .  .  .  .  .  .  .  .  }
+    59  .  .  .  .  .  .  .  }
+    60  .  .  .  .  .  .  }
+    61  .  .  .  .  .  .  ReturnType: *ast.Identifier {
+    62  .  .  .  .  .  .  .  NamePos: <string>:3:22
+    63  .  .  .  .  .  .  .  Name: "int"
+    64  .  .  .  .  .  .  }
+    65  .  .  .  .  .  }
+    66  .  .  .  .  .  Args: []ast.Expression (len = 1) {
+    67  .  .  .  .  .  .  0: *ast.IntLiteral {
+    68  .  .  .  .  .  .  .  IntPos: <string>:3:44
+    69  .  .  .  .  .  .  .  Lit: "5"
+    70  .  .  .  .  .  .  .  Value: 5
+    71  .  .  .  .  .  .  }
+    72  .  .  .  .  .  }
+    73  .  .  .  .  .  LeftParen: <string>:3:43
+    74  .  .  .  .  .  RightParen: <string>:3:45
+    75  .  .  .  .  }
+    76  .  .  .  }
+    77  .  .  }
+    78  .  }
+    79  }

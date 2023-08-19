@@ -86,7 +86,7 @@ func init() {
 		})
 	}
 
-	preloads := make(map[string]*ast.Module)
+	imp := &CachedImporter{LoadedModules: make(map[string]*ast.Module)}
 	preloadPaths, err := preloaded.ReadDir("preloaded")
 	if err != nil {
 		panic(err)
@@ -97,23 +97,35 @@ func init() {
 		}
 
 		if strings.HasSuffix(pre.Name(), ".d.ert") {
-			src, err := preloaded.ReadFile(filepath.Join("preloaded", pre.Name()))
-			if err != nil {
-				panic(err)
-			}
-			mod, err := parser.ParseModule(pre.Name(), src, &parser.Options{DeclarationOnly: true})
-			if err != nil {
-				panic(fmt.Errorf("compile %s: %w", pre.Name(), err))
-			}
+			recursiveResolve(imp, strings.TrimSuffix(pre.Name(), ".d.ert"))
+		}
+	}
+	BuiltinsImporter = imp
+}
 
-			err = ResolveModule(mod, nil)
-			if err != nil {
-				panic(fmt.Errorf("resolve %s: %w", pre.Name(), err))
-			}
-			preloads[strings.TrimSuffix(pre.Name(), ".d.ert")] = mod
+func recursiveResolve(imp *CachedImporter, moduleName string) {
+	src, err := preloaded.ReadFile(filepath.Join("preloaded", moduleName+".d.ert"))
+	if err != nil {
+		panic(err)
+	}
+	mod, err := parser.ParseModule(moduleName, src, &parser.Options{DeclarationOnly: true})
+	if err != nil {
+		panic(fmt.Errorf("compile preloaded/%s: %w", moduleName+".d.ert", err))
+	}
+
+	// before we resolve, recursively resolve all imports if they don't exist
+	for _, dep := range mod.Imports {
+		_, err := imp.Load(dep.Path.Value)
+		if err == ErrModuleMissing {
+			recursiveResolve(imp, dep.Path.Value)
+		} else if err != nil {
+			panic(err)
 		}
 	}
 
-	imp := &CachedImporter{LoadedModules: preloads}
-	BuiltinsImporter = imp
+	err = ResolveModule(mod, &Config{Importer: imp})
+	if err != nil {
+		panic(fmt.Errorf("resolve preloaded/%s: %w", moduleName+".d.ert", err))
+	}
+	imp.Add(moduleName, mod)
 }

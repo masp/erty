@@ -645,6 +645,21 @@ func (p *Parser) parsePrimary() ast.Expression {
 		})
 		rbracket := p.eatOnly(token.RSquareBracket, "unclosed '[' around list")
 		return &ast.ListLiteral{Opener: tok.Pos, Elts: elts, Closer: rbracket.Pos}
+	case token.Func:
+		params := p.parseParams()
+
+		var retType ast.Expression
+		if _, isType := typeStart[p.peek().Type]; isType {
+			// If the following token could be a type, it must be our return type
+			retType = p.parseType()
+		}
+		decl := &ast.FuncDecl{
+			Func:       tok.Pos,
+			Parameters: params,
+			ReturnType: retType,
+		}
+		p.parseFunctionBody(decl)
+		return decl
 	default:
 		p.error(tok.Pos, fmt.Errorf("expected expression, got %s", tok.Type.String()))
 		to := p.advance(exprEnd)

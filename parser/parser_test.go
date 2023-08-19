@@ -82,6 +82,13 @@ func TestParseFunc(t *testing.T) {
 			`,
 			expectedAst: "match.ast",
 		},
+		{ // lambdas
+			input: `
+			func lambdas() {
+				a := func(a int) int { return a + 10 }(5)
+			}`,
+			expectedAst: "lambdas.ast",
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
